@@ -148,8 +148,14 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     };
     const configAgent = config.agent as AgentConfig | undefined;
 
+    const preferOrchestrator = pluginConfig.sisyphus_agent?.prefer_orchestrator ?? false;
+    
     if (isSisyphusEnabled && builtinAgents.Sisyphus) {
-      (config as { default_agent?: string }).default_agent = "Sisyphus";
+      if (preferOrchestrator && builtinAgents["orchestrator-sisyphus"]) {
+        (config as { default_agent?: string }).default_agent = "orchestrator-sisyphus";
+      } else {
+        (config as { default_agent?: string }).default_agent = "Sisyphus";
+      }
 
       const agentConfig: Record<string, unknown> = {
         Sisyphus: builtinAgents.Sisyphus,
@@ -207,11 +213,11 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
             defaultModel ??
             "anthropic/claude-opus-4-5",
           mode: "primary" as const,
+          hidden: true,
           prompt: PROMETHEUS_SYSTEM_PROMPT,
           permission: PROMETHEUS_PERMISSION,
           description: `${configAgent?.plan?.description ?? "Plan agent"} (Prometheus - OhMyOpenCode)`,
           color: (configAgent?.plan?.color as string) ?? "#FF6347",
-          // Apply category properties (temperature, top_p, tools, etc.)
           ...(categoryConfig?.temperature !== undefined
             ? { temperature: categoryConfig.temperature }
             : {}),
@@ -272,12 +278,53 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
         ...(planDemoteConfig ? { plan: planDemoteConfig } : {}),
       };
     } else {
+      // Sisyphus disabled - use orchestrator-sisyphus as default
+      if (builtinAgents["orchestrator-sisyphus"]) {
+        (config as { default_agent?: string }).default_agent = "orchestrator-sisyphus";
+      }
+      
+      const migratedBuild = configAgent?.build
+        ? migrateAgentConfig(configAgent.build as Record<string, unknown>)
+        : {};
+      
+      const additionalAgents: Record<string, unknown> = {};
+      
+      if (plannerEnabled) {
+        const prometheusOverride =
+          pluginConfig.agents?.["Prometheus (Planner)"] as
+            | (Record<string, unknown> & { category?: string; model?: string })
+            | undefined;
+        const defaultModel = config.model as string | undefined;
+        const categoryConfig = prometheusOverride?.category
+          ? resolveCategoryConfig(prometheusOverride.category, pluginConfig.categories)
+          : undefined;
+
+        const prometheusBase = {
+          model: prometheusOverride?.model ?? categoryConfig?.model ?? defaultModel ?? "anthropic/claude-opus-4-5",
+          mode: "primary" as const,
+          hidden: true,
+          prompt: PROMETHEUS_SYSTEM_PROMPT,
+          permission: PROMETHEUS_PERMISSION,
+          description: `${configAgent?.plan?.description ?? "Plan agent"} (Prometheus - OhMyOpenCode)`,
+          color: (configAgent?.plan?.color as string) ?? "#FF6347",
+          ...(categoryConfig?.temperature !== undefined ? { temperature: categoryConfig.temperature } : {}),
+          ...(categoryConfig?.thinking ? { thinking: categoryConfig.thinking } : {}),
+        };
+
+        additionalAgents["Prometheus (Planner)"] = prometheusOverride
+          ? { ...prometheusBase, ...prometheusOverride }
+          : prometheusBase;
+      }
+      
       config.agent = {
         ...builtinAgents,
+        ...additionalAgents,
         ...userAgents,
         ...projectAgents,
         ...pluginAgents,
         ...configAgent,
+        build: { ...migratedBuild, mode: "subagent", hidden: true },
+        plan: { mode: "subagent" },
       };
     }
 

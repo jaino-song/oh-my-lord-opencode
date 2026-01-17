@@ -1,0 +1,1144 @@
+# Oh-My-OpenCode Agent Architecture
+# Last Updated: 2026-01-17
+
+version: "1.1.0"
+description: Multi-agent orchestration system with TDD-first planning and planner-paul
+
+# =============================================================================
+# CONTEXT SHARING & COMPACTION (Applies to ALL agents)
+# =============================================================================
+context_features:
+  description: |
+    oh-my-opencode's proprietary context sharing and compaction logic applies to ALL agents,
+    including Paul, planner-paul, Solomon, and any custom agents.
+  
+  automatic_features:
+    - name: Context Injector
+      description: Merges context from multiple sources (rules, AGENTS.md, README.md, keywords)
+      applies_to: All agents
+    
+    - name: Compaction Context Injector
+      description: Preserves user requests, work completed, remaining tasks during compaction
+      applies_to: All agents
+      preserves:
+        - User Requests (As-Is)
+        - Final Goal
+        - Work Completed
+        - Remaining Tasks
+        - MUST NOT Do (Critical Constraints)
+    
+    - name: Background Compaction Hook
+      description: Preserves running/completed background task state during compaction
+      applies_to: All agents with background tasks
+    
+    - name: Preemptive Compaction
+      description: Triggers summary at 85% context window usage before hitting limits
+      applies_to: All agents
+    
+    - name: Directory Injectors
+      description: Auto-injects AGENTS.md and README.md from file paths
+      applies_to: All agents
+    
+    - name: Rules Injector
+      description: Injects conditional rules from .claude/rules/
+      applies_to: All agents
+    
+    - name: Context Window Monitor
+      description: Reminds agents of remaining headroom at 70%+ usage
+      applies_to: All agents
+
+# =============================================================================
+# AGENT HIERARCHY
+# =============================================================================
+hierarchy:
+  primary_agents:
+    description: User-facing agents that can be invoked directly
+    agents:
+      - name: Paul
+        role: Master Orchestrator (formerly orchestrator-sisyphus)
+        invocation: (default, no prefix)
+        writes_code: false
+        named_after: "Paul the Apostle - master organizer who coordinated communities and delegated to Timothy, Titus, and others"
+        tdd_aware: true
+        auto_detects: ".paul/plans/ on startup"
+        delegates_to:
+          - Sisyphus-Junior-{category}
+          - Solomon (TDD Planner) - for test specifications
+          - Thomas (TDD Plan Consultant) - called by planners
+          - Peter (Test Writer) (Jest unit tests)
+          - John (E2E Test Writer) (Playwright E2E tests)
+          - Joshua (Test Runner) (runs both Jest and Playwright)
+          - oracle
+          - explore
+          - librarian
+          - frontend-ui-ux-engineer
+          - document-writer
+        tdd_workflow:
+          description: "Executes plans from planner-paul + Solomon"
+          triggers:
+            - "User switches to Paul after planning"
+            - "Paul detects .paul/plans/ files"
+            - "/start-work command"
+        context_features:
+          - All oh-my-opencode hooks apply automatically
+          - Context injection (AGENTS.md, rules, etc.)
+          - Compaction preservation
+          - Background task state preserved
+          - Preemptive compaction at 85%
+
+      - name: planner-paul
+        role: Implementation Planner for Paul (general planning)
+        invocation: "@planner-paul"
+        writes_code: false
+        named_after: "Paul's planning phase - establishes requirements and implementation strategy"
+        model: anthropic/claude-opus-4-5
+        interview_mode: true
+        read_only: true
+        enforced_by: planner-md-only hook
+        plan_location: ".paul/plans/{name}.md"
+        draft_location: ".paul/drafts/{name}.md"
+        auto_triggers_solomon: true
+        review_chain:
+          - Thomas (TDD Plan Consultant): After plan generation (MANDATORY)
+          - Momus (Plan Reviewer): After Thomas review (optional, high accuracy mode)
+        outputs:
+          - Requirements & deliverables
+          - Implementation plan
+          - Task breakdown
+          - Parallelization strategy
+        gap_handling:
+          CRITICAL: "Requires user decision → planner-paul asks user directly"
+          MINOR: "Can self-resolve → FIX silently, note in summary"
+          AMBIGUOUS: "Has reasonable default → Apply default, DISCLOSE"
+        interview_focus:
+          - "What should explicitly NOT be built? (scope boundaries)"
+          - "Can frontend and backend work happen simultaneously? (parallelization)"
+          - "Does this require understanding external libraries first? (research needs)"
+          - "Is this a quick fix or multi-day effort? (complexity assessment)"
+          - "What must be done before what? (dependencies)"
+        does_NOT_specify:
+          - Which agents to use (Paul decides at execution time)
+          - Agent assignments per task
+        context_features:
+          - All oh-my-opencode hooks apply automatically
+          - Same context/compaction features as Paul
+
+      - name: Sisyphus
+        role: Combined planner + implementer
+        invocation: "@Sisyphus"
+        writes_code: true
+        status: enabled (but not default)
+
+      - name: Solomon
+        role: TDD Test Planner (Unit + E2E specifications)
+        invocation: "@solomon or auto-triggered by planner-paul"
+        writes_code: false
+        model: anthropic/claude-opus-4-5
+        triggered_by: planner-paul (automatic after implementation plan)
+        reads_from: ".paul/plans/{name}.md (planner-paul's implementation plan)"
+        plan_location: ".paul/plans/{name}-tests.md"
+        review_chain:
+          - Thomas (TDD Plan Consultant): After plan generation (MANDATORY) - reviews actual test specs
+          - Momus (Plan Reviewer): After Thomas review (optional, high accuracy mode)
+        plans_for:
+          - Jest unit tests (backend, services, utilities)
+          - Playwright E2E tests (frontend user flows)
+        outputs:
+          - Unit test specifications
+          - E2E test specifications
+          - Red-Green-Refactor phases
+        interview_mode: true
+        interview_focus_after_planner_paul:
+          - "What edge cases should we test for?"
+          - "Expected error scenarios?"
+          - "Integration points to mock?"
+          - "Coverage requirements?"
+          - "Critical user flows for E2E?"
+          - "Which browsers to test?"
+        gap_handling:
+          CRITICAL: "Requires user decision → ASK"
+          MINOR: "Can self-resolve → FIX silently, note in summary"
+          AMBIGUOUS: "Has reasonable default → Apply default, DISCLOSE"
+        context_features:
+          - All oh-my-opencode hooks apply automatically
+
+  planners:
+    description: Agents that create plans but don't write code
+    agents:
+      - name: planner-paul
+        role: Implementation planner for Paul
+        status: enabled
+        methodology: General implementation planning
+        plan_location: ".paul/plans/{name}.md"
+        draft_location: ".paul/drafts/{name}.md"
+        auto_triggers: Solomon (after implementation plan complete)
+      
+      - name: Solomon
+        role: TDD test specification planner
+        status: enabled
+        methodology: Test-Driven Development
+        plan_location: ".paul/plans/{name}-tests.md"
+        reads_from: planner-paul's implementation plan
+
+      - name: Prometheus
+        role: Legacy general planner (for Sisyphus)
+        status: disabled
+
+  subagents:
+    description: Agents invoked by orchestrator via delegate_task()
+
+    code_writers:
+      - name: Sisyphus-Junior-{category}
+        role: Implementation code writer
+        writes_code: true
+        categories:
+          - ultrabrain (backend, business logic)
+          - general (general purpose)
+          - visual-engineering (frontend)
+          - quick (small tasks)
+          - most-capable (complex tasks)
+
+      - name: frontend-ui-ux-engineer
+        role: UI/UX implementation
+        writes_code: true (frontend only)
+
+      - name: document-writer
+        role: Documentation writer
+        writes_code: false (markdown only)
+
+    test_writers:
+      - name: Peter (Test Writer)
+        role: Jest unit test code writer
+        writes_code: true (tests only)
+        test_type: unit
+        status: created
+        model: anthropic/claude-sonnet-4-5
+        inputs:
+          - Unit test specs from Solomon's plan
+        outputs:
+          - "*.test.ts, *.spec.ts files"
+        targets:
+          - Services, utilities, business logic
+          - API endpoints
+          - Database operations
+          - Pure functions
+        capabilities:
+          test_patterns:
+            - BDD style with #given, #when, #then comments
+            - describe/test block organization
+            - beforeEach/afterEach setup/teardown
+          mocking:
+            - jest.mock() for modules
+            - jest.spyOn() for methods
+            - mockResolvedValue/mockRejectedValue for async
+          assertions:
+            - toBe, toEqual, toStrictEqual
+            - toThrow, rejects.toThrow
+            - toHaveBeenCalled, toHaveBeenCalledWith
+          edge_cases:
+            - null/undefined inputs
+            - empty arrays/objects
+            - boundary values
+            - error scenarios
+        workflow:
+          - Read Solomon's test specification
+          - Discover existing test patterns in codebase
+          - Check Jest configuration
+          - Write test file with proper structure
+          - Verify TypeScript compiles
+
+      - name: John (E2E Test Writer)
+        role: Playwright E2E test code writer
+        writes_code: true (tests only)
+        test_type: e2e
+        status: created
+        model: anthropic/claude-sonnet-4-5
+        inputs:
+          - E2E test specs from Solomon's plan
+        outputs:
+          - "*.spec.ts files in e2e/ or tests/"
+        targets:
+          - User flows
+          - Page interactions
+          - Form submissions
+          - Navigation
+          - Cross-browser scenarios
+        capabilities:
+          locator_strategies:
+            preferred:
+              - getByRole (accessibility-focused)
+              - getByLabel (form labels)
+              - getByText (visible content)
+              - getByTestId (stable, explicit)
+              - getByPlaceholder (inputs)
+            avoid:
+              - CSS selectors (fragile)
+              - XPath (hard to maintain)
+          test_patterns:
+            - BDD style with #given, #when, #then comments
+            - test.describe/test block organization
+            - Page Object Model support
+            - beforeEach/afterEach hooks
+          assertions:
+            - toHaveURL, toHaveTitle
+            - toBeVisible, toBeHidden
+            - toHaveText, toContainText
+            - toBeEnabled, toBeDisabled
+            - toHaveScreenshot (visual regression)
+          advanced_features:
+            - Network mocking (page.route)
+            - Authentication state persistence
+            - Mobile/responsive testing
+            - Accessibility testing (axe-core)
+            - Visual regression screenshots
+        workflow:
+          - Read Solomon's E2E test specification
+          - Discover existing Playwright patterns
+          - Check playwright.config for project settings
+          - Write test file with proper structure
+          - Use page objects if they exist
+
+    test_runners:
+      - name: Joshua (Test Runner)
+        role: Universal test executor for Jest and Playwright
+        writes_code: false
+        test_types:
+          - unit (Jest/Bun)
+          - e2e (Playwright)
+        status: created
+        model: anthropic/claude-sonnet-4-5
+        capabilities:
+          framework_detection:
+            - Auto-detect from file path patterns
+            - Auto-detect from config files
+            - Auto-detect from import statements
+          jest_execution:
+            commands:
+              - bun test
+              - npx jest
+              - bun test --coverage
+              - bun test --onlyChanged
+            output_parsing:
+              - Pass/fail counts
+              - Error messages with line numbers
+              - Stack traces
+              - Coverage metrics
+          playwright_execution:
+            commands:
+              - npx playwright test
+              - npx playwright test --project=chromium
+              - npx playwright test --headed
+              - npx playwright test --debug
+            output_parsing:
+              - Pass/fail/flaky counts by browser
+              - Screenshots on failure
+              - Video recordings
+              - Trace files
+              - Visual regression diffs
+          unified_reporting:
+            - Structured JSON results
+            - Actionable error suggestions
+            - Coverage summaries
+            - Artifact locations
+        workflow:
+          - Detect test framework from file/config
+          - Run appropriate test command
+          - Parse output to structured format
+          - Analyze failures and suggest fixes
+          - Generate unified report
+
+      consultants:
+      - name: oracle
+        role: Architecture and debugging advisor
+        writes_code: false
+        use_for:
+          - Code review
+          - Architecture decisions
+          - Complex debugging
+
+      - name: explore
+        role: Codebase explorer
+        writes_code: false
+        use_for:
+          - Find code patterns
+          - Understand codebase structure
+
+      - name: librarian
+        role: External documentation researcher
+        writes_code: false
+        use_for:
+          - Library documentation
+          - GitHub examples
+          - OSS reference
+
+    utilities:
+      - name: multimodal-looker
+        role: Image/PDF analyzer
+        writes_code: false
+
+      - name: Metis (Plan Consultant)
+        role: Pre-planning analysis (general)
+        writes_code: false
+        invoked_by: Prometheus (legacy)
+
+      - name: Thomas (TDD Plan Consultant)
+        role: Plan reviewer (reviews AFTER plan generation)
+        writes_code: false
+        invoked_by:
+          - planner-paul (reviews implementation plan)
+          - Solomon (reviews test specifications)
+        named_after: "Doubting Thomas - the apostle who needed to verify before believing"
+        model: anthropic/claude-sonnet-4-5
+        input: File path to .paul/plans/{name}.md or .paul/plans/{name}-tests.md
+        review_process:
+          - Receives file path from planner
+          - Reads the ACTUAL plan file
+          - Returns feedback to the planner (NOT to user, NOT to Paul)
+          - Planner fixes issues (CRITICAL → planner asks user)
+        focus_areas:
+          - Test coverage analysis (are all requirements tested?)
+          - Test quality checks (concrete inputs/outputs/assertions?)
+          - TDD anti-pattern detection (testing implementation vs behavior)
+          - Test infrastructure assessment (Jest/Playwright config)
+          - Specification clarity (can test writers implement without ambiguity?)
+          - Implementation plan completeness (for planner-paul)
+        output_format:
+          - TDD phase classification
+          - Missing test scenarios
+          - Edge cases not covered
+          - Specification gaps
+          - TDD anti-patterns detected
+          - Issues to fix
+          - Recommendations for planner
+
+      - name: Momus (Plan Reviewer)
+        role: Plan validation (high accuracy mode)
+        writes_code: false
+        invoked_by: Solomon, planner-paul (optional)
+
+tdd_workflow:
+  description: TDD flow with planner-paul → Solomon → Thomas → Momus and parallel test tracks
+
+  overview: |
+    Complete TDD workflow with separated planning phases:
+    
+    1. IMPLEMENTATION PLANNING PHASE (planner-paul → Thomas):
+       - planner-paul interviews user, gathers requirements
+       - planner-paul generates implementation plan → .paul/plans/{name}.md
+       - planner-paul self-reviews for gaps (CRITICAL/MINOR/AMBIGUOUS)
+       - Thomas reviews the ACTUAL implementation plan
+       - planner-paul fixes all issues from Thomas's review
+       - [Optional] Momus validates in high-accuracy mode
+    
+    2. TEST PLANNING PHASE (Solomon → Thomas → Momus):
+       - Solomon is AUTO-TRIGGERED by planner-paul
+       - Solomon reads .paul/plans/{name}.md (planner-paul's implementation plan)
+       - Solomon interviews for TEST-SPECIFIC details only
+       - Solomon generates test specifications → .paul/plans/{name}-tests.md
+       - Solomon self-reviews for gaps
+       - Thomas reviews the ACTUAL test specifications
+       - Solomon fixes all issues from Thomas's review
+       - [Optional] Momus validates in high-accuracy mode
+    
+    3. EXECUTION PHASE (Paul orchestrates: Peter/John + Sisyphus-Junior + Joshua):
+       - User switches to Paul
+       - Paul auto-detects .paul/plans/ files
+       - Unit Tests (Jest) → Peter → Sisyphus-Junior → Joshua
+       - E2E Tests (Playwright) → John → Sisyphus-Junior → Joshua
+    
+    Key Points:
+    - planner-paul focuses on WHAT to build (requirements, deliverables, tasks)
+    - Solomon focuses on WHAT to test (test specs, edge cases, assertions)
+    - Thomas reviews BOTH plans (implementation AND test specifications)
+    - Paul decides WHO implements each task (agents are NOT specified in plans)
+    - All planners benefit from oh-my-opencode's context sharing/compaction features
+
+  implementation_planning_phase:
+    description: planner-paul creates implementation plan with Thomas review
+    steps:
+      - name: "Step 1: Interview"
+        agent: planner-paul
+        action: Gathers requirements, asks implementation questions
+        outputs:
+          - Draft saved to .paul/drafts/{name}.md
+          - Requirements & deliverables
+          - Task breakdown ideas
+          - Parallelization opportunities
+
+      - name: "Step 2: Plan Generation"
+        agent: planner-paul
+        action: Generates implementation plan
+        trigger: When user says "Create the work plan"
+        outputs:
+          - Plan saved to .paul/plans/{name}.md
+
+      - name: "Step 3: Self-Review (Gap Handling)"
+        agent: planner-paul
+        action: Self-review and gap classification
+        gap_types:
+          CRITICAL: "Requires user decision → planner-paul asks user"
+          MINOR: "Can self-resolve → FIX silently, note in summary"
+          AMBIGUOUS: "Has reasonable default → Apply default, DISCLOSE"
+
+      - name: "Step 4: Thomas Review (MANDATORY)"
+        agent: Thomas (TDD Plan Consultant)
+        action: Reviews the ACTUAL implementation plan
+        inputs:
+          - File path to .paul/plans/{name}.md
+        checks:
+          - Requirements completeness
+          - Task breakdown clarity
+          - Dependencies correctly identified
+          - Parallelization opportunities
+          - Scope boundaries defined
+        outputs:
+          - Issues to fix
+          - Recommendations
+
+      - name: "Step 5: Fix Thomas's Issues"
+        agent: planner-paul
+        action: Address ALL issues from Thomas's review
+        outputs:
+          - Updated plan at .paul/plans/{name}.md
+
+      - name: "Step 6: Optional Momus Review"
+        agent: Momus (Plan Reviewer)
+        trigger: User requests high accuracy validation
+        action: Validates plan in review loop until "OKAY"
+
+      - name: "Step 7: Auto-Trigger Solomon"
+        agent: planner-paul
+        action: Automatically invokes Solomon for test planning
+        note: Seamless transition - user stays in planning session
+
+  test_planning_phase:
+    description: Solomon creates test specifications with Thomas review
+    steps:
+      - name: "Step 1: Read Implementation Plan"
+        agent: Solomon (TDD Planner)
+        action: Reads planner-paul's implementation plan
+        inputs:
+          - .paul/plans/{name}.md
+
+      - name: "Step 2: Interview for Test Details"
+        agent: Solomon (TDD Planner)
+        action: Asks TEST-SPECIFIC questions only (not re-interviewing requirements)
+        questions:
+          - "What edge cases should we test for?"
+          - "Expected error scenarios?"
+          - "Integration points to mock?"
+          - "Coverage requirements?"
+          - "Critical user flows for E2E?"
+          - "Which browsers to test?"
+
+      - name: "Step 3: Generate Test Specifications"
+        agent: Solomon (TDD Planner)
+        action: Generates TDD plan with test specifications
+        outputs:
+          - Plan saved to .paul/plans/{name}-tests.md
+
+      - name: "Step 4: Self-Review (Gap Handling)"
+        agent: Solomon (TDD Planner)
+        action: Self-review and gap classification
+        gap_types:
+          CRITICAL: "Requires user decision → ASK"
+          MINOR: "Can self-resolve → FIX silently, note in summary"
+          AMBIGUOUS: "Has reasonable default → Apply default, DISCLOSE"
+
+      - name: "Step 5: Thomas Review (MANDATORY)"
+        agent: Thomas (TDD Plan Consultant)
+        action: Reviews the ACTUAL test specifications
+        inputs:
+          - File path to .paul/plans/{name}-tests.md
+        checks:
+          - Test coverage (all requirements tested?)
+          - Test quality (concrete inputs/outputs/assertions?)
+          - TDD anti-patterns (testing implementation vs behavior?)
+          - Specification clarity (can Peter/John implement?)
+          - Edge cases (boundary conditions covered?)
+          - E2E locators (accessible selectors?)
+        outputs:
+          - Issues to fix
+          - Recommendations
+
+      - name: "Step 6: Fix Thomas's Issues"
+        agent: Solomon (TDD Planner)
+        action: Address ALL issues from Thomas's review
+        outputs:
+          - Updated plan at .paul/plans/{name}-tests.md
+
+      - name: "Step 7: Present Summary"
+        agent: Solomon (TDD Planner)
+        action: Present summary with Thomas review results
+
+      - name: "Step 8: Momus Review (Optional - High Accuracy Mode)"
+        agent: Momus (Plan Reviewer)
+        trigger: User requests high accuracy validation
+        action: Validates plan in review loop until "OKAY"
+        criteria_for_okay:
+          - 100% of test file references valid
+          - All unit test specs have input/output/assertions
+          - All E2E test specs have steps/locators/assertions
+          - ">=90% of tests have BDD comments planned"
+          - Zero TDD anti-patterns detected
+          - Clear RED-GREEN-REFACTOR structure
+
+      - name: "Step 9: Handoff to User"
+        agent: Solomon (TDD Planner)
+        action: Guide user to switch to Paul
+        message: "Plans ready. Switch to Paul and run /start-work"
+
+  execution_phases:
+    - name: "Phase 1: WRITE TESTS (RED)"
+      description: Write failing tests first (defines the contract)
+      tracks:
+        unit_tests:
+          - agent: Solomon (TDD Planner)
+            action: Outputs unit test specifications
+          - agent: Peter (Test Writer)
+            action: Creates *.test.ts files from specs
+        e2e_tests:
+          - agent: Solomon (TDD Planner)
+            action: Outputs E2E test specifications
+          - agent: John (E2E Test Writer)
+            action: Creates *.spec.ts files from specs
+
+    - name: "Phase 2: IMPLEMENT (GREEN)"
+      description: Write code to make tests pass
+      tracks:
+        unit_tests:
+          - agent: Sisyphus-Junior-ultrabrain
+            action: Implements backend code based on test expectations
+        e2e_tests:
+          - agent: Sisyphus-Junior-visual-engineering
+            action: Implements frontend code based on test expectations
+
+    - name: "Phase 3: VERIFY"
+      description: Run tests to verify implementation
+      tracks:
+        both:
+          - agent: Joshua (Test Runner)
+            action: Runs all tests (Jest + Playwright)
+            on_failure:
+              - Parse failure report (file, line, error)
+              - Sisyphus-Junior fixes code
+              - Joshua re-runs tests
+              - Loop until GREEN (max 5 iterations)
+
+    - name: "Phase 4: REFACTOR"
+      description: Clean up while keeping tests green
+      tracks:
+        both:
+          - agent: Sisyphus-Junior-ultrabrain
+            action: Refactors backend code
+          - agent: Sisyphus-Junior-visual-engineering
+            action: Refactors frontend code
+          - agent: Joshua (Test Runner)
+            action: Verifies all tests stay GREEN after each refactor
+
+  flow_diagram: |
+    ┌─────────────────────────────────────────────────────────────────┐
+    │              PHASE 1: IMPLEMENTATION PLANNING                    │
+    │                                                                  │
+    │  User Request                                                    │
+    │       ↓                                                          │
+    │  planner-paul ─── Interview Mode                                 │
+    │       │           (gathers requirements, deliverables,           │
+    │       │            task breakdown, parallelization)              │
+    │       ↓                                                          │
+    │  User: "Create the work plan"                                    │
+    │       ↓                                                          │
+    │  planner-paul generates Implementation Plan                      │
+    │       → .paul/plans/{name}.md                                    │
+    │       ↓                                                          │
+    │  Self-Review: Gap Handling (CRITICAL/MINOR/AMBIGUOUS)            │
+    │       ↓                                                          │
+    │  ┌─────────────────────────────────────────────────────────┐    │
+    │  │ Thomas ← REVIEWS IMPLEMENTATION PLAN                    │    │
+    │  │                                                         │    │
+    │  │ Reads: .paul/plans/{name}.md                            │    │
+    │  │ Returns feedback to: planner-paul (NOT user, NOT Paul)  │    │
+    │  │                                                         │    │
+    │  │ Checks:                                                 │    │
+    │  │ • Requirements complete?                                │    │
+    │  │ • Tasks clearly defined?                                │    │
+    │  │ • Dependencies identified?                              │    │
+    │  │ • Scope boundaries clear?                               │    │
+    │  └─────────────────────────────────────────────────────────┘    │
+    │       ↓                                                          │
+    │  planner-paul fixes issues (CRITICAL → asks user)                │
+    │       ↓                                                          │
+    │  [Optional] Momus high-accuracy review                           │
+    │       ↓                                                          │
+    │  Implementation Plan Ready                                       │
+    └─────────────────────────────────────────────────────────────────┘
+                ↓ (auto-trigger)
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                PHASE 2: TEST PLANNING                            │
+    │                                                                  │
+    │  Solomon ← AUTO-TRIGGERED by planner-paul                        │
+    │       │                                                          │
+    │       │   Reads: .paul/plans/{name}.md                           │
+    │       ↓                                                          │
+    │  Solomon ─── Interview Mode (TEST-SPECIFIC only)                 │
+    │       │      "What edge cases? Coverage target? Browsers?"       │
+    │       ↓                                                          │
+    │  Solomon generates Test Specifications                           │
+    │       → .paul/plans/{name}-tests.md                              │
+    │       ↓                                                          │
+    │  Self-Review: Gap Handling (CRITICAL/MINOR/AMBIGUOUS)            │
+    │       ↓                                                          │
+    │  ┌─────────────────────────────────────────────────────────┐    │
+    │  │ Thomas ← REVIEWS TEST SPECIFICATIONS                    │    │
+    │  │                                                         │    │
+    │  │ Reads: .paul/plans/{name}-tests.md                      │    │
+    │  │ Returns feedback to: Solomon (NOT user, NOT Paul)       │    │
+    │  │                                                         │    │
+    │  │ Checks:                                                 │    │
+    │  │ • Test coverage complete?                               │    │
+    │  │ • Concrete inputs/outputs/assertions?                   │    │
+    │  │ • TDD anti-patterns?                                    │    │
+    │  │ • Specs clear for Peter/John?                           │    │
+    │  └─────────────────────────────────────────────────────────┘    │
+    │       ↓                                                          │
+    │  Solomon fixes issues (CRITICAL → asks user)                     │
+    │       ↓                                                          │
+    │  [Optional] Momus high-accuracy review                           │
+    │       ↓                                                          │
+    │  Test Specifications Ready                                       │
+    │       ↓                                                          │
+    │  Solomon: "Plans ready. Switch to Paul."                         │
+    └─────────────────────────────────────────────────────────────────┘
+                ↓ (user switches to Paul)
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                PHASE 3: EXECUTION (Paul orchestrates)            │
+    │                                                                  │
+    │  Paul auto-detects .paul/plans/ on startup                       │
+    │       ↓                                                          │
+    │  ┌─────────────────────────────────────────────────────────┐    │
+    │  │                    Plan Files                            │    │
+    │  │  ┌─────────────────────┐  ┌─────────────────────────┐   │    │
+    │  │  │ Implementation Plan │  │ Test Specifications     │   │    │
+    │  │  │ .paul/plans/{name}  │  │ .paul/plans/{name}      │   │    │
+    │  │  │ .md                 │  │ -tests.md               │   │    │
+    │  │  └──────────┬──────────┘  └────────────┬────────────┘   │    │
+    │  └─────────────┼──────────────────────────┼────────────────┘    │
+    │                ↓                          ↓                      │
+    │  ┌───────────────────────┐   ┌───────────────────────────┐      │
+    │  │ UNIT TEST TRACK       │   │ E2E TEST TRACK            │      │
+    │  │                       │   │                           │      │
+    │  │ 1. Peter (writes)     │   │ 1. John (writes)          │      │
+    │  │     ↓                 │   │     ↓                     │      │
+    │  │ 2. Sisyphus-Junior    │   │ 2. Sisyphus-Junior-visual │      │
+    │  │    (implements)       │   │    (implements)           │      │
+    │  │     ↓                 │   │     ↓                     │      │
+    │  │ 3. Joshua (verifies)  │   │ 3. Joshua (verifies)      │      │
+    │  │     ↓                 │   │     ↓                     │      │
+    │  │    PASS? ────────────────────────────────────────┐   │      │
+    │  │     │ NO              │   │     │ NO             │   │      │
+    │  │     ↓                 │   │     ↓               │   │      │
+    │  │  Fix & re-verify      │   │  Fix & re-verify    │   │      │
+    │  │     │                 │   │     │               │   │      │
+    │  └─────┴─────────────────┘   └─────┴───────────────┘   │      │
+    │                                                         │      │
+    │              ↓ YES                                      │      │
+    │            REFACTOR (Joshua verifies after each change) ←┘      │
+    │              ↓                                                   │
+    │            Done ✓                                                │
+    └─────────────────────────────────────────────────────────────────┘
+
+solomon_plan_format:
+  description: Solomon outputs a unified TDD plan with both unit and E2E test sections
+  
+  structure:
+    - overview: Feature description
+    - unit_tests: Jest test specifications grouped by suite
+    - e2e_tests: Playwright test specifications grouped by flow
+    - implementation: Tasks to make tests pass
+    - refactor: Cleanup and optimization tasks
+
+  example: |
+    # TDD Plan: User Authentication
+
+    ## Overview
+    Implement user authentication with email/password login.
+
+    ## Unit Tests (Jest)
+
+    ### Test Suite: AuthService
+    - [ ] Test: validateEmail returns true for valid format
+      - Input: "user@example.com"
+      - Expected: true
+    - [ ] Test: validateEmail returns false for invalid format
+      - Input: "not-an-email"
+      - Expected: false
+    - [ ] Test: hashPassword produces unique hash
+      - Input: "password123"
+      - Expected: hash !== input, hash.length > 0
+    - [ ] Test: verifyPassword matches correct password
+      - Input: { password: "test", hash: hashOf("test") }
+      - Expected: true
+    - [ ] Test: verifyPassword rejects wrong password
+      - Input: { password: "wrong", hash: hashOf("test") }
+      - Expected: false
+
+    ### Test Suite: AuthController
+    - [ ] Test: POST /register returns 201 for valid input
+      - Input: { email: "new@test.com", password: "Secure123!" }
+      - Expected: 201, { user: { id, email } }
+    - [ ] Test: POST /register returns 400 for invalid email
+      - Input: { email: "invalid", password: "Secure123!" }
+      - Expected: 400, { error: "Invalid email format" }
+    - [ ] Test: POST /login returns token for valid credentials
+      - Input: { email: "existing@test.com", password: "correct" }
+      - Expected: 200, { token: "jwt..." }
+    - [ ] Test: POST /login returns 401 for invalid credentials
+      - Input: { email: "existing@test.com", password: "wrong" }
+      - Expected: 401, { error: "Invalid credentials" }
+
+    ## E2E Tests (Playwright)
+
+    ### Test Suite: Registration Flow
+    - [ ] Test: user can register with valid credentials
+      - Navigate to /register
+      - Fill email: "newuser@test.com"
+      - Fill password: "SecurePass123!"
+      - Fill confirm password: "SecurePass123!"
+      - Click "Create Account"
+      - Assert: redirected to /dashboard
+      - Assert: welcome message visible
+    - [ ] Test: user sees validation errors for invalid input
+      - Navigate to /register
+      - Fill email: "invalid"
+      - Click "Create Account"
+      - Assert: error message "Invalid email format" visible
+      - Assert: still on /register page
+
+    ### Test Suite: Login Flow
+    - [ ] Test: user can login with valid credentials
+      - Navigate to /login
+      - Fill email: "existing@test.com"
+      - Fill password: "correctpassword"
+      - Click "Sign In"
+      - Assert: redirected to /dashboard
+      - Assert: user avatar visible in header
+    - [ ] Test: user sees error for invalid credentials
+      - Navigate to /login
+      - Fill email: "existing@test.com"
+      - Fill password: "wrongpassword"
+      - Click "Sign In"
+      - Assert: error message "Invalid credentials" visible
+      - Assert: still on /login page
+
+    ### Test Suite: Session Management
+    - [ ] Test: user stays logged in after page refresh
+      - Login as user
+      - Refresh page
+      - Assert: still on /dashboard
+      - Assert: user avatar still visible
+    - [ ] Test: user can logout successfully
+      - Login as user
+      - Click logout button
+      - Assert: redirected to /login
+      - Navigate to /dashboard
+      - Assert: redirected to /login (protected route)
+    - [ ] Test: protected routes redirect when not authenticated
+      - Clear cookies/storage
+      - Navigate to /dashboard
+      - Assert: redirected to /login
+
+    ## Phase 2: GREEN (Implementation Tasks)
+    
+    ### Backend
+    - [ ] Create User entity with email, passwordHash fields
+    - [ ] Implement AuthService with validate/hash/verify methods
+    - [ ] Create POST /register endpoint
+    - [ ] Create POST /login endpoint with JWT
+    - [ ] Add authentication middleware
+
+    ### Frontend
+    - [ ] Build registration form component
+    - [ ] Build login form component
+    - [ ] Add form validation with error display
+    - [ ] Add auth context/state management
+    - [ ] Implement protected route wrapper
+    - [ ] Add user avatar component in header
+    - [ ] Implement logout functionality
+
+    ## Phase 3: REFACTOR
+    - [ ] Extract validation logic to shared module
+    - [ ] Add rate limiting to auth endpoints
+    - [ ] Implement refresh token rotation
+    - [ ] Add "Remember me" functionality
+    - [ ] Optimize form re-renders
+    - [ ] Add loading states to buttons
+
+paul_orchestration:
+  description: Paul (Master Orchestrator) executes plans from planner-paul + Solomon
+
+  plan_detection:
+    description: Paul auto-detects .paul/plans/ on startup
+    locations:
+      - ".paul/plans/{name}.md (implementation plan from planner-paul)"
+      - ".paul/plans/{name}-tests.md (test specifications from Solomon)"
+    action: "Reads plans and executes TDD workflow"
+
+  execution_workflow:
+    description: Paul executes plans created by planner-paul and Solomon
+    steps:
+      - step: 1
+        action: "Read .paul/plans/{name}.md and .paul/plans/{name}-tests.md"
+        result: Paul understands implementation tasks and test specifications
+      - step: 2
+        action: "delegate_task(agent='Peter (Test Writer)', prompt='Write unit tests from specs')"
+        result: Peter creates *.test.ts files with BDD comments (RED phase)
+      - step: 3
+        action: "delegate_task(agent='John (E2E Test Writer)', prompt='Write E2E tests from specs')"
+        result: John creates *.spec.ts files with accessible locators (RED phase)
+      - step: 4
+        action: "delegate_task(agent='Joshua (Test Runner)', prompt='Verify tests fail as expected')"
+        result: Joshua confirms tests fail (RED phase complete)
+      - step: 5
+        action: "Paul decides category/agent for each implementation task"
+        note: "Agent selection NOT specified in plans - Paul decides at runtime"
+        result: Sisyphus-Junior implements code to make tests GREEN
+      - step: 6
+        action: "delegate_task(agent='Joshua (Test Runner)', prompt='Run all tests')"
+        result: Joshua runs Jest + Playwright, reports pass/fail
+      - step: 7
+        action: "Loop until all tests pass or max 5 iterations"
+        result: Fix failures and re-run Joshua
+
+  decision_matrix:
+    implementation_plan: "planner-paul creates .paul/plans/{name}.md"
+    test_plan: "Solomon creates .paul/plans/{name}-tests.md"
+    unit_tests: "agent='Peter (Test Writer)'"
+    e2e_tests: "agent='John (E2E Test Writer)'"
+    run_tests: "agent='Joshua (Test Runner)'"
+    backend_impl: "category='ultrabrain' (Paul decides)"
+    frontend_impl: "category='visual-engineering' (Paul decides)"
+    architecture: "agent='oracle'"
+    codebase_search: "agent='explore'"
+    library_docs: "agent='librarian'"
+
+  context_features:
+    description: Paul benefits from all oh-my-opencode context features
+    automatic:
+      - Context injection (AGENTS.md, rules, etc.)
+      - Compaction preservation (user requests, work done, remaining tasks)
+      - Background task state preserved across compaction
+      - Preemptive compaction at 85% usage
+      - Context window monitoring
+
+planner_paul_workflow:
+  description: planner-paul creates implementation plans for Paul
+
+  interview_focus:
+    - "What should explicitly NOT be built? (scope boundaries)"
+    - "Can frontend and backend work happen simultaneously? (parallelization)"
+    - "Does this require understanding external libraries first? (research needs)"
+    - "Is this a quick fix or multi-day effort? (complexity assessment)"
+    - "What must be done before what? (dependencies)"
+
+  does_NOT_specify:
+    - "Which agents to use (Paul decides at execution time)"
+    - "Agent assignments per task"
+    - "Test specifications (Solomon handles this)"
+
+  plan_structure:
+    sections:
+      - Context (original request, interview summary, research findings)
+      - Work Objectives (core objective, deliverables, definition of done)
+      - Must Have / Must NOT Have (guardrails)
+      - Task Flow (dependency graph)
+      - Parallelization (which tasks can run together)
+      - TODOs (what to do, references, acceptance criteria)
+      - Success Criteria
+
+  auto_triggers_solomon:
+    description: After implementation plan complete, planner-paul auto-invokes Solomon
+    flow:
+      - planner-paul finishes implementation plan
+      - planner-paul calls Solomon with path to .paul/plans/{name}.md
+      - Solomon reads plan, interviews for test-specific details
+      - Solomon creates .paul/plans/{name}-tests.md
+      - User stays in same planning session (seamless)
+
+config:
+  file: "~/.config/opencode/oh-my-opencode.json"
+
+  key_settings:
+    sisyphus_agent:
+      disabled: false
+      prefer_orchestrator: true
+      planner_enabled: false
+
+    disabled_agents:
+      - Prometheus
+
+  hooks:
+    planner_md_only:
+      description: "Renamed from prometheus-md-only to planner-md-only"
+      applies_to:
+        - planner-paul
+        - Solomon (TDD Planner)
+        - Prometheus (legacy)
+      allowed_paths:
+        - ".paul/plans/*.md"
+        - ".paul/drafts/*.md"
+        - ".sisyphus/plans/*.md"
+        - ".sisyphus/drafts/*.md"
+      blocks: "All non-.md file writes"
+
+  plan_locations:
+    paul_workflow:
+      implementation_plan: ".paul/plans/{name}.md"
+      implementation_draft: ".paul/drafts/{name}.md"
+      test_specifications: ".paul/plans/{name}-tests.md"
+    sisyphus_workflow:
+      plan: ".sisyphus/plans/{name}.md"
+      draft: ".sisyphus/drafts/{name}.md"
+
+  agent_models:
+    # Orchestrators
+    Paul: "anthropic/claude-sonnet-4-5"
+    orchestrator-sisyphus: "anthropic/claude-sonnet-4-5"
+    Sisyphus: "anthropic/claude-opus-4-5"
+    
+    # Planners
+    planner-paul: "anthropic/claude-opus-4-5"
+    Solomon (TDD Planner): "anthropic/claude-opus-4-5"
+    
+    # Plan Consultants & Reviewers
+    Thomas (TDD Plan Consultant): "anthropic/claude-sonnet-4-5"
+    Metis (Plan Consultant): "anthropic/claude-opus-4-5"
+    Momus (Plan Reviewer): "anthropic/claude-sonnet-4-5"
+    
+    # Test Writers & Runner
+    Peter (Test Writer): "anthropic/claude-sonnet-4-5"
+    John (E2E Test Writer): "anthropic/claude-sonnet-4-5"
+    Joshua (Test Runner): "anthropic/claude-sonnet-4-5"
+    
+    # Specialists
+    oracle: "openai/gpt-5.2"
+    explore: "opencode/grok-code"
+    librarian: "opencode/glm-4.7-free"
+    frontend-ui-ux-engineer: "google-vertex/gemini-3-pro-preview"
+    document-writer: "google-vertex/gemini-3-flash-preview"
+
+completed:
+  - task: Create Solomon agent
+    status: completed
+    files:
+      - src/agents/solomon.ts
+
+  - task: Create Peter (Test Writer) agent
+    status: completed
+    files:
+      - src/agents/peter.ts
+
+  - task: Create John (E2E Test Writer) agent
+    status: completed
+    files:
+      - src/agents/john.ts
+
+  - task: Create Joshua (Test Runner) agent
+    status: completed
+    description: Universal test runner replacing jest-test-runner and playwright-runner
+    files:
+      - src/agents/joshua.ts
+
+  - task: Create Thomas (TDD Plan Consultant) agent
+    status: completed
+    description: TDD-specific plan consultant (wraps Metis concepts for TDD)
+    files:
+      - src/agents/thomas.ts
+    registration:
+      - src/agents/index.ts
+      - src/agents/utils.ts
+      - src/agents/types.ts
+      - src/config/schema.ts
+
+  - task: Update Solomon with Thomas + Gap Handling + Momus
+    status: completed
+    description: Added Thomas consultation, gap handling protocol, and Momus review loop
+    files:
+      - src/agents/solomon.ts
+    sections_added:
+      - "Pre-Generation: Thomas Consultation (MANDATORY)"
+      - "Post-Thomas: Generate Plan and Summarize"
+      - "Post-Plan Self-Review (gap handling protocol)"
+      - "High Accuracy Mode (Momus review loop)"
+
+  - task: Rename orchestrator-sisyphus to Paul and add TDD awareness
+    status: completed
+    description: Paul (formerly orchestrator-sisyphus) now routes TDD workflows through Solomon → Thomas → Peter/John → Joshua
+    files:
+      - src/agents/orchestrator-sisyphus.ts (renamed internally to Paul)
+      - src/agents/index.ts
+      - src/agents/utils.ts
+      - src/agents/types.ts
+      - src/config/schema.ts
+    features_added:
+      - TDD workflow section with agent chain
+      - TDD triggers in Key Triggers
+      - TDD request type classification
+      - Decision matrix with TDD agents
+
+  - task: Document planner-paul architecture in YAML
+    status: completed
+    description: Added planner-paul agent documentation and updated workflow diagrams
+    files:
+      - docs/agent-architecture.yaml
+    sections_added:
+      - context_features (applies to all agents)
+      - planner-paul in hierarchy.primary_agents
+      - planner-paul in hierarchy.planners
+      - Thomas invoked_by updated (planner-paul + Solomon)
+      - implementation_planning_phase (new)
+      - test_planning_phase (updated from planning_phase)
+      - Updated flow_diagram with 3 phases
+      - planner_paul_workflow (new section)
+      - Updated paul_orchestration
+      - hooks.planner_md_only configuration
+      - plan_locations for both workflows
+
+pending:
+  - task: Create planner-paul agent
+    status: pending
+    priority: high
+    description: Implementation planner for Paul with Thomas consultation and auto-Solomon trigger
+    files:
+      - src/agents/planner-paul.ts (CREATE)
+      - src/agents/index.ts (MODIFY - export)
+      - src/agents/utils.ts (MODIFY - agentSources + agentMetadata)
+      - src/agents/types.ts (MODIFY - BuiltinAgentName type)
+      - src/config/schema.ts (MODIFY - agent name schemas)
+
+  - task: Rename prometheus-md-only hook to planner-md-only
+    status: pending
+    priority: high
+    description: Rename hook and add .paul/ to allowed paths
+    files:
+      - src/hooks/prometheus-md-only/ (RENAME to planner-md-only/)
+      - src/hooks/planner-md-only/index.ts (MODIFY - add .paul/ paths)
+      - src/hooks/index.ts (MODIFY - update export)
+
+  - task: Update Solomon to read planner-paul's plan and save to .paul/
+    status: pending
+    priority: high
+    description: Solomon reads .paul/plans/{name}.md and saves to .paul/plans/{name}-tests.md
+    files:
+      - src/agents/solomon.ts (MODIFY)
+
+  - task: Update Paul to auto-detect .paul/plans/
+    status: pending
+    priority: high
+    description: Paul detects .paul/plans/ on startup and executes TDD workflow
+    files:
+      - src/agents/orchestrator-sisyphus.ts (MODIFY)
+
+  - task: Disable Prometheus in config
+    status: pending
+    priority: low
+    config_change: 'disabled_agents: ["Prometheus"]'

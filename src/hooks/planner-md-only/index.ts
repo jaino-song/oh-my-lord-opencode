@@ -1,7 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { existsSync, readdirSync } from "node:fs"
 import { join, resolve, relative, isAbsolute } from "node:path"
-import { HOOK_NAME, PROMETHEUS_AGENTS, ALLOWED_EXTENSIONS, ALLOWED_PATH_PREFIX, BLOCKED_TOOLS, PLANNING_CONSULT_WARNING } from "./constants"
+import { HOOK_NAME, PLANNER_AGENTS, ALLOWED_EXTENSIONS, ALLOWED_PATH_PREFIXES, BLOCKED_TOOLS, PLANNING_CONSULT_WARNING } from "./constants"
 import { findNearestMessageWithFields, findFirstMessageWithAgent, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { getSessionAgent } from "../../features/claude-code-session-state"
 import { log } from "../../shared/logger"
@@ -9,34 +9,22 @@ import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
 
 export * from "./constants"
 
-/**
- * Cross-platform path validator for Prometheus file writes.
- * Uses path.resolve/relative instead of string matching to handle:
- * - Windows backslashes (e.g., .sisyphus\\plans\\x.md)
- * - Mixed separators (e.g., .sisyphus\\plans/x.md)
- * - Case-insensitive directory/extension matching
- * - Workspace confinement (blocks paths outside root or via traversal)
- * - Nested project paths (e.g., parent/.sisyphus/... when ctx.directory is parent)
- */
 function isAllowedFile(filePath: string, workspaceRoot: string): boolean {
-  // 1. Resolve to absolute path
   const resolved = resolve(workspaceRoot, filePath)
-
-  // 2. Get relative path from workspace root
   const rel = relative(workspaceRoot, resolved)
 
-  // 3. Reject if escapes root (starts with ".." or is absolute)
   if (rel.startsWith("..") || isAbsolute(rel)) {
     return false
   }
 
-  // 4. Check if .sisyphus/ or .sisyphus\ exists anywhere in the path (case-insensitive)
-  // This handles both direct paths (.sisyphus/x.md) and nested paths (project/.sisyphus/x.md)
-  if (!/\.sisyphus[/\\]/i.test(rel)) {
+  const hasAllowedPath = ALLOWED_PATH_PREFIXES.some(prefix => {
+    const pattern = new RegExp(`\\${prefix}[/\\\\]`, "i")
+    return pattern.test(rel)
+  })
+  if (!hasAllowedPath) {
     return false
   }
 
-  // 5. Check extension matches one of ALLOWED_EXTENSIONS (case-insensitive)
   const hasAllowedExtension = ALLOWED_EXTENSIONS.some(
     ext => resolved.toLowerCase().endsWith(ext.toLowerCase())
   )
@@ -73,7 +61,7 @@ function getAgentFromSession(sessionID: string): string | undefined {
   return getSessionAgent(sessionID) ?? getAgentFromMessageFiles(sessionID)
 }
 
-export function createPrometheusMdOnlyHook(ctx: PluginInput) {
+export function createPlannerMdOnlyHook(ctx: PluginInput) {
   return {
     "tool.execute.before": async (
       input: { tool: string; sessionID: string; callID: string },
@@ -81,13 +69,12 @@ export function createPrometheusMdOnlyHook(ctx: PluginInput) {
     ): Promise<void> => {
       const agentName = getAgentFromSession(input.sessionID)
       
-      if (!agentName || !PROMETHEUS_AGENTS.includes(agentName)) {
+      if (!agentName || !PLANNER_AGENTS.includes(agentName)) {
         return
       }
 
       const toolName = input.tool
 
-      // Inject read-only warning for task tools called by Prometheus
       if (TASK_TOOLS.includes(toolName)) {
         const prompt = output.args.prompt as string | undefined
         if (prompt && !prompt.includes(SYSTEM_DIRECTIVE_PREFIX)) {
@@ -111,20 +98,20 @@ export function createPrometheusMdOnlyHook(ctx: PluginInput) {
       }
 
       if (!isAllowedFile(filePath, ctx.directory)) {
-        log(`[${HOOK_NAME}] Blocked: Prometheus can only write to .sisyphus/*.md`, {
+        log(`[${HOOK_NAME}] Blocked: Planner can only write to .sisyphus/*.md or .paul/*.md`, {
           sessionID: input.sessionID,
           tool: toolName,
           filePath,
           agent: agentName,
         })
         throw new Error(
-          `[${HOOK_NAME}] Prometheus (Planner) can only write/edit .md files inside .sisyphus/ directory. ` +
+          `[${HOOK_NAME}] Planner agents can only write/edit .md files inside .sisyphus/ or .paul/ directories. ` +
           `Attempted to modify: ${filePath}. ` +
-          `Prometheus is a READ-ONLY planner. Use /start-work to execute the plan.`
+          `Planners are READ-ONLY. Use /start-work to execute the plan.`
         )
       }
 
-      log(`[${HOOK_NAME}] Allowed: .sisyphus/*.md write permitted`, {
+      log(`[${HOOK_NAME}] Allowed: Planner .md write permitted`, {
         sessionID: input.sessionID,
         tool: toolName,
         filePath,
@@ -133,3 +120,5 @@ export function createPrometheusMdOnlyHook(ctx: PluginInput) {
     },
   }
 }
+
+export { createPlannerMdOnlyHook as createPrometheusMdOnlyHook }

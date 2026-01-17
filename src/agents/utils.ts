@@ -9,14 +9,31 @@ import { createFrontendUiUxEngineerAgent, FRONTEND_PROMPT_METADATA } from "./fro
 import { createDocumentWriterAgent, DOCUMENT_WRITER_PROMPT_METADATA } from "./document-writer"
 import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "./multimodal-looker"
 import { createMetisAgent } from "./metis"
-import { createOrchestratorSisyphusAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
+import { createPaulAgent, paulAgent, createOrchestratorSisyphusAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
 import { createMomusAgent } from "./momus"
+import { createSolomonAgent } from "./solomon"
+import { createJoshuaAgent, JOSHUA_PROMPT_METADATA } from "./joshua"
+import { createPeterAgent, PETER_PROMPT_METADATA } from "./peter"
+import { createJohnAgent, JOHN_PROMPT_METADATA } from "./john"
+import { createThomasAgent, THOMAS_PROMPT_METADATA } from "./thomas"
+import { createPlannerPaulAgent } from "./planner-paul"
+import { createTimothyAgent, timothyPromptMetadata } from "./timothy"
 import type { AvailableAgent } from "./sisyphus-prompt-builder"
 import { deepMerge } from "../shared"
 import { DEFAULT_CATEGORIES } from "../tools/delegate-task/constants"
 import { resolveMultipleSkills } from "../features/opencode-skill-loader/skill-content"
 
 type AgentSource = AgentFactory | AgentConfig
+
+/**
+ * Agents that are user-selectable from the @ autocomplete menu.
+ * All other agents are hidden and can only be invoked by the orchestrator.
+ */
+const USER_SELECTABLE_AGENTS: BuiltinAgentName[] = [
+  "Sisyphus",
+  "Paul",
+  "planner-paul",
+]
 
 const agentSources: Record<BuiltinAgentName, AgentSource> = {
   Sisyphus: createSisyphusAgent,
@@ -28,7 +45,15 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   "multimodal-looker": createMultimodalLookerAgent,
   "Metis (Plan Consultant)": createMetisAgent,
   "Momus (Plan Reviewer)": createMomusAgent,
+  "Paul": paulAgent,
   "orchestrator-sisyphus": orchestratorSisyphusAgent,
+  "Solomon (TDD Planner)": createSolomonAgent,
+  "Joshua (Test Runner)": createJoshuaAgent,
+  "Peter (Test Writer)": createPeterAgent,
+  "John (E2E Test Writer)": createJohnAgent,
+  "Thomas (TDD Plan Consultant)": createThomasAgent,
+  "planner-paul": createPlannerPaulAgent,
+  "Timothy (Implementation Plan Reviewer)": createTimothyAgent,
 }
 
 /**
@@ -42,6 +67,11 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   "frontend-ui-ux-engineer": FRONTEND_PROMPT_METADATA,
   "document-writer": DOCUMENT_WRITER_PROMPT_METADATA,
   "multimodal-looker": MULTIMODAL_LOOKER_PROMPT_METADATA,
+  "Peter (Test Writer)": PETER_PROMPT_METADATA,
+  "Joshua (Test Runner)": JOSHUA_PROMPT_METADATA,
+  "John (E2E Test Writer)": JOHN_PROMPT_METADATA,
+  "Thomas (TDD Plan Consultant)": THOMAS_PROMPT_METADATA,
+  "Timothy (Implementation Plan Reviewer)": timothyPromptMetadata,
 }
 
 function isFactory(source: AgentSource): source is AgentFactory {
@@ -162,6 +192,10 @@ export function createBuiltinAgents(
       config = mergeAgentConfig(config, override)
     }
 
+    if (!USER_SELECTABLE_AGENTS.includes(agentName)) {
+      config = { ...config, hidden: true }
+    }
+
     result[name] = config
 
     const metadata = agentMetadata[agentName]
@@ -204,6 +238,7 @@ export function createBuiltinAgents(
       orchestratorConfig = mergeAgentConfig(orchestratorConfig, orchestratorOverride)
     }
 
+    orchestratorConfig = { ...orchestratorConfig, hidden: true }
     result["orchestrator-sisyphus"] = orchestratorConfig
   }
 

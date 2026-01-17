@@ -26,7 +26,14 @@ export const BuiltinAgentNameSchema = z.enum([
   "multimodal-looker",
   "Metis (Plan Consultant)",
   "Momus (Plan Reviewer)",
+  "Paul",
   "orchestrator-sisyphus",
+  "Solomon (TDD Planner)",
+  "Peter (Test Writer)",
+  "John (E2E Test Writer)",
+  "Joshua (Test Runner)",
+  "Thomas (TDD Plan Consultant)",
+  "planner-paul",
 ])
 
 export const BuiltinSkillNameSchema = z.enum([
@@ -44,6 +51,7 @@ export const OverridableAgentNameSchema = z.enum([
   "Prometheus (Planner)",
   "Metis (Plan Consultant)",
   "Momus (Plan Reviewer)",
+  "Paul",
   "oracle",
   "librarian",
   "explore",
@@ -51,6 +59,13 @@ export const OverridableAgentNameSchema = z.enum([
   "document-writer",
   "multimodal-looker",
   "orchestrator-sisyphus",
+  "Solomon (TDD Planner)",
+  "Peter (Test Writer)",
+  "John (E2E Test Writer)",
+  "Joshua (Test Runner)",
+  "Thomas (TDD Plan Consultant)",
+  "planner-paul",
+  "Timothy (Implementation Plan Reviewer)",
 ])
 
 export const AgentNameSchema = BuiltinAgentNameSchema
@@ -85,6 +100,7 @@ export const HookNameSchema = z.enum([
   "auto-slash-command",
   "edit-error-recovery",
   "delegate-task-retry",
+  "planner-md-only",
   "prometheus-md-only",
   "start-work",
   "sisyphus-orchestrator",
@@ -134,6 +150,13 @@ export const AgentOverridesSchema = z.object({
   "document-writer": AgentOverrideConfigSchema.optional(),
   "multimodal-looker": AgentOverrideConfigSchema.optional(),
   "orchestrator-sisyphus": AgentOverrideConfigSchema.optional(),
+  "Solomon (TDD Planner)": AgentOverrideConfigSchema.optional(),
+  "Peter (Test Writer)": AgentOverrideConfigSchema.optional(),
+  "John (E2E Test Writer)": AgentOverrideConfigSchema.optional(),
+  "Joshua (Test Runner)": AgentOverrideConfigSchema.optional(),
+  "Thomas (TDD Plan Consultant)": AgentOverrideConfigSchema.optional(),
+  "planner-paul": AgentOverrideConfigSchema.optional(),
+  "Timothy (Implementation Plan Reviewer)": AgentOverrideConfigSchema.optional(),
 })
 
 export const ClaudeCodeConfigSchema = z.object({
@@ -151,6 +174,7 @@ export const SisyphusAgentConfigSchema = z.object({
   default_builder_enabled: z.boolean().optional(),
   planner_enabled: z.boolean().optional(),
   replace_plan: z.boolean().optional(),
+  prefer_orchestrator: z.boolean().optional(),
 })
 
 export const CategoryConfigSchema = z.object({
