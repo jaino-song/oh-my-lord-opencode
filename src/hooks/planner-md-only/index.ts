@@ -1,7 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { existsSync, readdirSync } from "node:fs"
 import { join, resolve, relative, isAbsolute } from "node:path"
-import { HOOK_NAME, PLANNER_AGENTS, ALLOWED_EXTENSIONS, ALLOWED_PATH_PREFIXES, BLOCKED_TOOLS, PLANNING_CONSULT_WARNING } from "./constants"
+import { HOOK_NAME, PLANNER_AGENTS, ALLOWED_EXTENSIONS, ALLOWED_PATH_PREFIXES, BLOCKED_TOOLS, BASH_TOOLS, DANGEROUS_BASH_PATTERNS, SAFE_BASH_PATTERNS, PLANNING_CONSULT_WARNING } from "./constants"
 import { findNearestMessageWithFields, findFirstMessageWithAgent, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { getSessionAgent } from "../../features/claude-code-session-state"
 import { log } from "../../shared/logger"
@@ -33,6 +33,15 @@ function isAllowedFile(filePath: string, workspaceRoot: string): boolean {
   }
 
   return true
+}
+
+function isSafeBashCommand(command: string): boolean {
+  const trimmed = command.trim()
+  return SAFE_BASH_PATTERNS.some(pattern => pattern.test(trimmed))
+}
+
+function isDangerousBashCommand(command: string): boolean {
+  return DANGEROUS_BASH_PATTERNS.some(pattern => pattern.test(command))
 }
 
 function getMessageDir(sessionID: string): string | null {
@@ -85,6 +94,45 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
             agent: agentName,
           })
         }
+        return
+      }
+
+      if (BASH_TOOLS.includes(toolName)) {
+        const command = output.args.command as string | undefined
+        if (!command) {
+          return
+        }
+
+        if (isSafeBashCommand(command)) {
+          log(`[${HOOK_NAME}] Allowed: Safe bash command`, {
+            sessionID: input.sessionID,
+            tool: toolName,
+            command: command.substring(0, 100),
+            agent: agentName,
+          })
+          return
+        }
+
+        if (isDangerousBashCommand(command)) {
+          log(`[${HOOK_NAME}] Blocked: Dangerous bash command detected`, {
+            sessionID: input.sessionID,
+            tool: toolName,
+            command: command.substring(0, 200),
+            agent: agentName,
+          })
+          throw new Error(
+            `[${HOOK_NAME}] Planner agents cannot execute file-modifying bash commands. ` +
+            `Detected dangerous pattern in command. ` +
+            `Planners are READ-ONLY. Use /start-work to execute the plan.`
+          )
+        }
+
+        log(`[${HOOK_NAME}] Allowed: Bash command (no dangerous patterns detected)`, {
+          sessionID: input.sessionID,
+          tool: toolName,
+          command: command.substring(0, 100),
+          agent: agentName,
+        })
         return
       }
 

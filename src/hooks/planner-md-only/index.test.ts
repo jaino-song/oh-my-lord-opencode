@@ -485,4 +485,125 @@ describe("prometheus-md-only", () => {
       ).rejects.toThrow("can only write/edit .md files")
     })
   })
+
+  describe("bash command blocking", () => {
+    beforeEach(() => {
+      setupMessageStorage(TEST_SESSION_ID, "planner-paul")
+    })
+
+    describe("should block dangerous bash commands", () => {
+      const dangerousCommands = [
+        { cmd: "cat > /path/to/file.ts << 'EOF'\ncontent\nEOF", desc: "heredoc file write" },
+        { cmd: "echo 'code' > file.ts", desc: "echo redirect" },
+        { cmd: "sed -i 's/foo/bar/g' file.ts", desc: "sed in-place" },
+        { cmd: "rm -rf src/", desc: "rm command" },
+        { cmd: "cp source.ts dest.ts", desc: "cp command" },
+        { cmd: "mv old.ts new.ts", desc: "mv command" },
+        { cmd: "touch newfile.ts", desc: "touch command" },
+        { cmd: "mkdir -p src/new", desc: "mkdir command" },
+        { cmd: "chmod +x script.sh", desc: "chmod command" },
+        { cmd: "git commit -m 'message'", desc: "git commit" },
+        { cmd: "git push origin main", desc: "git push" },
+        { cmd: "npm install lodash", desc: "npm install" },
+        { cmd: "pnpm add react", desc: "pnpm add" },
+        { cmd: "echo test >> file.log", desc: "append redirect" },
+        { cmd: "cat file | tee output.txt", desc: "tee command" },
+        { cmd: "printf '%s' 'data' > file.txt", desc: "printf redirect" },
+      ]
+
+      for (const { cmd, desc } of dangerousCommands) {
+        test(`should block: ${desc}`, async () => {
+          // #given
+          const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+          const input = {
+            tool: "Bash",
+            sessionID: TEST_SESSION_ID,
+            callID: "call-1",
+          }
+          const output = {
+            args: { command: cmd },
+          }
+
+          // #when / #then
+          await expect(
+            hook["tool.execute.before"](input, output)
+          ).rejects.toThrow("cannot execute file-modifying bash commands")
+        })
+      }
+    })
+
+    describe("should allow safe bash commands", () => {
+      const safeCommands = [
+        { cmd: "ls -la", desc: "ls command" },
+        { cmd: "cat file.ts", desc: "cat read-only" },
+        { cmd: "head -n 10 file.ts", desc: "head command" },
+        { cmd: "tail -f log.txt", desc: "tail command" },
+        { cmd: "grep -r 'pattern' src/", desc: "grep command" },
+        { cmd: "find . -name '*.ts'", desc: "find command" },
+        { cmd: "git status", desc: "git status" },
+        { cmd: "git log --oneline", desc: "git log" },
+        { cmd: "git diff HEAD~1", desc: "git diff" },
+        { cmd: "npm list", desc: "npm list" },
+        { cmd: "pwd", desc: "pwd command" },
+        { cmd: "whoami", desc: "whoami command" },
+        { cmd: "tree src/", desc: "tree command" },
+      ]
+
+      for (const { cmd, desc } of safeCommands) {
+        test(`should allow: ${desc}`, async () => {
+          // #given
+          const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+          const input = {
+            tool: "Bash",
+            sessionID: TEST_SESSION_ID,
+            callID: "call-1",
+          }
+          const output = {
+            args: { command: cmd },
+          }
+
+          // #when / #then
+          await expect(
+            hook["tool.execute.before"](input, output)
+          ).resolves.toBeUndefined()
+        })
+      }
+    })
+
+    test("should handle missing command gracefully", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "Bash",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: {},
+      }
+
+      // #when / #then
+      await expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
+    test("should work with lowercase 'bash' tool name", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "bash",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: { command: "rm -rf /" },
+      }
+
+      // #when / #then
+      await expect(
+        hook["tool.execute.before"](input, output)
+      ).rejects.toThrow("cannot execute file-modifying bash commands")
+    })
+  })
 })
