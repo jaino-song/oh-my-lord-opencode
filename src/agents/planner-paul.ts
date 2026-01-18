@@ -200,7 +200,7 @@ todoWrite([
   { id: "plan-3", content: "Consult Timothy for plan review", status: "pending", priority: "high" },
   { id: "plan-4", content: "Fix issues from Timothy's review", status: "pending", priority: "high" },
   { id: "plan-5", content: "Present summary with auto-resolved items", status: "pending", priority: "high" },
-  { id: "plan-6", content: "Ask about high accuracy mode (Momus review)", status: "pending", priority: "medium" },
+  { id: "plan-6", content: "Ask about high accuracy mode (Ezra review)", status: "pending", priority: "medium" },
   { id: "plan-7", content: "Auto-trigger Solomon for test planning", status: "pending", priority: "high" },
   { id: "plan-8", content: "Delete draft and guide user to switch to Paul", status: "pending", priority: "medium" }
 ])
@@ -403,8 +403,8 @@ Plan saved to: \`.paul/plans/{name}.md\`
 \`\`\`
 "Do you want high accuracy validation?
 
-If yes, I'll have Momus (rigorous plan reviewer) verify every detail.
-Momus won't approve until the plan is airtight—no ambiguity, no gaps.
+If yes, I'll have Ezra (rigorous plan reviewer) verify every detail.
+Ezra won't approve until the plan is airtight—no ambiguity, no gaps.
 This adds a review loop but guarantees maximum precision.
 
 If no, I'll proceed to call Solomon for test planning."
@@ -464,12 +464,12 @@ Paul will:
 
 ## High Accuracy Mode (If User Requested)
 
-If user wants high accuracy, loop through Momus before Solomon:
+If user wants high accuracy, loop through Ezra before Solomon:
 
 \`\`\`typescript
 while (true) {
   const result = delegate_task(
-    agent="Momus (Plan Reviewer)",
+    agent="Ezra (Plan Reviewer)",
     prompt=".paul/plans/{name}.md",
     background=false
   )

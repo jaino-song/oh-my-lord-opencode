@@ -38,6 +38,7 @@ agents/
 | Prometheus | anthropic/claude-opus-4-5 | Strategic planner. Interview mode, orchestrates Metis/Momus. |
 | Metis | anthropic/claude-sonnet-4-5 | Plan Consultant. Pre-planning risk/requirement analysis. |
 | Momus | anthropic/claude-sonnet-4-5 | Plan Reviewer. Validation and quality enforcement. |
+| Ezra | anthropic/claude-sonnet-4-5 | Plan Reviewer with confidence scoring, anti-pattern detection, review modes. |
 
 ## HOW TO ADD AN AGENT
 1. Create `src/agents/my-agent.ts` exporting `AgentConfig`.

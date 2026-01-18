@@ -9,6 +9,7 @@ import { multimodalLookerAgent } from "./multimodal-looker"
 import { metisAgent } from "./metis"
 import { paulAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
 import { momusAgent } from "./momus"
+import { ezraAgent } from "./ezra"
 import { solomonAgent } from "./solomon"
 import { joshuaAgent } from "./joshua"
 import { peterAgent } from "./peter"
@@ -27,6 +28,7 @@ export const builtinAgents: Record<string, AgentConfig> = {
   "multimodal-looker": multimodalLookerAgent,
   "Metis (Plan Consultant)": metisAgent,
   "Momus (Plan Reviewer)": momusAgent,
+  "Ezra (Plan Reviewer)": ezraAgent,
   "Paul": paulAgent,
   "orchestrator-sisyphus": orchestratorSisyphusAgent,
   "Solomon (TDD Planner)": solomonAgent,

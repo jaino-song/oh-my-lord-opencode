@@ -66,6 +66,7 @@ export type BuiltinAgentName =
   | "multimodal-looker"
   | "Metis (Plan Consultant)"
   | "Momus (Plan Reviewer)"
+  | "Ezra (Plan Reviewer)"
   | "Paul"
   | "orchestrator-sisyphus"
   | "Solomon (TDD Planner)"
