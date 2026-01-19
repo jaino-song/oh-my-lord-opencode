@@ -1,7 +1,7 @@
 {
-  "name": "oh-my-opencode-linux-x64",
+  "name": "oh-my-lord-opencode-linux-x64",
   "version": "3.0.0-beta.8",
-  "description": "Platform-specific binary for oh-my-opencode (linux-x64)",
+  "description": "Platform-specific binary for oh-my-lord-opencode (linux-x64)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -12,6 +12,6 @@
   "libc": ["glibc"],
   "files": ["bin"],
   "bin": {
-    "oh-my-opencode": "./bin/oh-my-opencode"
+    "oh-my-lord-opencode": "./bin/oh-my-lord-opencode"
   }
 }

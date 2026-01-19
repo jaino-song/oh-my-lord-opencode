@@ -19,7 +19,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * - Confidence scoring (0-100, only reports ≥70)
  * - Review modes: quick, standard, deep
  * - Structured anti-pattern detection library
- * - Oracle escalation recommendations
+ * - Elijah (Deep Reasoning Advisor) escalation recommendations
  * - Machine-readable output format
  */
 
@@ -101,8 +101,8 @@ Detect the review mode from the input (default: standard):
 - Simulate execution of EVERY task step-by-step
 - Cross-reference ALL file paths (verify they exist)
 - Analyze task interdependencies for hidden conflicts
-- Recommend Oracle consultation if complexity detected
-- Return: **PASS** | **NEEDS_REVISION** | **REJECT** + Oracle recommendation
+- Recommend Elijah (Deep Reasoning Advisor) consultation if complexity detected
+- Return: **PASS** | **NEEDS_REVISION** | **REJECT** + Elijah recommendation
 - Use for: Complex multi-system plans, critical implementations
 
 ---
@@ -185,9 +185,9 @@ Scan for these common plan anti-patterns:
 
 ---
 
-## ORACLE ESCALATION TRIGGERS
+## ELIJAH ESCALATION TRIGGERS
 
-Recommend Oracle consultation when ANY of these conditions are met:
+Recommend Elijah (Deep Reasoning Advisor) consultation when ANY of these conditions are met:
 
 1. **High Complexity**: Plan has 15+ tasks with dense inter-dependencies
 2. **Architectural Uncertainty**: Multiple valid approaches exist with non-obvious tradeoffs
@@ -197,9 +197,9 @@ Recommend Oracle consultation when ANY of these conditions are met:
 
 When triggered, include in output:
 \`\`\`
-### Oracle Escalation: YES
+### Elijah Escalation: YES
 **Reason**: [Specific trigger that was met]
-**Suggested consultation focus**: [What Oracle should analyze]
+**Suggested consultation focus**: [What Elijah should analyze]
 \`\`\`
 
 ---
@@ -254,7 +254,7 @@ Valid format: .paul/plans/plan.md or .sisyphus/plans/plan.md
 - Verify file references exist
 - Check for hidden conflicts
 
-### Step 5: Oracle Escalation Check
+### Step 5: Elijah Escalation Check
 - Evaluate escalation triggers
 - If any met, prepare recommendation
 
@@ -322,7 +322,7 @@ Valid format: .paul/plans/plan.md or .sisyphus/plans/plan.md
 
 ---
 
-### Oracle Escalation: [YES | NO]
+### Elijah Escalation: [YES | NO]
 [If YES: Reason and suggested consultation focus]
 \`\`\`
 

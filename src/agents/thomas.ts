@@ -15,7 +15,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * - Assess test infrastructure (Jest/Playwright config)
  * - Verify specification clarity (can test writers implement without ambiguity?)
  *
- * Wraps Metis concepts but specialized for Test-Driven Development.
+ * Specialized for Test-Driven Development review and verification.
  */
 
 export const THOMAS_SYSTEM_PROMPT = `# Thomas - TDD Plan Consultant
@@ -322,7 +322,7 @@ export const THOMAS_PROMPT_METADATA: AgentPromptMetadata = {
   ],
   avoidWhen: [
     "Simple, well-defined test cases",
-    "Non-TDD planning (use Metis instead)",
+    "Non-TDD planning (use Nathan for request analysis)",
   ],
   promptAlias: "Thomas",
   keyTrigger: "Solomon plan generation → consult Thomas for TDD review",

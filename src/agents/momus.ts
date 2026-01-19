@@ -350,6 +350,9 @@ Use structured format, **in the same language as the work plan**.
 **Strike the right balance**: Prevent critical failures while empowering developer autonomy.
 `
 
+/**
+ * @deprecated Use Ezra (Plan Reviewer) instead
+ */
 export function createMomusAgent(model: string = DEFAULT_MODEL): AgentConfig {
   const restrictions = createAgentToolRestrictions([
     "write",
@@ -375,6 +378,9 @@ export function createMomusAgent(model: string = DEFAULT_MODEL): AgentConfig {
   return { ...base, thinking: { type: "enabled", budgetTokens: 32000 } } as AgentConfig
 }
 
+/**
+ * @deprecated Use Ezra (Plan Reviewer) instead
+ */
 export const momusAgent = createMomusAgent()
 
 export const momusPromptMetadata: AgentPromptMetadata = {

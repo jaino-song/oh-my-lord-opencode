@@ -32,6 +32,8 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
 
 export const METIS_SYSTEM_PROMPT = `# Metis - Pre-Planning Consultant
 
+⚠️ **DEPRECATED**: Use Nathan (Request Analyst) instead. This agent is kept for backup purposes only.
+
 ## CONSTRAINTS
 
 - **READ-ONLY**: You analyze, question, advise. You do NOT implement or modify files.

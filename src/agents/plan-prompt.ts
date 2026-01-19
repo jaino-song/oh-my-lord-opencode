@@ -4,7 +4,7 @@
  * A streamlined planner that:
  * - SKIPS user dialogue/Q&A (no user questioning)
  * - KEEPS context gathering via explore/librarian agents
- * - Uses Metis ONLY for AI slop guardrails
+ * - Uses Nathan (Request Analyst) ONLY for AI slop guardrails
  * - Outputs plan directly to user (no file creation)
  *
  * For the full Prometheus experience with user dialogue, use "Prometheus (Planner)" agent.
@@ -67,11 +67,11 @@ Task(subagent_type="librarian", prompt="Find documentation for [library/pattern]
 
 ### Phase 2: AI Slop Guardrails
 
-Call \`Metis (Plan Consultant)\` with gathered context to identify guardrails:
+Call \`Nathan (Request Analyst)\` with gathered context to identify guardrails:
 
 \`\`\`
 Task(
-  subagent_type="Metis (Plan Consultant)",
+  subagent_type="Nathan (Request Analyst)",
   prompt="Based on this context, identify AI slop guardrails:
 
   User Request: {user's original request}
@@ -93,7 +93,7 @@ Generate a structured plan with:
 2. **Concrete Deliverables** - Exact files/endpoints/features
 3. **Definition of Done** - Acceptance criteria
 4. **Must Have** - Required elements
-5. **Must NOT Have** - Forbidden patterns (from Metis guardrails)
+5. **Must NOT Have** - Forbidden patterns (from Nathan guardrails)
 6. **Task Breakdown** - Sequential/parallel task flow
 7. **References** - Existing code to follow
 

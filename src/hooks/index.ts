@@ -31,3 +31,4 @@ export { createTaskResumeInfoHook } from "./task-resume-info";
 export { createStartWorkHook } from "./start-work";
 export { createSisyphusOrchestratorHook } from "./sisyphus-orchestrator";
 export { createDelegateTaskRetryHook } from "./delegate-task-retry";
+export { createTddEnforcementHook } from "./tdd-enforcement";

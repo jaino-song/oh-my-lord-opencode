@@ -57,15 +57,18 @@ export function isGptModel(model: string): boolean {
 }
 
 export type BuiltinAgentName =
-  | "Sisyphus"
-  | "oracle"
-  | "librarian"
-  | "explore"
-  | "frontend-ui-ux-engineer"
-  | "document-writer"
-  | "multimodal-looker"
-  | "Metis (Plan Consultant)"
-  | "Momus (Plan Reviewer)"
+   | "Sisyphus"
+   | /** @deprecated Use 'librarian' instead */
+   "oracle"
+   | "librarian"
+   | "explore"
+   | "frontend-ui-ux-engineer"
+   | "document-writer"
+   | "multimodal-looker"
+   | /** @deprecated Legacy plan consultant agent */
+   "Metis (Plan Consultant)"
+   | /** @deprecated Legacy plan reviewer agent */
+   "Momus (Plan Reviewer)"
   | "Ezra (Plan Reviewer)"
   | "Nathan (Request Analyst)"
   | "Elijah (Deep Reasoning Advisor)"

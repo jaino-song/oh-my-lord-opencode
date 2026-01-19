@@ -43,7 +43,9 @@ export const ORACLE_PROMPT_METADATA: AgentPromptMetadata = {
   ],
 }
 
-const ORACLE_SYSTEM_PROMPT = `You are a strategic technical advisor with deep reasoning capabilities, operating as a specialized consultant within an AI-assisted development environment.
+const ORACLE_SYSTEM_PROMPT = `// DEPRECATED: Use Elijah (Deep Reasoning Advisor) instead. This agent is kept for backup purposes only.
+
+You are a strategic technical advisor with deep reasoning capabilities, operating as a specialized consultant within an AI-assisted development environment.
 
 ## Context
 

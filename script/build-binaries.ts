@@ -14,13 +14,13 @@ interface PlatformTarget {
 }
 
 const PLATFORMS: PlatformTarget[] = [
-  { dir: "darwin-arm64", target: "bun-darwin-arm64", binary: "oh-my-opencode", description: "macOS ARM64" },
-  { dir: "darwin-x64", target: "bun-darwin-x64", binary: "oh-my-opencode", description: "macOS x64" },
-  { dir: "linux-x64", target: "bun-linux-x64", binary: "oh-my-opencode", description: "Linux x64 (glibc)" },
-  { dir: "linux-arm64", target: "bun-linux-arm64", binary: "oh-my-opencode", description: "Linux ARM64 (glibc)" },
-  { dir: "linux-x64-musl", target: "bun-linux-x64-musl", binary: "oh-my-opencode", description: "Linux x64 (musl)" },
-  { dir: "linux-arm64-musl", target: "bun-linux-arm64-musl", binary: "oh-my-opencode", description: "Linux ARM64 (musl)" },
-  { dir: "windows-x64", target: "bun-windows-x64", binary: "oh-my-opencode.exe", description: "Windows x64" },
+  { dir: "darwin-arm64", target: "bun-darwin-arm64", binary: "oh-my-lord-opencode", description: "macOS ARM64" },
+  { dir: "darwin-x64", target: "bun-darwin-x64", binary: "oh-my-lord-opencode", description: "macOS x64" },
+  { dir: "linux-x64", target: "bun-linux-x64", binary: "oh-my-lord-opencode", description: "Linux x64 (glibc)" },
+  { dir: "linux-arm64", target: "bun-linux-arm64", binary: "oh-my-lord-opencode", description: "Linux ARM64 (glibc)" },
+  { dir: "linux-x64-musl", target: "bun-linux-x64-musl", binary: "oh-my-lord-opencode", description: "Linux x64 (musl)" },
+  { dir: "linux-arm64-musl", target: "bun-linux-arm64-musl", binary: "oh-my-lord-opencode", description: "Linux ARM64 (musl)" },
+  { dir: "windows-x64", target: "bun-windows-x64", binary: "oh-my-lord-opencode.exe", description: "Windows x64" },
 ];
 
 const ENTRY_POINT = "src/cli/index.ts";
@@ -57,7 +57,7 @@ async function buildPlatform(platform: PlatformTarget): Promise<boolean> {
 }
 
 async function main() {
-  console.log("🔨 Building oh-my-opencode platform binaries");
+  console.log("🔨 Building oh-my-lord-opencode platform binaries");
   console.log(`   Entry point: ${ENTRY_POINT}`);
   console.log(`   Platforms: ${PLATFORMS.length}`);
 

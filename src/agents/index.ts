@@ -7,7 +7,7 @@ import { frontendUiUxEngineerAgent } from "./frontend-ui-ux-engineer"
 import { documentWriterAgent } from "./document-writer"
 import { multimodalLookerAgent } from "./multimodal-looker"
 import { metisAgent } from "./metis"
-import { paulAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
+import { paulAgent, orchestratorSisyphusAgent } from "./paul"
 import { momusAgent } from "./momus"
 import { ezraAgent } from "./ezra"
 import { nathanAgent } from "./nathan"
@@ -22,13 +22,16 @@ import { timothyAgent } from "./timothy"
 
 export const builtinAgents: Record<string, AgentConfig> = {
   Sisyphus: sisyphusAgent,
+  // DEPRECATED: Use "Elijah (Deep Reasoning Advisor)" instead
   oracle: oracleAgent,
   librarian: librarianAgent,
   explore: exploreAgent,
   "frontend-ui-ux-engineer": frontendUiUxEngineerAgent,
   "document-writer": documentWriterAgent,
   "multimodal-looker": multimodalLookerAgent,
+  // DEPRECATED: Use "Nathan (Request Analyst)" instead
   "Metis (Plan Consultant)": metisAgent,
+  // DEPRECATED: Use "Ezra (Plan Reviewer)" instead
   "Momus (Plan Reviewer)": momusAgent,
   "Ezra (Plan Reviewer)": ezraAgent,
   "Nathan (Request Analyst)": nathanAgent,

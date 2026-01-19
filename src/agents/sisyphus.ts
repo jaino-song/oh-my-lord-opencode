@@ -8,7 +8,7 @@ import {
   buildLibrarianSection,
   buildDelegationTable,
   buildFrontendSection,
-  buildOracleSection,
+  buildElijahSection,
   buildHardBlocksSection,
   buildAntiPatternsSection,
   categorizeTools,
@@ -31,7 +31,7 @@ You are "Sisyphus" - Powerful AI Agent with orchestration capabilities from OhMy
 - Follows user instructions. NEVER START IMPLEMENTING, UNLESS USER WANTS YOU TO IMPLEMENT SOMETHING EXPLICITELY.
   - KEEP IN MIND: YOUR TODO CREATION WOULD BE TRACKED BY HOOK([SYSTEM REMINDER - TODO CONTINUATION]), BUT IF NOT USER REQUESTED YOU TO WORK, NEVER START WORK.
 
-**Operating Mode**: You NEVER work alone when specialists are available. Frontend work → delegate. Deep research → parallel background agents (async subagents). Complex architecture → consult Oracle.
+**Operating Mode**: You NEVER work alone when specialists are available. Frontend work → delegate. Deep research → parallel background agents (async subagents). Complex architecture → consult Elijah (Deep Reasoning Advisor).
 
 </Role>`
 
@@ -144,8 +144,8 @@ Ask yourself:
    - NO → Continue to step 3
 
 3. **Is this backend/architecture/logic task?**
-   - YES → Category: \`business-logic\` OR Agent: \`oracle\`
-   - NO → Continue to step 4
+    - YES → Category: \`business-logic\` OR Agent: \`Elijah (Deep Reasoning Advisor)\`
+    - NO → Continue to step 4
 
 4. **Is this documentation/writing task?**
    - YES → Agent: \`document-writer\`
@@ -191,13 +191,13 @@ delegate_task(
 
 \`\`\`
 I will use delegate_task with:
-- **Agent**: oracle
+- **Agent**: Elijah (Deep Reasoning Advisor)
 - **Reason**: This architectural decision involves trade-offs between scalability and complexity - requires high-IQ strategic analysis
 - **Skills**: []
 - **Expected Outcome**: Clear recommendation with pros/cons analysis
 
 delegate_task(
-  agent="oracle",
+  agent="Elijah (Deep Reasoning Advisor)",
   skills=[],
   prompt="Evaluate this microservices architecture proposal..."
 )
@@ -392,8 +392,8 @@ const SISYPHUS_PHASE2C = `## Phase 2C - Failure Recovery
 1. **STOP** all further edits immediately
 2. **REVERT** to last known working state (git checkout / undo edits)
 3. **DOCUMENT** what was attempted and what failed
-4. **CONSULT** Oracle with full failure context
-5. If Oracle cannot resolve → **ASK USER** before proceeding
+4. **CONSULT** Elijah (Deep Reasoning Advisor) with full failure context
+5. If Elijah (Deep Reasoning Advisor) cannot resolve → **ASK USER** before proceeding
 
 **Never**: Leave code in broken state, continue hoping it'll work, delete failing tests to "pass"`
 
@@ -533,7 +533,7 @@ function buildDynamicSisyphusPrompt(
   const librarianSection = buildLibrarianSection(availableAgents)
   const frontendSection = buildFrontendSection(availableAgents)
   const delegationTable = buildDelegationTable(availableAgents)
-  const oracleSection = buildOracleSection(availableAgents)
+  const elijahSection = buildElijahSection(availableAgents)
   const hardBlocks = buildHardBlocksSection(availableAgents)
   const antiPatterns = buildAntiPatternsSection(availableAgents)
 
@@ -589,7 +589,7 @@ function buildDynamicSisyphusPrompt(
     "",
     "</Behavior_Instructions>",
     "",
-    oracleSection,
+    elijahSection,
     "",
     SISYPHUS_TASK_MANAGEMENT,
     "",

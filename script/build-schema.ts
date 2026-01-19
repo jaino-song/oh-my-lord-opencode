@@ -1,8 +1,12 @@
 #!/usr/bin/env bun
+/// <reference types="bun-types" />
 import * as z from "zod"
 import { OhMyOpenCodeConfigSchema } from "../src/config/schema"
 
-const SCHEMA_OUTPUT_PATH = "assets/oh-my-opencode.schema.json"
+const SCHEMA_OUTPUT_PATHS = [
+  "assets/oh-my-lord-opencode.schema.json",
+  "dist/oh-my-lord-opencode.schema.json",
+]
 
 async function main() {
   console.log("Generating JSON Schema...")
@@ -16,13 +20,13 @@ async function main() {
     $schema: "http://json-schema.org/draft-07/schema#",
     $id: "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
     title: "Oh My OpenCode Configuration",
-    description: "Configuration schema for oh-my-opencode plugin",
+    description: "Configuration schema for oh-my-lord-opencode plugin",
     ...jsonSchema,
   }
 
-  await Bun.write(SCHEMA_OUTPUT_PATH, JSON.stringify(finalSchema, null, 2))
+  await Promise.all(SCHEMA_OUTPUT_PATHS.map((outputPath) => Bun.write(outputPath, JSON.stringify(finalSchema, null, 2))))
 
-  console.log(`✓ JSON Schema generated: ${SCHEMA_OUTPUT_PATH}`)
+  console.log(`✓ JSON Schema generated: ${SCHEMA_OUTPUT_PATHS.join(", ")}`)
 }
 
 main()

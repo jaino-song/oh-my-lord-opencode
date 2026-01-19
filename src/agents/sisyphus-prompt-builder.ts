@@ -139,8 +139,8 @@ export function buildToolSelectionTable(
     rows.push(`| \`${agent.name}\` agent | ${agent.metadata.cost} | ${shortDesc} |`)
   }
 
-  rows.push("")
-  rows.push("**Default flow**: skill (if match) → explore/librarian (background) + tools → oracle (if required)")
+   rows.push("")
+   rows.push("**Default flow**: skill (if match) → explore/librarian (background) + tools → Elijah (if required)")
 
   return rows.join("\n")
 }
@@ -257,33 +257,33 @@ If change has BOTH logic AND visual:
 3. **Never** combine them into one edit`
 }
 
-export function buildOracleSection(agents: AvailableAgent[]): string {
-  const oracleAgent = agents.find((a) => a.name === "oracle")
-  if (!oracleAgent) return ""
+export function buildElijahSection(agents: AvailableAgent[]): string {
+   const elijahAgent = agents.find((a) => a.name === "Elijah (Deep Reasoning Advisor)")
+   if (!elijahAgent) return ""
 
-  const useWhen = oracleAgent.metadata.useWhen || []
-  const avoidWhen = oracleAgent.metadata.avoidWhen || []
+   const useWhen = elijahAgent.metadata.useWhen || []
+   const avoidWhen = elijahAgent.metadata.avoidWhen || []
 
-  return `<Oracle_Usage>
-## Oracle — Read-Only High-IQ Consultant
+   return `<Elijah_Usage>
+## Elijah — Deep Reasoning Advisor
 
-Oracle is a read-only, expensive, high-quality reasoning model for debugging and architecture. Consultation only.
+Elijah is a deep reasoning model for complex debugging and architecture decisions. Consultation only.
 
 ### WHEN to Consult:
 
 | Trigger | Action |
 |---------|--------|
-${useWhen.map((w) => `| ${w} | Oracle FIRST, then implement |`).join("\n")}
+${useWhen.map((w) => `| ${w} | Elijah FIRST, then implement |`).join("\n")}
 
 ### WHEN NOT to Consult:
 
 ${avoidWhen.map((w) => `- ${w}`).join("\n")}
 
 ### Usage Pattern:
-Briefly announce "Consulting Oracle for [reason]" before invocation.
+Briefly announce "Consulting Elijah for [reason]" before invocation.
 
 **Exception**: This is the ONLY case where you announce before acting. For all other work, start immediately without status updates.
-</Oracle_Usage>`
+</Elijah_Usage>`
 }
 
 export function buildHardBlocksSection(agents: AvailableAgent[]): string {
@@ -338,7 +338,7 @@ ${patterns.join("\n")}`
 export function buildUltraworkAgentSection(agents: AvailableAgent[]): string {
   if (agents.length === 0) return ""
 
-  const ultraworkAgentPriority = ["explore", "librarian", "plan", "oracle"]
+   const ultraworkAgentPriority = ["explore", "librarian", "plan", "Elijah (Deep Reasoning Advisor)"]
   const sortedAgents = [...agents].sort((a, b) => {
     const aIdx = ultraworkAgentPriority.indexOf(a.name)
     const bIdx = ultraworkAgentPriority.indexOf(b.name)

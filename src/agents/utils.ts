@@ -2,14 +2,16 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { BuiltinAgentName, AgentOverrideConfig, AgentOverrides, AgentFactory, AgentPromptMetadata } from "./types"
 import type { CategoriesConfig, CategoryConfig, GitMasterConfig } from "../config/schema"
 import { createSisyphusAgent } from "./sisyphus"
+// @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
 import { createOracleAgent, ORACLE_PROMPT_METADATA } from "./oracle"
 import { createLibrarianAgent, LIBRARIAN_PROMPT_METADATA } from "./librarian"
 import { createExploreAgent, EXPLORE_PROMPT_METADATA } from "./explore"
 import { createFrontendUiUxEngineerAgent, FRONTEND_PROMPT_METADATA } from "./frontend-ui-ux-engineer"
 import { createDocumentWriterAgent, DOCUMENT_WRITER_PROMPT_METADATA } from "./document-writer"
 import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "./multimodal-looker"
+// @deprecated Use specialized agents (Solomon, Timothy) instead
 import { createMetisAgent } from "./metis"
-import { createPaulAgent, paulAgent, createOrchestratorSisyphusAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
+import { createPaulAgent, paulAgent, createOrchestratorSisyphusAgent, orchestratorSisyphusAgent } from "./paul"
 import { createMomusAgent } from "./momus"
 import { createEzraAgent, EZRA_PROMPT_METADATA } from "./ezra"
 import { createNathanAgent, NATHAN_PROMPT_METADATA } from "./nathan"
@@ -39,15 +41,17 @@ const USER_SELECTABLE_AGENTS: BuiltinAgentName[] = [
 ]
 
 const agentSources: Record<BuiltinAgentName, AgentSource> = {
-  Sisyphus: createSisyphusAgent,
-  oracle: createOracleAgent,
-  librarian: createLibrarianAgent,
+   Sisyphus: createSisyphusAgent,
+   // @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
+   oracle: createOracleAgent,
+   librarian: createLibrarianAgent,
   explore: createExploreAgent,
   "frontend-ui-ux-engineer": createFrontendUiUxEngineerAgent,
   "document-writer": createDocumentWriterAgent,
-  "multimodal-looker": createMultimodalLookerAgent,
-  "Metis (Plan Consultant)": createMetisAgent,
-  "Momus (Plan Reviewer)": createMomusAgent,
+   "multimodal-looker": createMultimodalLookerAgent,
+   // @deprecated Use specialized agents (Solomon, Timothy) instead
+   "Metis (Plan Consultant)": createMetisAgent,
+   "Momus (Plan Reviewer)": createMomusAgent,
   "Ezra (Plan Reviewer)": createEzraAgent,
   "Nathan (Request Analyst)": createNathanAgent,
   "Elijah (Deep Reasoning Advisor)": createElijahAgent,
@@ -67,8 +71,9 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
  * (Delegation Table, Tool Selection, Key Triggers, etc.)
  */
 const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
-  oracle: ORACLE_PROMPT_METADATA,
-  librarian: LIBRARIAN_PROMPT_METADATA,
+   // @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
+   oracle: ORACLE_PROMPT_METADATA,
+   librarian: LIBRARIAN_PROMPT_METADATA,
   explore: EXPLORE_PROMPT_METADATA,
   "frontend-ui-ux-engineer": FRONTEND_PROMPT_METADATA,
   "document-writer": DOCUMENT_WRITER_PROMPT_METADATA,
