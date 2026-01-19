@@ -12,6 +12,8 @@ import { createMetisAgent } from "./metis"
 import { createPaulAgent, paulAgent, createOrchestratorSisyphusAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
 import { createMomusAgent } from "./momus"
 import { createEzraAgent, EZRA_PROMPT_METADATA } from "./ezra"
+import { createNathanAgent, NATHAN_PROMPT_METADATA } from "./nathan"
+import { createElijahAgent, ELIJAH_PROMPT_METADATA } from "./elijah"
 import { createSolomonAgent } from "./solomon"
 import { createJoshuaAgent, JOSHUA_PROMPT_METADATA } from "./joshua"
 import { createPeterAgent, PETER_PROMPT_METADATA } from "./peter"
@@ -47,6 +49,8 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   "Metis (Plan Consultant)": createMetisAgent,
   "Momus (Plan Reviewer)": createMomusAgent,
   "Ezra (Plan Reviewer)": createEzraAgent,
+  "Nathan (Request Analyst)": createNathanAgent,
+  "Elijah (Deep Reasoning Advisor)": createElijahAgent,
   "Paul": paulAgent,
   "orchestrator-sisyphus": orchestratorSisyphusAgent,
   "Solomon (TDD Planner)": createSolomonAgent,
@@ -75,6 +79,8 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   "Thomas (TDD Plan Consultant)": THOMAS_PROMPT_METADATA,
   "Timothy (Implementation Plan Reviewer)": timothyPromptMetadata,
   "Ezra (Plan Reviewer)": EZRA_PROMPT_METADATA,
+  "Nathan (Request Analyst)": NATHAN_PROMPT_METADATA,
+  "Elijah (Deep Reasoning Advisor)": ELIJAH_PROMPT_METADATA,
 }
 
 function isFactory(source: AgentSource): source is AgentFactory {

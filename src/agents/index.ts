@@ -10,6 +10,8 @@ import { metisAgent } from "./metis"
 import { paulAgent, orchestratorSisyphusAgent } from "./orchestrator-sisyphus"
 import { momusAgent } from "./momus"
 import { ezraAgent } from "./ezra"
+import { nathanAgent } from "./nathan"
+import { elijahAgent } from "./elijah"
 import { solomonAgent } from "./solomon"
 import { joshuaAgent } from "./joshua"
 import { peterAgent } from "./peter"
@@ -29,6 +31,8 @@ export const builtinAgents: Record<string, AgentConfig> = {
   "Metis (Plan Consultant)": metisAgent,
   "Momus (Plan Reviewer)": momusAgent,
   "Ezra (Plan Reviewer)": ezraAgent,
+  "Nathan (Request Analyst)": nathanAgent,
+  "Elijah (Deep Reasoning Advisor)": elijahAgent,
   "Paul": paulAgent,
   "orchestrator-sisyphus": orchestratorSisyphusAgent,
   "Solomon (TDD Planner)": solomonAgent,

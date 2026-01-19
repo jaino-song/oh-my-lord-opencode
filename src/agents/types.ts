@@ -67,6 +67,8 @@ export type BuiltinAgentName =
   | "Metis (Plan Consultant)"
   | "Momus (Plan Reviewer)"
   | "Ezra (Plan Reviewer)"
+  | "Nathan (Request Analyst)"
+  | "Elijah (Deep Reasoning Advisor)"
   | "Paul"
   | "orchestrator-sisyphus"
   | "Solomon (TDD Planner)"
