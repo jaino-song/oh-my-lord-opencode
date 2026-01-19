@@ -364,6 +364,14 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       const agent = agentResult["Sisyphus-Junior"] as AgentWithPermission;
       agent.permission = { ...agent.permission, delegate_task: "allow" };
     }
+    if (agentResult["Paul"]) {
+      const agent = agentResult["Paul"] as AgentWithPermission;
+      agent.permission = { ...agent.permission, task: "deny", call_omo_agent: "deny", delegate_task: "allow" };
+    }
+    if (agentResult["planner-paul"]) {
+      const agent = agentResult["planner-paul"] as AgentWithPermission;
+      agent.permission = { ...agent.permission, call_omo_agent: "deny", delegate_task: "allow" };
+    }
 
     config.permission = {
       ...(config.permission as Record<string, unknown>),
