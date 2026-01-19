@@ -3,6 +3,18 @@ import type { AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
+/**
+ * @deprecated Use Elijah (Deep Reasoning Advisor) instead.
+ * 
+ * Oracle is being replaced by Elijah, which provides:
+ * - Structured consultation modes: --debug, --architecture, --security, --performance, --stuck
+ * - Higher token limit (64k vs 32k)
+ * - Better reasoning with reasoningEffort: "high"
+ * 
+ * Migration: Replace `delegate_task(agent="oracle", ...)` with
+ * `delegate_task(agent="Elijah (Deep Reasoning Advisor)", prompt="--debug: ...")`
+ */
+
 const DEFAULT_MODEL = "openai/gpt-5.2"
 
 export const ORACLE_PROMPT_METADATA: AgentPromptMetadata = {

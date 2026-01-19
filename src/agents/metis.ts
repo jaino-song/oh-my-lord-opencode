@@ -3,7 +3,21 @@ import type { AgentPromptMetadata } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
 /**
- * Metis - Plan Consultant Agent
+ * @deprecated Use Nathan (Request Analyst) instead.
+ * 
+ * Metis is being replaced by Nathan, which provides:
+ * - Intent classification (build/fix/refactor/architecture/research)
+ * - Pre-interview research (fires explore/librarian BEFORE asking questions)
+ * - Guardrail generation (Must NOT Have - AI-slop prevention)
+ * - Question prioritization (Critical/High/Medium/Low)
+ * - Scope boundary detection (IN/OUT)
+ * 
+ * Migration: Replace `delegate_task(agent="metis", ...)` with
+ * `delegate_task(agent="Nathan (Request Analyst)", ...)`
+ * 
+ * ---
+ * 
+ * Metis - Plan Consultant Agent (DEPRECATED)
  *
  * Named after the Greek goddess of wisdom, prudence, and deep counsel.
  * Metis analyzes user requests BEFORE planning to prevent AI failures.
