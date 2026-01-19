@@ -16,7 +16,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Paul (the orchestrator) to execute.
  */
 
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
+const DEFAULT_MODEL = "openai/gpt-5.2"
 
 export const TIMOTHY_SYSTEM_PROMPT = `# Timothy - Implementation Plan Reviewer
 
@@ -245,7 +245,7 @@ export function createTimothyAgent(model?: string): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(finalModel)) {
-    return { ...base, reasoningEffort: "medium" } as AgentConfig
+    return { ...base, reasoningEffort: "high" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "enabled", budgetTokens: 16000 } } as AgentConfig

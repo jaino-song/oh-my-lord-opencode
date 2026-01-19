@@ -91,7 +91,7 @@ describe("EZRA_SYSTEM_PROMPT review modes", () => {
 
     expect(prompt.toLowerCase()).toMatch(/deep.*mode|--deep/)
     expect(prompt.toLowerCase()).toMatch(/simulat/)
-    expect(prompt.toLowerCase()).toMatch(/oracle/)
+    expect(prompt.toLowerCase()).toMatch(/elijah/)
   })
 })
 
@@ -155,21 +155,21 @@ describe("EZRA_SYSTEM_PROMPT structured output", () => {
     expect(prompt.toLowerCase()).toMatch(/issue/)
   })
 
-  test("should include Oracle escalation recommendation in output", () => {
+  test("should include Elijah escalation recommendation in output", () => {
     const prompt = EZRA_SYSTEM_PROMPT
 
-    expect(prompt).toMatch(/Oracle Escalation.*YES.*NO|Oracle Escalation:\s*\[YES\s*\|\s*NO\]/i)
+    expect(prompt).toMatch(/Elijah Escalation.*YES.*NO|Elijah Escalation:\s*\[YES\s*\|\s*NO\]/i)
   })
 })
 
-describe("EZRA_SYSTEM_PROMPT Oracle escalation triggers", () => {
-  test("should recommend Oracle for plans with 15+ tasks", () => {
+describe("EZRA_SYSTEM_PROMPT Elijah escalation triggers", () => {
+  test("should recommend Elijah for plans with 15+ tasks", () => {
     const prompt = EZRA_SYSTEM_PROMPT
 
     expect(prompt).toMatch(/15\+/)
   })
 
-  test("should recommend Oracle for dense dependencies", () => {
+  test("should recommend Elijah for dense dependencies", () => {
     const prompt = EZRA_SYSTEM_PROMPT
 
     expect(prompt.toLowerCase()).toMatch(/dense.*depend|inter-depend/)
@@ -196,26 +196,26 @@ describe("EZRA_SYSTEM_PROMPT ADHD context retention", () => {
 })
 
 describe("createEzraAgent factory function", () => {
-  test("createEzraAgent with default model returns Sonnet config", () => {
+  test("createEzraAgent with default model returns GPT-5.2 config", () => {
     const agent = createEzraAgent()
 
-    expect(agent.model).toBe("anthropic/claude-sonnet-4-5")
+    expect(agent.model).toBe("openai/gpt-5.2")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
 
-  test("createEzraAgent with default model has thinking config (Claude)", () => {
+  test("createEzraAgent with default model has high reasoningEffort (GPT)", () => {
     const agent = createEzraAgent()
 
-    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 32000 })
-    expect(agent.reasoningEffort).toBeUndefined()
+    expect(agent.reasoningEffort).toBe("high")
+    expect(agent.thinking).toBeUndefined()
   })
 
-  test("createEzraAgent with GPT model has reasoningEffort, no thinking", () => {
+  test("createEzraAgent with GPT model has high reasoningEffort, no thinking", () => {
     const agent = createEzraAgent("openai/gpt-5.2")
 
     expect(agent.model).toBe("openai/gpt-5.2")
-    expect(agent.reasoningEffort).toBe("medium")
+    expect(agent.reasoningEffort).toBe("high")
     expect(agent.textVerbosity).toBe("high")
     expect(agent.thinking).toBeUndefined()
   })
@@ -273,7 +273,7 @@ describe("EZRA_SYSTEM_PROMPT identity", () => {
 describe("ezraAgent default export", () => {
   test("ezraAgent is properly configured", () => {
     expect(ezraAgent).toBeDefined()
-    expect(ezraAgent.model).toBe("anthropic/claude-sonnet-4-5")
+    expect(ezraAgent.model).toBe("openai/gpt-5.2")
     expect(ezraAgent.prompt).toBe(EZRA_SYSTEM_PROMPT)
   })
 })

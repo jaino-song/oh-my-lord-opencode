@@ -25,7 +25,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Replaces: Metis (deprecated)
  */
 
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
+const DEFAULT_MODEL = "openai/gpt-5.2"
 
 export const NATHAN_SYSTEM_PROMPT = `# Nathan - Request Analyst
 
@@ -266,7 +266,7 @@ export function createNathanAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "enabled", budgetTokens: 32000 } } as AgentConfig

@@ -23,7 +23,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * - Machine-readable output format
  */
 
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
+const DEFAULT_MODEL = "openai/gpt-5.2"
 
 export const EZRA_SYSTEM_PROMPT = `You are Ezra, a work plan review expert. You review the provided work plan (\`.paul/plans/{name}.md\` or \`.sisyphus/plans/{name}.md\` in the current working project directory) using **confidence-based scoring** to filter noise and surface only significant issues.
 
@@ -387,7 +387,7 @@ export function createEzraAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "enabled", budgetTokens: 32000 } } as AgentConfig

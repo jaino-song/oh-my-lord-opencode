@@ -154,26 +154,26 @@ describe("NATHAN_SYSTEM_PROMPT constraints", () => {
 })
 
 describe("createNathanAgent factory function", () => {
-  test("createNathanAgent with default model returns Sonnet config", () => {
+  test("createNathanAgent with default model returns GPT-5.2 config", () => {
     const agent = createNathanAgent()
 
-    expect(agent.model).toBe("anthropic/claude-sonnet-4-5")
+    expect(agent.model).toBe("openai/gpt-5.2")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
 
-  test("createNathanAgent with default model has thinking config (Claude)", () => {
+  test("createNathanAgent with default model has high reasoningEffort (GPT)", () => {
     const agent = createNathanAgent()
 
-    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 32000 })
-    expect(agent.reasoningEffort).toBeUndefined()
+    expect(agent.reasoningEffort).toBe("high")
+    expect(agent.thinking).toBeUndefined()
   })
 
-  test("createNathanAgent with GPT model has reasoningEffort, no thinking", () => {
+  test("createNathanAgent with GPT model has high reasoningEffort, no thinking", () => {
     const agent = createNathanAgent("openai/gpt-5.2")
 
     expect(agent.model).toBe("openai/gpt-5.2")
-    expect(agent.reasoningEffort).toBe("medium")
+    expect(agent.reasoningEffort).toBe("high")
     expect(agent.textVerbosity).toBe("high")
     expect(agent.thinking).toBeUndefined()
   })
@@ -234,7 +234,7 @@ describe("NATHAN_PROMPT_METADATA", () => {
 describe("nathanAgent default export", () => {
   test("nathanAgent is properly configured", () => {
     expect(nathanAgent).toBeDefined()
-    expect(nathanAgent.model).toBe("anthropic/claude-sonnet-4-5")
+    expect(nathanAgent.model).toBe("openai/gpt-5.2")
     expect(nathanAgent.prompt).toBe(NATHAN_SYSTEM_PROMPT)
   })
 

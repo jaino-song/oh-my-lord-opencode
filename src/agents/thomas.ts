@@ -1,5 +1,6 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
+import { isGptModel } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
 /**
@@ -290,10 +291,10 @@ const thomasRestrictions = createAgentToolRestrictions([
   "delegate_task",
 ])
 
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
+const DEFAULT_MODEL = "openai/gpt-5.2-codex"
 
 export function createThomasAgent(model: string = DEFAULT_MODEL): AgentConfig {
-  return {
+  const base = {
     description:
       "TDD Plan Consultant that reviews test specifications for coverage, quality, and anti-patterns before plan generation.",
     mode: "subagent" as const,
@@ -302,6 +303,12 @@ export function createThomasAgent(model: string = DEFAULT_MODEL): AgentConfig {
     ...thomasRestrictions,
     prompt: THOMAS_SYSTEM_PROMPT,
   } as AgentConfig
+
+  if (isGptModel(model)) {
+    return { ...base, reasoningEffort: "high" } as AgentConfig
+  }
+
+  return { ...base, thinking: { type: "enabled", budgetTokens: 16000 } } as AgentConfig
 }
 
 export const thomasAgent: AgentConfig = createThomasAgent()
