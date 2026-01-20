@@ -8,9 +8,40 @@ export const PLANNER_AGENTS = [
   "planner-paul",
 ]
 
+// Whitelist of allowed delegate targets
+export const ALLOWED_DELEGATE_TARGETS = [
+  // Analysis & Research
+  "Nathan (Request Analyst)",
+  "explore",
+  "librarian",
+  
+  // Deep Reasoning & Consultation
+  "Elijah (Deep Reasoning Advisor)",
+  
+  // Planning & Review
+  "Timothy (Implementation Plan Reviewer)",
+  "Solomon (TDD Planner)",
+  "Thomas (TDD Plan Consultant)",
+  "Ezra (Plan Reviewer)",
+]
+
 export const ALLOWED_EXTENSIONS = [".md"]
 
 export const ALLOWED_PATH_PREFIXES = [".sisyphus", ".paul"]
+
+export const PLAN_TRIGGER_PHRASES = [
+  "make a plan",
+  "make the plan",
+  "generate plan",
+  "generate the plan",
+  "create the plan",
+  "save it",
+  "save the plan",
+  "write the plan",
+]
+
+export const DRAFT_PATH_PATTERN = /[/\\]\.?(paul|sisyphus)[/\\]drafts[/\\]/i
+export const PLAN_PATH_PATTERN = /[/\\]\.?(paul|sisyphus)[/\\]plans[/\\]/i
 
 export const BLOCKED_TOOLS = ["Write", "Edit", "write", "edit"]
 
@@ -21,42 +52,42 @@ export const BASH_TOOLS = ["Bash", "bash"]
 // These patterns BLOCK the command
 export const DANGEROUS_BASH_PATTERNS = [
   // Output redirection (writes to files)
-  />(?!\s*\/dev\/null)/,           // > but not > /dev/null
-  />>/,                             // >> append
-  /\s+tee\s+/,                      // tee command
+  />(?!\s*\/dev\/null)/,
+  />>/,
+  /\s+tee\s+/,
   
   // File creation/deletion
-  /\btouch\s+/,                     // touch creates files
-  /\bmkdir\s+/,                     // mkdir creates directories
-  /\brm\s+/,                        // rm deletes files
-  /\brmdir\s+/,                     // rmdir deletes directories
-  /\bunlink\s+/,                    // unlink deletes files
+  /\btouch\s+/,
+  /\bmkdir\s+/,
+  /\brm\s+/,
+  /\brmdir\s+/,
+  /\bunlink\s+/,
   
   // File modification
-  /\bsed\s+-i/,                     // sed in-place edit
-  /\bsed\s+--in-place/,             // sed in-place edit (long form)
-  /\bawk\s+-i\s+inplace/,           // awk in-place edit
-  /\bperl\s+-[ip]/,                 // perl in-place edit
+  /\bsed\s+-i/,
+  /\bsed\s+--in-place/,
+  /\bawk\s+-i\s+inplace/,
+  /\bperl\s+-[ip]/,
   
   // File copy/move (can overwrite)
-  /\bcp\s+/,                        // cp copies files
-  /\bmv\s+/,                        // mv moves/renames files
-  /\brsync\s+/,                     // rsync syncs files
+  /\bcp\s+/,
+  /\bmv\s+/,
+  /\brsync\s+/,
   
   // Here-docs (writes to files)
-  /<<\s*['"]?EOF/i,                 // heredoc patterns
+  /<<\s*['"]?EOF/i,
   /<<\s*['"]?END/i,
-  /<<-?\s*['"]?\w+['"]?\s*$/,       // general heredoc
+  /<<-?\s*['"]?\w+['"]?\s*$/,
   
   // Direct file writes
-  /\becho\s+.*>/,                   // echo with redirect
-  /\bprintf\s+.*>/,                 // printf with redirect
-  /\bcat\s+.*>/,                    // cat with redirect (not cat for reading)
+  /\becho\s+.*>/,
+  /\bprintf\s+.*>/,
+  /\bcat\s+.*>/,
   
   // Permission changes
-  /\bchmod\s+/,                     // chmod changes permissions
-  /\bchown\s+/,                     // chown changes ownership
-  /\bchgrp\s+/,                     // chgrp changes group
+  /\bchmod\s+/,
+  /\bchown\s+/,
+  /\bchgrp\s+/,
   
   // Destructive git operations
   /\bgit\s+(push|commit|add|checkout|reset|clean|stash)/,
@@ -66,36 +97,36 @@ export const DANGEROUS_BASH_PATTERNS = [
   /\bpip\s+(install|uninstall)/,
   
   // Other dangerous operations
-  /\btruncate\s+/,                  // truncate files
-  /\bdd\s+/,                        // dd disk operations
-  /\binstall\s+/,                   // install command
-  /\bln\s+/,                        // ln creates links
+  /\btruncate\s+/,
+  /\bdd\s+/,
+  /\binstall\s+/,
+  /\bln\s+/,
 ]
 
 // Safe read-only bash patterns (allow list - these are always safe)
 export const SAFE_BASH_PATTERNS = [
-  /^ls(\s|$)/,                      // ls
-  /^cat\s+[^>|]+$/,                 // cat without redirect or pipe to write
-  /^head\s+/,                       // head
-  /^tail\s+/,                       // tail
-  /^grep\s+/,                       // grep
-  /^find\s+/,                       // find
-  /^which\s+/,                      // which
-  /^pwd$/,                          // pwd
-  /^echo\s+[^>]+$/,                 // echo without redirect
-  /^git\s+(status|log|diff|branch|show|remote|describe|rev-parse)/,  // safe git
-  /^(npm|yarn|pnpm|bun)\s+(list|ls|view|show|info|outdated|why)/,    // safe npm
-  /^env$/,                          // env
-  /^printenv/,                      // printenv
-  /^whoami$/,                       // whoami
-  /^hostname$/,                     // hostname
-  /^date$/,                         // date
-  /^df\s/,                          // df
-  /^du\s/,                          // du
-  /^wc\s/,                          // wc
-  /^file\s/,                        // file
-  /^stat\s/,                        // stat
-  /^tree(\s|$)/,                    // tree
+  /^ls(\s|$)/,
+  /^cat\s+[^>|]+$/,
+  /^head\s+/,
+  /^tail\s+/,
+  /^grep\s+/,
+  /^find\s+/,
+  /^which\s+/,
+  /^pwd$/,
+  /^echo\s+[^>]+$/,
+  /^git\s+(status|log|diff|branch|show|remote|describe|rev-parse)/,
+  /^(npm|yarn|pnpm|bun)\s+(list|ls|view|show|info|outdated|why)/,
+  /^env$/,
+  /^printenv/,
+  /^whoami$/,
+  /^hostname$/,
+  /^date$/,
+  /^df\s/,
+  /^du\s/,
+  /^wc\s/,
+  /^file\s/,
+  /^stat\s/,
+  /^tree(\s|$)/,
 ]
 
 export const PLANNING_CONSULT_WARNING = `

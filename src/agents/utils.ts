@@ -240,6 +240,34 @@ export function createBuiltinAgents(
     result["Sisyphus"] = sisyphusConfig
   }
 
+  if (!disabledAgents.includes("Paul")) {
+    const paulOverride = agentOverrides["Paul"]
+    const paulModel = paulOverride?.model ?? systemDefaultModel
+    let paulConfig = createOrchestratorSisyphusAgent({
+      model: paulModel,
+      availableAgents,
+    })
+
+    if (paulOverride) {
+      paulConfig = mergeAgentConfig(paulConfig, paulOverride)
+    }
+
+    result["Paul"] = paulConfig
+  }
+
+  if (!disabledAgents.includes("planner-paul")) {
+      const plannerOverride = agentOverrides["planner-paul"]
+      const plannerModel = plannerOverride?.model ?? systemDefaultModel
+      
+      let plannerConfig = createPlannerPaulAgent(plannerModel)
+      
+      if (plannerOverride) {
+          plannerConfig = mergeAgentConfig(plannerConfig, plannerOverride)
+      }
+      
+      result["planner-paul"] = plannerConfig
+  }
+
   if (!disabledAgents.includes("orchestrator-sisyphus")) {
     const orchestratorOverride = agentOverrides["orchestrator-sisyphus"]
     const orchestratorModel = orchestratorOverride?.model ?? systemDefaultModel

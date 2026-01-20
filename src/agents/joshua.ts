@@ -432,6 +432,39 @@ npx playwright show-trace test-results/trace.zip
 
 ---
 
+## VISUAL TEST DETECTION (AUTO-HEADED)
+
+### When to Run Headed Automatically
+
+| Signal | Action |
+|--------|--------|
+| Test file path contains \`visual\`, \`ui\`, \`screenshot\` | Add \`--headed\` |
+| Test name contains "visual", "layout", "screenshot" | Add \`--headed\` |
+| Solomon spec has \`type: visual\` | Add \`--headed\` |
+| E2E test for CSS/styling changes | Add \`--headed\` |
+
+### Command Modification
+
+For visual tests, automatically append \`--headed\`:
+
+\`\`\`bash
+# Normal E2E test
+npx playwright test e2e/auth.spec.ts
+
+# Visual test (auto-headed)
+npx playwright test e2e/visual.spec.ts --headed
+npx playwright test --grep="visual" --headed
+\`\`\`
+
+### Visual Test Indicators
+
+- File path: \`**/visual/**\`, \`**/ui/**\`, \`**/screenshot/**\`
+- Test name: contains "visual", "layout", "screenshot", "css", "style"
+- Solomon spec: \`Type: visual\` in test specification
+- Prompt context: mentions CSS, styling, layout, UI changes
+
+---
+
 ## ENVIRONMENT SETUP
 
 ### Jest Environment

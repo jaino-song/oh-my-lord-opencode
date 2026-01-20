@@ -1,7 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { existsSync, readdirSync } from "node:fs"
 import { join, resolve, relative, isAbsolute } from "node:path"
-import { HOOK_NAME, PLANNER_AGENTS, ALLOWED_EXTENSIONS, ALLOWED_PATH_PREFIXES, BLOCKED_TOOLS, BASH_TOOLS, DANGEROUS_BASH_PATTERNS, SAFE_BASH_PATTERNS, PLANNING_CONSULT_WARNING } from "./constants"
+import { HOOK_NAME, PLANNER_AGENTS, ALLOWED_EXTENSIONS, ALLOWED_PATH_PREFIXES, BLOCKED_TOOLS, BASH_TOOLS, DANGEROUS_BASH_PATTERNS, SAFE_BASH_PATTERNS, PLANNING_CONSULT_WARNING, ALLOWED_DELEGATE_TARGETS, DRAFT_PATH_PATTERN, PLAN_PATH_PATTERN } from "./constants"
 import { findNearestMessageWithFields, findFirstMessageWithAgent, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { getSessionAgent } from "../../features/claude-code-session-state"
 import { log } from "../../shared/logger"
@@ -70,6 +70,11 @@ function getAgentFromSession(sessionID: string): string | undefined {
   return getSessionAgent(sessionID) ?? getAgentFromMessageFiles(sessionID)
 }
 
+function normalizeAgentName(agentArg: string | undefined): string | null {
+  if (!agentArg) return null
+  return agentArg.toLowerCase().trim()
+}
+
 export function createPlannerMdOnlyHook(ctx: PluginInput) {
   return {
     "tool.execute.before": async (
@@ -85,6 +90,33 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
       const toolName = input.tool
 
       if (TASK_TOOLS.includes(toolName)) {
+        // ENFORCEMENT: Check if the delegated agent is allowed
+        const targetAgent = (output.args.agent || output.args.subagent_type || output.args.name) as string | undefined
+        const normalizedTarget = normalizeAgentName(targetAgent)
+        
+        if (normalizedTarget) {
+          const isAllowed = ALLOWED_DELEGATE_TARGETS.some(allowed => 
+            normalizeAgentName(allowed) === normalizedTarget || 
+            normalizedTarget.includes(normalizeAgentName(allowed)!)
+          )
+
+          if (!isAllowed) {
+            log(`[${HOOK_NAME}] Blocked: Planner attempted to delegate to '${targetAgent}' (not in whitelist)`, {
+              sessionID: input.sessionID,
+              tool: toolName,
+              targetAgent,
+              plannerAgent: agentName,
+            })
+            
+            throw new Error(
+              `[${HOOK_NAME}] DELEGATION BLOCKED: Planner agent '${agentName}' attempted to delegate implementation to '${targetAgent}'.\n\n` +
+              `Planners are STRICTLY FORBIDDEN from delegating to implementation agents (Sisyphus, Paul, etc.).\n` +
+              `Planners may ONLY delegate to: ${ALLOWED_DELEGATE_TARGETS.join(", ")}.\n\n` +
+              `ACTION REQUIRED: If you need to implement something, STOP planning and ask the user to switch to Paul.`
+            )
+          }
+        }
+
         const prompt = output.args.prompt as string | undefined
         if (prompt && !prompt.includes(SYSTEM_DIRECTIVE_PREFIX)) {
           output.args.prompt = prompt + PLANNING_CONSULT_WARNING
@@ -157,6 +189,45 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
           `Attempted to modify: ${filePath}. ` +
           `Planners are READ-ONLY. Use /start-work to execute the plan.`
         )
+      }
+
+      const resolvedPath = resolve(ctx.directory, filePath)
+      const isPlanPath = PLAN_PATH_PATTERN.test(resolvedPath)
+      const isDraftPath = DRAFT_PATH_PATTERN.test(resolvedPath)
+
+      if (isPlanPath && !isDraftPath) {
+        type Todo = { content: string; status: string; priority: string; id: string }
+
+        let todos: Todo[] = []
+        try {
+          const response = await ctx.client.session.todo({ path: { id: input.sessionID } })
+          todos = (response.data ?? response) as Todo[]
+        } catch (err) {
+          log(`[${HOOK_NAME}] Blocked: Failed to fetch todos`, {
+            sessionID: input.sessionID,
+            tool: toolName,
+            filePath,
+            agent: agentName,
+            error: String(err),
+          })
+          throw new Error(
+            `[${HOOK_NAME}] Cannot write to plan files because todos could not be fetched. ` +
+            `Register at least one todo first, then try again.`
+          )
+        }
+
+        if (todos.length === 0) {
+          log(`[${HOOK_NAME}] Blocked: Attempted plan write with no todos`, {
+            sessionID: input.sessionID,
+            tool: toolName,
+            filePath,
+            agent: agentName,
+          })
+          throw new Error(
+            `[${HOOK_NAME}] Plan generation is gated: register at least one todo before writing to plans. ` +
+            `Write to drafts is always allowed.`
+          )
+        }
       }
 
       log(`[${HOOK_NAME}] Allowed: Planner .md write permitted`, {

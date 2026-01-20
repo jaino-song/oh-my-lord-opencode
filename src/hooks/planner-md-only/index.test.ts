@@ -3,16 +3,30 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { createPrometheusMdOnlyHook } from "./index"
 import { MESSAGE_STORAGE } from "../../features/hook-message-injector"
-import { SYSTEM_DIRECTIVE_PREFIX, createSystemDirective, SystemDirectiveTypes } from "../../shared/system-directive"
+import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
 import { clearSessionAgent } from "../../features/claude-code-session-state"
 
 describe("prometheus-md-only", () => {
   const TEST_SESSION_ID = "test-session-prometheus"
   let testMessageDir: string
 
-  function createMockPluginInput() {
+  type Todo = { content: string; status: string; priority: string; id: string }
+
+  function createMockPluginInput(options?: { todos?: Todo[]; throwTodoError?: boolean }) {
+    const todoMock = mock(async () => {
+      if (options?.throwTodoError) {
+        throw new Error("todo fetch failed")
+      }
+
+      return {
+        data: (options?.todos ?? [
+          { content: "test todo", status: "pending", priority: "high", id: "todo-1" },
+        ]) satisfies Todo[],
+      }
+    })
+
     return {
-      client: {},
+      client: { session: { todo: todoMock } },
       directory: "/tmp/test",
     } as never
   }
@@ -59,12 +73,12 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).rejects.toThrow("can only write/edit .md files")
     })
 
-    test("should allow Prometheus to write .md files inside .sisyphus/", async () => {
+    test("should allow plan writes when todos exist", async () => {
       // #given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -77,7 +91,43 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
+    test("should block plan writes when no todos registered", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput({ todos: [] }))
+      const input = {
+        tool: "Write",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: { filePath: "/tmp/test/.paul/plans/work-plan.md" },
+      }
+
+      // #when / #then
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).rejects.toThrow("register at least one todo")
+    })
+
+    test("should always allow draft writes", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput({ todos: [] }))
+      const input = {
+        tool: "Write",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: { filePath: "/tmp/test/.paul/drafts/work-plan.md" },
+      }
+
+      // #when / #then
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -95,7 +145,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).rejects.toThrow("can only write/edit .md files inside .sisyphus/")
     })
@@ -113,7 +163,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).rejects.toThrow("can only write/edit .md files")
     })
@@ -131,7 +181,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -149,7 +199,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -252,7 +302,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -293,7 +343,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -317,7 +367,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -335,7 +385,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -353,7 +403,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -371,7 +421,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).rejects.toThrow("can only write/edit .md files inside .sisyphus/")
     })
@@ -389,7 +439,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then - should allow because .sisyphus is in path
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -407,7 +457,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).rejects.toThrow("can only write/edit .md files inside .sisyphus/")
     })
@@ -425,7 +475,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -444,7 +494,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -462,7 +512,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -480,7 +530,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).rejects.toThrow("can only write/edit .md files")
     })
@@ -525,7 +575,7 @@ describe("prometheus-md-only", () => {
           }
 
           // #when / #then
-          await expect(
+          return expect(
             hook["tool.execute.before"](input, output)
           ).rejects.toThrow("cannot execute file-modifying bash commands")
         })
@@ -563,7 +613,7 @@ describe("prometheus-md-only", () => {
           }
 
           // #when / #then
-          await expect(
+          return expect(
             hook["tool.execute.before"](input, output)
           ).resolves.toBeUndefined()
         })
@@ -583,7 +633,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -601,7 +651,7 @@ describe("prometheus-md-only", () => {
       }
 
       // #when / #then
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).rejects.toThrow("cannot execute file-modifying bash commands")
     })
