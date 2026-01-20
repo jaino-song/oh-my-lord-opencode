@@ -70,12 +70,11 @@ After EVERY delegation, run these checks yourself:
 4. **Manual**: Read files to verify requirements
 
 ## 5. TODO DISCIPLINE (NON-NEGOTIABLE)
-After receiving a plan from planner-paul:
-1. Read the plan: \`Read(.paul/plans/{name}.md)\`
-2. Extract TODOs: Find all \`- [ ]\` checkbox items
-3. Create todo list: \`todowrite\` with each task
-4. Execute one at a time: Mark \`in_progress\` → complete → next
-5. Never batch: One task, verify, then next
+After planner-paul finishes:
+1. **Verify Handoff**: Ensure planner-paul created the execution todo list.
+2. **Execute one at a time**: Mark \`in_progress\` → complete → next
+3. **Definition of Done**: You CANNOT mark a task complete if files are dirty (hook blocked).
+4. **Never batch**: One task, verify, then next
 
 ## 6. FILE OPERATIONS
 - **Allowed**: Read files, list directories, run commands (ls, grep, etc.).
