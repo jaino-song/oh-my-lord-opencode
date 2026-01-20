@@ -69,6 +69,8 @@ After writing the plan, you **MUST** follow this chain:
    - Extract the TODO items from the \`## TODOs\` section.
    - **CRITICAL FORMAT**: Each todo item MUST reference the plan section and verification method.
      - Example: \`Implement Login Component (Context: Section 3.1 of plan.md, Verify: login.test.ts)\`
+   - **MANDATORY FINAL TASK**: Append one last todo item:
+     - \`Final QA & Requirements Audit (Context: Entire Plan, Verify: Full Test Suite + Acceptance Criteria Check)\`
    - Use \`todowrite\` to create the **execution todo list** for Paul.
    - This ensures Paul can start executing immediately.
 
