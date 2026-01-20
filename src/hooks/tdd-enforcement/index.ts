@@ -43,16 +43,18 @@ function isCompletingTodo(args: Record<string, unknown>): boolean {
   return false
 }
 
+const callToFilePathMap = new Map<string, string>()
+
 export function createTddEnforcementHook(ctx: PluginInput) {
   return {
     "tool.execute.before": async (
-      input: { tool: string; sessionID: string; callID: string; args: Record<string, unknown> },
+      input: { tool: string; sessionID: string; callID: string },
       output: { args: Record<string, unknown>; message?: string }
     ): Promise<void> => {
       const toolName = input.tool
 
       if (TODO_TOOLS.includes(toolName)) {
-        if (isCompletingTodo(input.args)) {
+        if (isCompletingTodo(output.args)) {
           if (hasDirtyFiles(input.sessionID)) {
              const dirtyFiles = getDirtyFiles(input.sessionID)
              const errorMsg = `
@@ -72,13 +74,13 @@ Use: \`delegate_task(agent="Joshua (Test Runner)", prompt="Run tests")\`
       }
 
       if (toolName === "delegate_task") {
-        const isVerification = isVerificationAgent(input.args)
+        const isVerification = isVerificationAgent(output.args)
 
         if (isVerification) {
           if (hasDirtyFiles(input.sessionID)) {
              log(`[${HOOK_NAME}] Clearing dirty files for verification run`, {
                sessionID: input.sessionID,
-               agent: input.args.subagent_type
+               agent: output.args.subagent_type
              })
              clearDirtyFiles(input.sessionID)
           }
@@ -102,54 +104,43 @@ Use: \`delegate_task(agent="Joshua (Test Runner)", prompt="Run tests")\`
         return
       }
 
-      if (!WRITE_EDIT_TOOLS.includes(toolName)) {
-        return
-      }
-
-      const filePath = (output.args.filePath ?? output.args.path ?? output.args.file) as string | undefined
-      if (!filePath || !isCodeFile(filePath)) {
-        return
-      }
-
-      if (!hasTestSpecs(ctx.directory)) {
-        const reminder = "[TDD REMINDER] No test specs found in .paul/plans/. Consider using Solomon to create test specs first."
-        output.message = output.message ? `${output.message}\n\n${reminder}` : reminder
-        
-        log(`[${HOOK_NAME}] Injected pre-write TDD reminder`, {
-          sessionID: input.sessionID,
-          tool: toolName,
-          filePath,
-        })
+      if (WRITE_EDIT_TOOLS.includes(toolName)) {
+        const filePath = (output.args.filePath ?? output.args.path ?? output.args.file) as string | undefined
+        if (filePath && isCodeFile(filePath)) {
+          callToFilePathMap.set(input.callID, filePath)
+          
+          if (!hasTestSpecs(ctx.directory)) {
+            const reminder = "[TDD REMINDER] No test specs found in .paul/plans/. Consider using Solomon to create test specs first."
+            output.message = output.message ? `${output.message}\n\n${reminder}` : reminder
+            
+            log(`[${HOOK_NAME}] Injected pre-write TDD reminder`, {
+              sessionID: input.sessionID,
+              tool: toolName,
+              filePath,
+            })
+          }
+        }
       }
     },
 
     "tool.execute.after": async (
       input: { tool: string; sessionID: string; callID: string },
-      output: { args: Record<string, unknown>; result?: unknown; message?: string }
+      _output: unknown
     ): Promise<void> => {
-      const toolName = input.tool
-
-      if (!WRITE_EDIT_TOOLS.includes(toolName)) {
-        return
+      const filePath = callToFilePathMap.get(input.callID)
+      if (filePath) {
+        callToFilePathMap.delete(input.callID)
+        markFileDirty(input.sessionID, filePath)
+        
+        const dirtyCount = getDirtyFiles(input.sessionID).length
+        
+        log(`[${HOOK_NAME}] Marked file dirty`, {
+          sessionID: input.sessionID,
+          tool: input.tool,
+          filePath,
+          dirtyCount
+        })
       }
-
-      const filePath = (output.args.filePath ?? output.args.path ?? output.args.file) as string | undefined
-      if (!filePath || !isCodeFile(filePath)) {
-        return
-      }
-
-      markFileDirty(input.sessionID, filePath)
-      
-      const dirtyCount = getDirtyFiles(input.sessionID).length
-      const reminder = `[TDD REMINDER] Code changed (${dirtyCount} dirty files). Run Joshua (Test Runner) to verify: delegate_task(agent='Joshua (Test Runner)', prompt='Run tests')`
-      output.message = output.message ? `${output.message}\n\n${reminder}` : reminder
-      
-      log(`[${HOOK_NAME}] Marked file dirty & injected reminder`, {
-        sessionID: input.sessionID,
-        tool: toolName,
-        filePath,
-        dirtyCount
-      })
     },
   }
 }

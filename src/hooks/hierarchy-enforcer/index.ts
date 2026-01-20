@@ -63,7 +63,7 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
 
   return {
     "tool.execute.before": async (
-      input: { tool: string; sessionID: string },
+      input: { tool: string; sessionID: string; callID: string },
       output: { args: Record<string, unknown>; message?: string }
     ): Promise<void> => {
       const tool = input.tool.toLowerCase()

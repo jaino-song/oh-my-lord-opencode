@@ -28,7 +28,7 @@ describe("hierarchy-enforcer", () => {
       const { createHierarchyEnforcerHook } = await import("./index")
       const hook = createHierarchyEnforcerHook(mockCtx as any)
       
-      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID }
+      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "test-call" }
       const output = {
         args: {
           category: "quick",
@@ -49,7 +49,7 @@ describe("hierarchy-enforcer", () => {
       const { createHierarchyEnforcerHook } = await import("./index")
       const hook = createHierarchyEnforcerHook(mockCtx as any)
       
-      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID }
+      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "test-call" }
       const output = {
         args: {
           category: "quick",
