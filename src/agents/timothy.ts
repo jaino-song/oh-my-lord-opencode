@@ -120,6 +120,7 @@ Extract the plan path from anywhere in the input:
 |-------|----------|
 | **Atomicity** | Is each task small enough to complete in one session? |
 | **Actionability** | Can an executor start immediately without asking questions? |
+| **Blind Executability** | Could an agent execute this task with NO memory of previous steps? Are references explicit? |
 | **References** | Are file paths, patterns, and examples provided? |
 | **Parallelizability** | Which tasks can run in parallel? Which have dependencies? |
 | **Verification** | How will each task be verified as complete? |
@@ -199,6 +200,12 @@ After reviewing, provide your assessment:
 ### Focus on Implementability
 
 Ask yourself: "If I were Paul executing this plan, would I know exactly what to do?"
+
+### Amnesia-Proof Instructions
+
+Assume Paul has NO memory of previous context. Every task must be self-contained:
+- ❌ "Implement the function discussed above"
+- ✅ "Implement \`calculateTotal\` in \`src/utils.ts\` using logic from Section 2.1"
 
 ### Catch the Gaps
 
