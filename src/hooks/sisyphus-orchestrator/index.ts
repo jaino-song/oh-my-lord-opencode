@@ -655,13 +655,17 @@ export function createSisyphusOrchestratorHook(
           if (input.callID) {
             pendingFilePaths.set(input.callID, filePath)
           }
-          const warning = ORCHESTRATOR_DELEGATION_REQUIRED.replace("$FILE_PATH", filePath)
-          output.message = (output.message || "") + warning
-          log(`[${HOOK_NAME}] Injected delegation warning for direct file modification`, {
+          log(`[${HOOK_NAME}] BLOCKED: Direct file modification by orchestrator`, {
             sessionID: input.sessionID,
             tool: input.tool,
             filePath,
           })
+          
+          throw new Error(
+            `[${HOOK_NAME}] VIOLATION BLOCKED: You (Orchestrator) attempted to modify '${filePath}' directly.\n` +
+            `Protocol: You MUST delegate implementation to subagents (Sisyphus-Junior, frontend-ui-ux, etc.).\n` +
+            `Action: Use delegate_task() to assign this work.`
+          )
         }
         return
       }
