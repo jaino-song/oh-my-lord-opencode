@@ -87,7 +87,11 @@
           "planner-md-only",
           "prometheus-md-only",
           "start-work",
-          "sisyphus-orchestrator"
+          "sisyphus-orchestrator",
+          "tdd-enforcement",
+          "strict-workflow",
+          "hierarchy-enforcer",
+          "parallel-safety-enforcer"
         ]
       }
     },
