@@ -1,1 +1,1 @@
-planner
+tdd-planner
