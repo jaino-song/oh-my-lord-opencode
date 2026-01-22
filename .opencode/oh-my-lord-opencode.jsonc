@@ -1,6 +1,10 @@
 {
+  // ==============================================
   // Native Claude Code Migration Config
-  // These hooks are replaced by .claude/hooks/hooks.json
+  // Branch: feature/native-claude-code-migration
+  // ==============================================
+
+  // PHASE 3: Hooks replaced by .claude/hooks/hooks.json
   "disabled_hooks": [
     // Major token savings - these inject AGENTS.md/README.md on every file read
     "directory-agents-injector",
@@ -25,7 +29,25 @@
   // "edit-error-recovery" - retry failed edits
   // "background-notification" - useful notifications
 
-  // Disable legacy agents (using native .claude/agents/ instead)
+  // ==============================================
+  // PHASE 4: Tool Migration Notes
+  // ==============================================
+  // Tools don't have a disable config - they remain available but unused
+  // when using native agents.
+  //
+  // REPLACED BY NATIVE (not used when using .claude/agents/):
+  // - delegate_task -> native Task tool
+  // - glob -> native Glob tool
+  // - grep -> native Grep tool
+  // - look-at -> native Read tool
+  // - skill -> native Skill tool
+  //
+  // KEEP AS MCP (valuable, no native equivalent):
+  // - lsp - Language Server Protocol diagnostics
+  // - ast-grep - AST-based search and refactoring
+  // ==============================================
+
+  // PHASE 3: Disable legacy agents (using native .claude/agents/ instead)
   "disabled_agents": [
     "Paul",
     "planner-paul",
