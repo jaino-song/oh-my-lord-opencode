@@ -1,0 +1,5 @@
+# State directory for native Claude Code migration
+# This directory holds runtime state files:
+# - current-agent.txt: Active agent for hierarchy tracking
+# - tdd-phase.json: TDD phase (NONE/RED/GREEN)
+# - active-todos.json: Todo list from previous session

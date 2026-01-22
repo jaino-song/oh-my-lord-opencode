@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/schemas/hooks.json",
+  "hooks": [
+    {
+      "name": "hierarchy-enforcer",
+      "description": "Validates agent delegation hierarchy",
+      "event": "PreToolUse",
+      "matcher": {
+        "tool_name": "Task"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash .claude/scripts/hierarchy-check.sh"
+        }
+      ]
+    },
+    {
+      "name": "tdd-phase-tracker",
+      "description": "Tracks TDD phase and validates transitions",
+      "event": "PreToolUse",
+      "matcher": {
+        "tool_name": "Write|Edit"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash .claude/scripts/tdd-check.sh"
+        }
+      ]
+    },
+    {
+      "name": "planner-write-restrict",
+      "description": "Prevents planner from writing code files",
+      "event": "PreToolUse",
+      "matcher": {
+        "tool_name": "Write|Edit",
+        "agent": "planner"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash .claude/scripts/planner-restrict.sh"
+        }
+      ]
+    },
+    {
+      "name": "executor-code-restrict",
+      "description": "Prevents executor from writing code directly",
+      "event": "PreToolUse",
+      "matcher": {
+        "tool_name": "Write|Edit",
+        "agent": "executor"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash .claude/scripts/executor-restrict.sh"
+        }
+      ]
+    },
+    {
+      "name": "session-start-context",
+      "description": "Injects active plan and todos on session start",
+      "event": "SessionStart",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash .claude/scripts/session-context.sh"
+        }
+      ]
+    },
+    {
+      "name": "test-result-tracker",
+      "description": "Tracks test results for TDD phase management",
+      "event": "PostToolUse",
+      "matcher": {
+        "tool_name": "Bash"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash .claude/scripts/track-test-results.sh"
+        }
+      ]
+    }
+  ]
+}
