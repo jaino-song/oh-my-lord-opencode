@@ -21,9 +21,11 @@ describe("NATHAN_SYSTEM_PROMPT identity", () => {
 })
 
 describe("NATHAN_SYSTEM_PROMPT unique responsibilities", () => {
-  test("should include intent classification", () => {
+  test("should include intent classification with Primary/Secondary", () => {
     expect(NATHAN_SYSTEM_PROMPT.toLowerCase()).toMatch(/intent.*classif/)
-    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Build|Fix|Refactor|Architecture|Research/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Build|Fix|Refactor|Architecture|Research|Trivial|Unclear/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Primary Intent/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Secondary Intent/)
   })
 
   test("should include pre-interview research phase", () => {
@@ -77,6 +79,16 @@ describe("NATHAN_SYSTEM_PROMPT intent types", () => {
     expect(NATHAN_SYSTEM_PROMPT).toMatch(/Research/)
     expect(NATHAN_SYSTEM_PROMPT.toLowerCase()).toMatch(/investigate|explore/)
   })
+
+  test("should define Trivial intent", () => {
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Trivial/)
+    expect(NATHAN_SYSTEM_PROMPT.toLowerCase()).toMatch(/typo|comment|single-file/)
+  })
+
+  test("should define Unclear intent", () => {
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Unclear/)
+    expect(NATHAN_SYSTEM_PROMPT.toLowerCase()).toMatch(/vague|nonsense|missing context/)
+  })
 })
 
 describe("NATHAN_SYSTEM_PROMPT guardrails by intent", () => {
@@ -98,6 +110,14 @@ describe("NATHAN_SYSTEM_PROMPT guardrails by intent", () => {
 
   test("should have Research intent guardrails", () => {
     expect(NATHAN_SYSTEM_PROMPT.toLowerCase()).toMatch(/research.*guardrail|research intent/i)
+  })
+
+  test("should have Trivial intent action", () => {
+    expect(NATHAN_SYSTEM_PROMPT.toLowerCase()).toMatch(/trivial.*action|worker-paul/)
+  })
+
+  test("should have Unclear intent action", () => {
+    expect(NATHAN_SYSTEM_PROMPT.toLowerCase()).toMatch(/unclear.*action|clarify/)
   })
 })
 

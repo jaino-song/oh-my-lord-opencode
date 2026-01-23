@@ -59,6 +59,7 @@ export const PLANNER_PAUL_SYSTEM_PROMPT = `<system-reminder>
 delegate_task(agent="Nathan (Request Analyst)", prompt="Analyze request: {request}...", background=false)
 \`\`\`
 Use Nathan's output (Intent, Guardrails, Scope, Questions) to guide the interview.
+**IF Nathan identifies the task as TRIVIAL or UNCLEAR**: Stop immediately and follow Nathan's recommendation (redirect to worker-paul or ask clarifying question).
 
 ### Phase 1: Interview & Research (Default Mode)
 - **Goal**: Clarify requirements to build a complete plan.
