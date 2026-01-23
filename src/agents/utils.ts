@@ -23,6 +23,8 @@ import { createJohnAgent, JOHN_PROMPT_METADATA } from "./john"
 import { createThomasAgent, THOMAS_PROMPT_METADATA } from "./thomas"
 import { createPlannerPaulAgent } from "./planner-paul"
 import { createTimothyAgent, timothyPromptMetadata } from "./timothy"
+import { createWorkerPaulAgentWithOverrides, workerPaulAgent } from "./worker-paul"
+import { createSaulAgentWithOverrides, saulAgent } from "./saul"
 import type { AvailableAgent } from "./sisyphus-prompt-builder"
 import { deepMerge } from "../shared"
 import { DEFAULT_CATEGORIES } from "../tools/delegate-task/constants"
@@ -38,10 +40,13 @@ const USER_SELECTABLE_AGENTS: BuiltinAgentName[] = [
   "Sisyphus",
   "Paul",
   "planner-paul",
+  "worker-paul",
+  "Saul",
 ]
 
 const agentSources: Record<BuiltinAgentName, AgentSource> = {
    Sisyphus: createSisyphusAgent,
+   Saul: saulAgent,
    // @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
    oracle: createOracleAgent,
    librarian: createLibrarianAgent,
@@ -64,6 +69,7 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   "Thomas (TDD Plan Consultant)": createThomasAgent,
   "planner-paul": createPlannerPaulAgent,
   "Timothy (Implementation Plan Reviewer)": createTimothyAgent,
+  "worker-paul": workerPaulAgent,
 }
 
 /**
@@ -258,14 +264,38 @@ export function createBuiltinAgents(
   if (!disabledAgents.includes("planner-paul")) {
       const plannerOverride = agentOverrides["planner-paul"]
       const plannerModel = plannerOverride?.model ?? systemDefaultModel
-      
+
       let plannerConfig = createPlannerPaulAgent(plannerModel)
-      
+
       if (plannerOverride) {
           plannerConfig = mergeAgentConfig(plannerConfig, plannerOverride)
       }
-      
+
       result["planner-paul"] = plannerConfig
+  }
+
+  if (!disabledAgents.includes("worker-paul")) {
+      const workerOverride = agentOverrides["worker-paul"]
+
+      let workerConfig = createWorkerPaulAgentWithOverrides(workerOverride, systemDefaultModel)
+
+      if (workerOverride) {
+          workerConfig = mergeAgentConfig(workerConfig, workerOverride)
+      }
+
+      result["worker-paul"] = workerConfig
+  }
+
+  if (!disabledAgents.includes("Saul")) {
+      const saulOverride = agentOverrides["Saul"]
+
+      let saulConfig = createSaulAgentWithOverrides(saulOverride, systemDefaultModel)
+
+      if (saulOverride) {
+          saulConfig = mergeAgentConfig(saulConfig, saulOverride)
+      }
+
+      result["Saul"] = saulConfig
   }
 
   if (!disabledAgents.includes("orchestrator-sisyphus")) {

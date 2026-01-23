@@ -31,9 +31,11 @@ agents/
 ## AGENT MODELS
 | Agent | Default Model | Purpose |
 |-------|---------------|---------|
+| Paul | anthropic/claude-sonnet-4-5 | Primary orchestrator. 32k extended thinking budget. |
+| Solomon | openai/gpt-5.2-codex-high | TDD test planning. Plans tests FIRST, then implementation. |
 | Sisyphus | anthropic/claude-opus-4-5 | Primary orchestrator. 32k extended thinking budget. |
-| Elijah | openai/gpt-5.2 | Deep Reasoning Advisor. 5 modes: --debug, --architecture, --security, --performance, --stuck. High reasoning effort, 64k tokens. |
-| Nathan | anthropic/claude-sonnet-4-5 | Request Analyst. Intent classification, guardrails, question prioritization before planning. |
+| Elijah | openai/gpt-5.2-codex-high | Deep Reasoning Advisor. 5 modes: --debug, --architecture, --security, --performance, --stuck. High reasoning effort, 64k tokens. |
+| Nathan | openai/gpt-5.2-high | Request Analyst. Intent classification, guardrails, question prioritization before planning. |
 | librarian | opencode/glm-4.7-free | Multi-repo analysis, docs research, GitHub examples. |
 | explore | opencode/grok-code | Fast contextual grep. Fallbacks: Gemini-3-Flash, Haiku-4-5. |
 | frontend-ui-ux | google/gemini-3-pro-preview | Production-grade UI/UX generation and styling. |

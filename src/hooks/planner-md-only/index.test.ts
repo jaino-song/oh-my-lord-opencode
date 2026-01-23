@@ -132,7 +132,7 @@ describe("prometheus-md-only", () => {
       ).resolves.toBeUndefined()
     })
 
-    test("should block Prometheus from writing .md files outside .sisyphus/", async () => {
+    test("should block Prometheus from writing non-.md files", async () => {
       // #given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -141,13 +141,13 @@ describe("prometheus-md-only", () => {
         callID: "call-1",
       }
       const output = {
-        args: { filePath: "/path/to/README.md" },
+        args: { filePath: "/tmp/test/src/code.ts" },
       }
 
       // #when / #then
       return expect(
         hook["tool.execute.before"](input, output)
-      ).rejects.toThrow("can only write/edit .md files inside .sisyphus/")
+      ).rejects.toThrow("can only write/edit .md files")
     })
 
     test("should block Edit tool for non-.md files", async () => {
@@ -349,6 +349,120 @@ describe("prometheus-md-only", () => {
     })
   })
 
+  describe("workspace-wide markdown write permissions", () => {
+    beforeEach(() => {
+      setupMessageStorage(TEST_SESSION_ID, "planner-paul")
+    })
+
+    test("should allow planner to write any .md file under workspace root", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "Write",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: { filePath: "/tmp/test/docs/architecture.md" },
+      }
+
+      // #when / #then
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
+    test("should allow planner to write README.md at workspace root", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "Write",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: { filePath: "/tmp/test/README.md" },
+      }
+
+      // #when / #then
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
+    test("should allow planner to write .md in nested directories", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "Write",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: { filePath: "/tmp/test/src/components/Button/README.md" },
+      }
+
+      // #when / #then
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
+    test("should block planner from writing .md outside workspace root", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "Write",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: { filePath: "/other/project/README.md" },
+      }
+
+      // #when / #then
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).rejects.toThrow("outside workspace root")
+    })
+
+    test("should block planner from writing .md via path traversal", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "Write",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: { filePath: "/tmp/test/../../../etc/passwd.md" },
+      }
+
+      // #when / #then
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).rejects.toThrow("outside workspace root")
+    })
+
+    test("should still allow .sisyphus and .paul directories", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "Write",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: { filePath: "/tmp/test/.sisyphus/plans/work-plan.md" },
+      }
+
+      // #when / #then
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+  })
+
   describe("cross-platform path validation", () => {
     beforeEach(() => {
       setupMessageStorage(TEST_SESSION_ID, "Prometheus (Planner)")
@@ -408,7 +522,7 @@ describe("prometheus-md-only", () => {
       ).resolves.toBeUndefined()
     })
 
-    test("should block paths outside workspace root even if containing .sisyphus", async () => {
+    test("should block paths outside workspace root", async () => {
       // #given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -417,16 +531,16 @@ describe("prometheus-md-only", () => {
         callID: "call-1",
       }
       const output = {
-        args: { filePath: "/other/project/.sisyphus/plans/x.md" },
+        args: { filePath: "/other/project/docs/plan.md" },
       }
 
       // #when / #then
       return expect(
         hook["tool.execute.before"](input, output)
-      ).rejects.toThrow("can only write/edit .md files inside .sisyphus/")
+      ).rejects.toThrow("outside workspace root")
     })
 
-    test("should allow nested .sisyphus directories (ctx.directory may be parent)", async () => {
+    test("should allow nested directories with .md files", async () => {
       // #given - when ctx.directory is parent of actual project, path includes project name
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -435,16 +549,16 @@ describe("prometheus-md-only", () => {
         callID: "call-1",
       }
       const output = {
-        args: { filePath: "src/.sisyphus/plans/x.md" },
+        args: { filePath: "src/docs/api.md" },
       }
 
-      // #when / #then - should allow because .sisyphus is in path
+      // #when / #then - should allow any .md file under workspace
       return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
 
-    test("should block path traversal attempts", async () => {
+    test("should block path traversal attempts outside workspace", async () => {
       // #given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -453,13 +567,13 @@ describe("prometheus-md-only", () => {
         callID: "call-1",
       }
       const output = {
-        args: { filePath: ".sisyphus/../secrets.md" },
+        args: { filePath: "docs/../../etc/passwd.md" },
       }
 
       // #when / #then
       return expect(
         hook["tool.execute.before"](input, output)
-      ).rejects.toThrow("can only write/edit .md files inside .sisyphus/")
+      ).rejects.toThrow("outside workspace root")
     })
 
     test("should allow case-insensitive .SISYPHUS directory", async () => {

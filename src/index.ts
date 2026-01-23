@@ -8,6 +8,7 @@ import {
   createToolOutputTruncatorHook,
   createDirectoryAgentsInjectorHook,
   createDirectoryReadmeInjectorHook,
+  createPlanSummaryInjectorHook,
   createEmptyTaskResponseDetectorHook,
   createThinkModeHook,
   createClaudeCodeHooksHook,
@@ -131,6 +132,9 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     : null;
   const directoryReadmeInjector = isHookEnabled("directory-readme-injector")
     ? createDirectoryReadmeInjectorHook(ctx)
+    : null;
+  const planSummaryInjector = isHookEnabled("plan-summary-injector")
+    ? createPlanSummaryInjectorHook(ctx)
     : null;
   const emptyTaskResponseDetector = isHookEnabled("empty-task-response-detector")
     ? createEmptyTaskResponseDetectorHook(ctx)
@@ -568,6 +572,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await commentChecker?.["tool.execute.after"](input, output);
       await directoryAgentsInjector?.["tool.execute.after"](input, output);
       await directoryReadmeInjector?.["tool.execute.after"](input, output);
+      await planSummaryInjector?.["tool.execute.after"](input, output);
       await rulesInjector?.["tool.execute.after"](input, output);
       await emptyTaskResponseDetector?.["tool.execute.after"](input, output);
       await agentUsageReminder?.["tool.execute.after"](input, output);

@@ -212,7 +212,7 @@ hierarchy:
         writes_code: true (tests only)
         test_type: unit
         status: created
-        model: anthropic/claude-sonnet-4-5
+        model: openai/gpt-5.2
         inputs:
           - Unit test specs from Solomon's plan
         outputs:
@@ -1007,7 +1007,7 @@ config:
     
     # Planners
     planner-paul: "anthropic/claude-opus-4-5"
-    Solomon (TDD Planner): "anthropic/claude-opus-4-5"
+    Solomon (TDD Planner): "openai/gpt-5.2-codex-high"
     
     # Plan Consultants & Reviewers
     Thomas (TDD Plan Consultant): "anthropic/claude-sonnet-4-5"
@@ -1015,9 +1015,9 @@ config:
     Momus (Plan Reviewer): "anthropic/claude-sonnet-4-5"
     
     # Test Writers & Runner
-    Peter (Test Writer): "anthropic/claude-sonnet-4-5"
-    John (E2E Test Writer): "anthropic/claude-sonnet-4-5"
-    Joshua (Test Runner): "anthropic/claude-sonnet-4-5"
+    Peter (Test Writer): "openai/gpt-5.2-codex-high"
+    John (E2E Test Writer): "openai/gpt-5.2-codex-high"
+    Joshua (Test Runner): "openai/gpt-5.2"
     
     # Specialists
     oracle: "openai/gpt-5.2"

@@ -944,6 +944,7 @@ Task 1 → Task 2 → Task 3
 
 > Implementation + Test = ONE Task. Never separate.
 > Specify parallelizability for EVERY task.
+> Do NOT mix UI/layout work with testing/verification in the same TODO. Split UI and testing into separate TODOs.
 
 - [ ] 1. [Task Title]
 

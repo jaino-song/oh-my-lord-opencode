@@ -12,11 +12,14 @@ import { getTaskToastManager } from "../../features/task-toast-manager"
 import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
 import { subagentSessions, getSessionAgent } from "../../features/claude-code-session-state"
 import { log, getAgentToolRestrictions } from "../../shared"
+import { truncateToTokenLimit } from "../../shared/dynamic-truncator"
 
 type OpencodeClient = PluginInput["client"]
 
 const SISYPHUS_JUNIOR_AGENT = "Sisyphus-Junior"
 const CATEGORY_EXAMPLES = Object.keys(DEFAULT_CATEGORIES).map(k => `'${k}'`).join(", ")
+const DEFAULT_OUTPUT_SUMMARY_TOKENS = 300
+const SKILL_SUMMARY_TOKENS = 300
 
 function parseModelString(model: string): { providerID: string; modelID: string } | undefined {
   const parts = model.split("/")
@@ -97,6 +100,20 @@ function formatDetailedError(error: unknown, ctx: ErrorContext): string {
   }
 
   return lines.join("\n")
+}
+
+function formatOutputByPreference(content: string, outputFormat: "summary" | "full"): string {
+  if (outputFormat === "full") return content
+  if (!content.trim()) return "(No text output)"
+  const { result, truncated } = truncateToTokenLimit(content, DEFAULT_OUTPUT_SUMMARY_TOKENS, 0)
+  if (!truncated) return result
+  return `${result}\n\n[Output truncated. Use output_format=\"full\" to retrieve the full output.]`
+}
+
+function summarizeSkillContent(content: string): string {
+  const { result, truncated } = truncateToTokenLimit(content, SKILL_SUMMARY_TOKENS, 0)
+  if (!truncated) return result
+  return `${result}\n\n[Skill content truncated to save context. Use a full skill load if needed.]`
 }
 
 type ToolContextWithMetadata = {
@@ -182,6 +199,7 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
       run_in_background: tool.schema.boolean().describe("Run in background. MUST be explicitly set. Use false for task delegation, true only for parallel exploration."),
       resume: tool.schema.string().optional().describe("Session ID to resume - continues previous agent session with full context"),
       skills: tool.schema.array(tool.schema.string()).nullable().describe("Array of skill names to prepend to the prompt. Use null if no skills needed. Empty array [] is NOT allowed."),
+      output_format: tool.schema.enum(["summary", "full"]).optional().describe("Output format for sync results. 'summary' (default) truncates long outputs."),
     },
     async execute(args: DelegateTaskArgs, toolContext) {
       const ctx = toolContext as ToolContextWithMetadata
@@ -204,6 +222,7 @@ ${availableSkillsList}${allSkills.length > 15 ? `\n  ... and ${allSkills.length 
 If you believe no skills are needed, you MUST explicitly explain why to the user before using skills=null.`
       }
       const runInBackground = args.run_in_background === true
+      const outputFormat = args.output_format ?? "summary"
 
       let skillContent: string | undefined
       if (args.skills !== null && args.skills.length > 0) {
@@ -213,7 +232,8 @@ If you believe no skills are needed, you MUST explicitly explain why to the user
           const available = allSkills.map(s => s.name).join(", ")
           return `❌ Skills not found: ${notFound.join(", ")}. Available: ${available}`
         }
-        skillContent = Array.from(resolved.values()).join("\n\n")
+        const summarized = Array.from(resolved.values()).map(summarizeSkillContent)
+        skillContent = summarized.join("\n\n")
       }
 
       const messageDir = getMessageDir(ctx.sessionID)
@@ -396,6 +416,7 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
         // Extract text from both "text" and "reasoning" parts (thinking models use "reasoning")
         const textParts = lastMessage?.parts?.filter((p) => p.type === "text" || p.type === "reasoning") ?? []
         const textContent = textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
+        const formattedOutput = formatOutputByPreference(textContent, outputFormat)
 
         const duration = formatDuration(startTime)
 
@@ -405,7 +426,7 @@ Session ID: ${args.resume}
 
 ---
 
-${textContent || "(No text output)"}`
+${formattedOutput}`
       }
 
       if (args.category && args.subagent_type) {
@@ -733,6 +754,7 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
         // Extract text from both "text" and "reasoning" parts (thinking models use "reasoning")
         const textParts = lastMessage?.parts?.filter((p) => p.type === "text" || p.type === "reasoning") ?? []
         const textContent = textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
+        const formattedOutput = formatOutputByPreference(textContent, outputFormat)
 
         const duration = formatDuration(startTime)
 
@@ -749,7 +771,7 @@ Session ID: ${sessionID}
 
 ---
 
-${textContent || "(No text output)"}`
+${formattedOutput}`
       } catch (error) {
         if (toastManager && taskId !== undefined) {
           toastManager.removeTask(taskId)

@@ -19,9 +19,12 @@ import { johnAgent } from "./john"
 import { thomasAgent } from "./thomas"
 import { plannerPaulAgent } from "./planner-paul"
 import { timothyAgent } from "./timothy"
+import { workerPaulAgent } from "./worker-paul"
+import { saulAgent } from "./saul"
 
 export const builtinAgents: Record<string, AgentConfig> = {
   Sisyphus: sisyphusAgent,
+  Saul: saulAgent,
   // DEPRECATED: Use "Elijah (Deep Reasoning Advisor)" instead
   oracle: oracleAgent,
   librarian: librarianAgent,
@@ -45,6 +48,7 @@ export const builtinAgents: Record<string, AgentConfig> = {
   "Thomas (TDD Plan Consultant)": thomasAgent,
   "planner-paul": plannerPaulAgent,
   "Timothy (Implementation Plan Reviewer)": timothyAgent,
+  "worker-paul": workerPaulAgent,
 }
 
 export * from "./types"

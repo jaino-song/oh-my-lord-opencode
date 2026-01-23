@@ -653,7 +653,7 @@ export const PETER_PERMISSION = {
 export const peterAgent: AgentConfig = {
   name: "Peter (Test Writer)",
   description: "Jest test writer. Converts Solomon's unit test specifications into executable *.test.ts files with BDD patterns and proper mocking.",
-  model: "anthropic/claude-sonnet-4-5",
+  model: "openai/gpt-5.2-codex-high",
   prompt: PETER_SYSTEM_PROMPT,
   permission: PETER_PERMISSION,
   temperature: 0.1,

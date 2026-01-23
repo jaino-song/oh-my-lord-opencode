@@ -33,6 +33,14 @@ function normalizeAgentName(agentArg: string | undefined): string | null {
   return agentArg.toLowerCase().trim()
 }
 
+function stripTddWarning(prompt: string): string {
+  const warningPrefix = "[SYSTEM WARNING: TDD VIOLATION DETECTED]"
+  if (!prompt.startsWith(warningPrefix)) return prompt
+  const dividerIndex = prompt.indexOf("\n\n")
+  if (dividerIndex === -1) return prompt
+  return prompt.slice(dividerIndex + 2)
+}
+
 const COMPETENCY_RULES = [
   {
     category: "Visual/UI",
@@ -80,7 +88,8 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
           }
         }
 
-        const prompt = (output.args.prompt as string || "").toLowerCase()
+        const rawPrompt = output.args.prompt as string || ""
+        const prompt = stripTddWarning(rawPrompt).toLowerCase()
         const normalizedTarget = normalizeAgentName(targetAgent)
         
         if (targetAgent && !BYPASS_AGENTS.includes(currentAgent)) {
@@ -117,22 +126,26 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
             for (const rule of COMPETENCY_RULES) {
               const hasKeyword = rule.keywords.some(k => prompt.includes(k))
               
+              if (rule.category === "Visual/UI" && (normalizedTarget === "sisyphus-junior" || normalizedTarget === "git-master")) continue
+
               if (hasKeyword && normalizedTarget !== normalizeAgentName(rule.requiredAgent) && !normalizedTarget?.includes("auditor")) {
                 
                 if (normalizedTarget === "joshua (test runner)" || normalizedTarget === "joshua") continue
                 
-                log(`[${HOOK_NAME}] BLOCKED: Competency trap triggered`, { 
+                log(`[${HOOK_NAME}] ADVISORY: Competency mismatch detected`, { 
                   sessionID: input.sessionID, 
                   category: rule.category,
                   target: targetAgent 
                 })
                 
-                throw new Error(
-                  `[${HOOK_NAME}] COMPETENCY VIOLATION: You detected '${rule.category}' keywords in your prompt.\n` +
+                // Inject advisory warning instead of blocking
+                output.args.prompt = `[SYSTEM ADVISORY: COMPETENCY MISMATCH]\n` +
+                  `Your prompt contains '${rule.category}' keywords.\n` +
                   `${rule.errorMsg}\n` +
-                  `You tried to delegate to: '${targetAgent}'.\n` +
-                  `Correct Action: Change delegate to '${rule.requiredAgent}'.`
-                )
+                  `You are delegating to: '${targetAgent}'.\n` +
+                  `RECOMMENDATION: Consider delegating to '${rule.requiredAgent}' instead.\n` +
+                  `If you have a good reason to proceed with '${targetAgent}', you may continue.\n\n` +
+                  rawPrompt
               }
             }
           }

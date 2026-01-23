@@ -1,7 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { existsSync, readdirSync } from "node:fs"
 import { join, resolve, relative, isAbsolute } from "node:path"
-import { HOOK_NAME, PLANNER_AGENTS, ALLOWED_EXTENSIONS, ALLOWED_PATH_PREFIXES, BLOCKED_TOOLS, BASH_TOOLS, DANGEROUS_BASH_PATTERNS, SAFE_BASH_PATTERNS, PLANNING_CONSULT_WARNING, ALLOWED_DELEGATE_TARGETS, DRAFT_PATH_PATTERN, PLAN_PATH_PATTERN } from "./constants"
+import { HOOK_NAME, PLANNER_AGENTS, ALLOWED_EXTENSIONS, BLOCKED_TOOLS, BASH_TOOLS, DANGEROUS_BASH_PATTERNS, SAFE_BASH_PATTERNS, PLANNING_CONSULT_WARNING, ALLOWED_DELEGATE_TARGETS, DRAFT_PATH_PATTERN, PLAN_PATH_PATTERN } from "./constants"
 import { findNearestMessageWithFields, findFirstMessageWithAgent, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { getSessionAgent } from "../../features/claude-code-session-state"
 import { log } from "../../shared/logger"
@@ -14,14 +14,6 @@ function isAllowedFile(filePath: string, workspaceRoot: string): boolean {
   const rel = relative(workspaceRoot, resolved)
 
   if (rel.startsWith("..") || isAbsolute(rel)) {
-    return false
-  }
-
-  const hasAllowedPath = ALLOWED_PATH_PREFIXES.some(prefix => {
-    const pattern = new RegExp(`\\${prefix}[/\\\\]`, "i")
-    return pattern.test(rel)
-  })
-  if (!hasAllowedPath) {
     return false
   }
 
@@ -178,16 +170,16 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
       }
 
       if (!isAllowedFile(filePath, ctx.directory)) {
-        log(`[${HOOK_NAME}] Blocked: Planner can only write to .sisyphus/*.md or .paul/*.md`, {
+        log(`[${HOOK_NAME}] Blocked: Planner can only write .md files within workspace root`, {
           sessionID: input.sessionID,
           tool: toolName,
           filePath,
           agent: agentName,
         })
         throw new Error(
-          `[${HOOK_NAME}] Planner agents can only write/edit .md files inside .sisyphus/ or .paul/ directories. ` +
-          `Attempted to modify: ${filePath}. ` +
-          `Planners are READ-ONLY. Use /start-work to execute the plan.`
+          `[${HOOK_NAME}] Planner agents can only write/edit .md files within the workspace root. ` +
+          `Attempted to modify: ${filePath} (outside workspace root). ` +
+          `Planners are READ-ONLY for code files. Use /start-work to execute the plan.`
         )
       }
 

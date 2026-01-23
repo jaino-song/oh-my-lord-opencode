@@ -25,7 +25,6 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
   "Paul": [
     "Joshua (Test Runner)",
     "Sisyphus-Junior",
-    "frontend-ui-ux-engineer",
     "ultrabrain",
     "git-master",
     "explore",
@@ -41,7 +40,7 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
   ],
 
   "Joshua (Test Runner)": [],
-  "Sisyphus-Junior": [],
+  "Sisyphus-Junior": ["frontend-ui-ux-engineer"],
   "frontend-ui-ux-engineer": [],
 }
 

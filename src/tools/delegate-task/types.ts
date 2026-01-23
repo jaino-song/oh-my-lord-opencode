@@ -6,4 +6,5 @@ export interface DelegateTaskArgs {
   run_in_background: boolean
   resume?: string
   skills: string[] | null
+  output_format?: "summary" | "full"
 }

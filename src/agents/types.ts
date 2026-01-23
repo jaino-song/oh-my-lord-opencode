@@ -58,6 +58,7 @@ export function isGptModel(model: string): boolean {
 
 export type BuiltinAgentName =
    | "Sisyphus"
+   | "Saul"
    | /** @deprecated Use 'librarian' instead */
    "oracle"
    | "librarian"
@@ -81,6 +82,7 @@ export type BuiltinAgentName =
   | "Thomas (TDD Plan Consultant)"
   | "planner-paul"
   | "Timothy (Implementation Plan Reviewer)"
+  | "worker-paul"
 
 export type OverridableAgentName =
   | "build"

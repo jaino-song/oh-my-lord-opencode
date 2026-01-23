@@ -112,6 +112,13 @@ describe("sisyphus-task", () => {
       // #given / #when / #then
       expect(DELEGATE_TASK_DESCRIPTION).toContain("5+")
     })
+
+    test("documents output_format option", () => {
+      // #given / #when / #then
+      expect(DELEGATE_TASK_DESCRIPTION).toContain("output_format")
+      expect(DELEGATE_TASK_DESCRIPTION).toContain("summary")
+      expect(DELEGATE_TASK_DESCRIPTION).toContain("full")
+    })
   })
 
   describe("resolveCategoryConfig", () => {
@@ -330,6 +337,64 @@ describe("sisyphus-task", () => {
         modelID: "gpt-5.2",
         variant: "xhigh",
       })
+    })
+  })
+
+  describe("category agent routing", () => {
+    test("routes visual-engineering to Sisyphus-Junior", async () => {
+      // #given
+      const { createDelegateTask } = require("./tools")
+      let launchInput: any
+
+      const mockManager = {
+        launch: async (input: any) => {
+          launchInput = input
+          return {
+            id: "task-visual",
+            sessionID: "session-visual",
+            description: "Visual task",
+            agent: input.agent,
+            status: "running",
+          }
+        },
+      }
+
+      const mockClient = {
+        app: { agents: async () => ({ data: [] }) },
+        config: { get: async () => ({}) },
+        session: {
+          create: async () => ({ data: { id: "test-session" } }),
+          prompt: async () => ({ data: {} }),
+          messages: async () => ({ data: [] }),
+        },
+      }
+
+      const tool = createDelegateTask({
+        manager: mockManager,
+        client: mockClient,
+      })
+
+      const toolContext = {
+        sessionID: "parent-session",
+        messageID: "parent-message",
+        agent: "Sisyphus",
+        abort: new AbortController().signal,
+      }
+
+      // #when
+      await tool.execute(
+        {
+          description: "Visual task",
+          prompt: "Update the layout",
+          category: "visual-engineering",
+          run_in_background: true,
+          skills: null,
+        },
+        toolContext
+      )
+
+      // #then
+      expect(launchInput.agent).toBe("Sisyphus-Junior")
     })
   })
 

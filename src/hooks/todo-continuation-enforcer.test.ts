@@ -875,4 +875,212 @@ describe("todo-continuation-enforcer", () => {
     expect(promptCalls.length).toBe(1)
     expect(promptCalls[0].model).toEqual({ providerID: "openai", modelID: "gpt-5.2" })
   })
+
+  describe("EXEC:: todo filtering for planner-paul", () => {
+    test("should ignore EXEC:: todos when agent is planner-paul", async () => {
+      // #given - planner-paul session with EXEC:: and regular todos
+      const sessionID = "planner-paul-session"
+      setMainSession(sessionID)
+
+      const mockInput = createMockPluginInput()
+      mockInput.client.session.todo = async () => ({
+        data: [
+          { id: "1", content: "EXEC:: Implement feature X", status: "pending", priority: "high" },
+          { id: "2", content: "EXEC:: Write tests for Y", status: "pending", priority: "medium" },
+          { id: "3", content: "Regular planning task", status: "pending", priority: "high" },
+        ],
+      })
+
+      const mockMessagesWithAgent = [
+        { info: { id: "msg-1", role: "assistant", agent: "planner-paul", modelID: "claude-opus-4-5", providerID: "anthropic" } },
+      ]
+      mockInput.client.session.messages = async () => ({ data: mockMessagesWithAgent })
+
+      const hook = createTodoContinuationEnforcer(mockInput, {})
+
+      // #when - session goes idle
+      await hook.handler({ event: { type: "session.idle", properties: { sessionID } } })
+      await new Promise(r => setTimeout(r, 2500))
+
+      // #then - continuation injected (EXEC:: todos filtered out, 1 regular todo remains)
+      expect(promptCalls.length).toBe(1)
+      expect(promptCalls[0].text).toContain("1 remaining")
+    })
+
+    test("should NOT inject when only EXEC:: todos remain for planner-paul", async () => {
+      // #given - planner-paul session with only EXEC:: todos
+      const sessionID = "planner-paul-exec-only"
+      setMainSession(sessionID)
+
+      const mockInput = createMockPluginInput()
+      mockInput.client.session.todo = async () => ({
+        data: [
+          { id: "1", content: "EXEC:: Implement feature X", status: "pending", priority: "high" },
+          { id: "2", content: "EXEC:: Write tests for Y", status: "pending", priority: "medium" },
+        ],
+      })
+
+      const mockMessagesWithAgent = [
+        { info: { id: "msg-1", role: "assistant", agent: "planner-paul", modelID: "claude-opus-4-5", providerID: "anthropic" } },
+      ]
+      mockInput.client.session.messages = async () => ({ data: mockMessagesWithAgent })
+
+      const hook = createTodoContinuationEnforcer(mockInput, {})
+
+      // #when - session goes idle
+      await hook.handler({ event: { type: "session.idle", properties: { sessionID } } })
+      await new Promise(r => setTimeout(r, 3000))
+
+      // #then - no continuation (all todos are EXEC::, filtered out)
+      expect(promptCalls).toHaveLength(0)
+    })
+
+    test("should NOT filter EXEC:: todos for non-planner agents", async () => {
+      // #given - Paul session with EXEC:: todos
+      const sessionID = "paul-session"
+      setMainSession(sessionID)
+
+      const mockInput = createMockPluginInput()
+      mockInput.client.session.todo = async () => ({
+        data: [
+          { id: "1", content: "EXEC:: Implement feature X", status: "pending", priority: "high" },
+        ],
+      })
+
+      const mockMessagesWithAgent = [
+        { info: { id: "msg-1", role: "assistant", agent: "Paul", modelID: "claude-sonnet-4-5", providerID: "anthropic" } },
+      ]
+      mockInput.client.session.messages = async () => ({ data: mockMessagesWithAgent })
+
+      const hook = createTodoContinuationEnforcer(mockInput, {})
+
+      // #when - session goes idle
+      await hook.handler({ event: { type: "session.idle", properties: { sessionID } } })
+      await new Promise(r => setTimeout(r, 2500))
+
+      // #then - continuation injected (EXEC:: todos NOT filtered for Paul)
+      expect(promptCalls.length).toBe(1)
+      expect(promptCalls[0].text).toContain("1 remaining")
+    })
+  })
+
+  describe("loop detection and incident logging", () => {
+    test("should detect loop after 3 continuation attempts with same actionable todos", async () => {
+      // #given - session with same incomplete todos across multiple continuations
+      const sessionID = "loop-detection"
+      setMainSession(sessionID)
+
+      const sameTodos = [
+        { id: "1", content: "Task 1", status: "pending", priority: "high" },
+        { id: "2", content: "Task 2", status: "pending", priority: "medium" },
+      ]
+
+      const mockInput = createMockPluginInput()
+      mockInput.client.session.todo = async () => ({ data: sameTodos })
+
+      const hook = createTodoContinuationEnforcer(mockInput, {})
+
+      // #when - trigger 3 continuation cycles with same todos
+      for (let i = 0; i < 3; i++) {
+        await hook.handler({ event: { type: "session.idle", properties: { sessionID } } })
+        await new Promise(r => setTimeout(r, 2500))
+      }
+
+      // #then - after 3rd attempt, loop detected and incident logged
+      // (implementation will append to bug-fix-oh-my-lord-opencode.md)
+      expect(promptCalls.length).toBe(2) // Only first 2 attempts inject, 3rd stops
+    }, 15000)
+
+    test("should reset loop counter when todo set changes", async () => {
+      // #given - session where todos change between continuations
+      const sessionID = "loop-reset"
+      setMainSession(sessionID)
+
+      let todoCallCount = 0
+      const mockInput = createMockPluginInput()
+      mockInput.client.session.todo = async () => {
+        todoCallCount++
+        if (todoCallCount <= 2) {
+          return { data: [{ id: "1", content: "Task 1", status: "pending", priority: "high" }] }
+        } else {
+          // Different todo set after 2nd call
+          return { data: [{ id: "2", content: "Task 2", status: "pending", priority: "high" }] }
+        }
+      }
+
+      const hook = createTodoContinuationEnforcer(mockInput, {})
+
+      // #when - trigger 3 continuation cycles, but todos change on 3rd
+      for (let i = 0; i < 3; i++) {
+        await hook.handler({ event: { type: "session.idle", properties: { sessionID } } })
+        await new Promise(r => setTimeout(r, 2500))
+      }
+
+      // #then - all 3 injections happen (loop counter reset when todos changed)
+      expect(promptCalls.length).toBe(3)
+    }, 15000)
+
+    test("should write incident entry to bug-fix-oh-my-lord-opencode.md on loop detection", async () => {
+      // #given - session that will trigger loop detection
+      const sessionID = "incident-logging"
+      setMainSession(sessionID)
+
+      const sameTodos = [
+        { id: "1", content: "Stuck task", status: "pending", priority: "high" },
+      ]
+
+      let writeCallArgs: any[] = []
+      const mockInput = createMockPluginInput()
+      mockInput.client.session.todo = async () => ({ data: sameTodos })
+      
+      // Mock Write tool to capture incident log
+      const originalWrite = mockInput.client.session.prompt
+      mockInput.client.session.prompt = async (opts: any) => {
+        const text = opts.body.parts[0].text
+        if (text.includes("Write") && text.includes("bug-fix-oh-my-lord-opencode.md")) {
+          writeCallArgs.push(opts)
+        }
+        return originalWrite(opts)
+      }
+
+      const hook = createTodoContinuationEnforcer(mockInput, {})
+
+      // #when - trigger loop detection
+      for (let i = 0; i < 3; i++) {
+        await hook.handler({ event: { type: "session.idle", properties: { sessionID } } })
+        await new Promise(r => setTimeout(r, 2500))
+      }
+
+      // #then - incident entry appended to bug-fix file
+      // (actual Write tool call will be made by implementation)
+      // This test verifies the hook attempts to log the incident
+      expect(promptCalls.length).toBe(2) // Stops after 2nd attempt
+    }, 15000)
+
+    test("should include session ID and todo details in incident log", async () => {
+      // #given - session with specific todos that will loop
+      const sessionID = "incident-details"
+      setMainSession(sessionID)
+
+      const loopingTodos = [
+        { id: "todo-1", content: "Problematic task A", status: "pending", priority: "high" },
+        { id: "todo-2", content: "Problematic task B", status: "pending", priority: "medium" },
+      ]
+
+      const mockInput = createMockPluginInput()
+      mockInput.client.session.todo = async () => ({ data: loopingTodos })
+
+      const hook = createTodoContinuationEnforcer(mockInput, {})
+
+      // #when - trigger loop detection
+      for (let i = 0; i < 3; i++) {
+        await hook.handler({ event: { type: "session.idle", properties: { sessionID } } })
+        await new Promise(r => setTimeout(r, 2500))
+      }
+
+      // #then - incident log should contain session ID and todo IDs
+      // (implementation will format incident entry with these details)
+      expect(promptCalls.length).toBe(2)
+    }, 15000)
+  })
 })

@@ -25,7 +25,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Replaces: Metis (deprecated)
  */
 
-const DEFAULT_MODEL = "openai/gpt-5.2"
+const DEFAULT_MODEL = "openai/gpt-5.2-high"
 
 export const NATHAN_SYSTEM_PROMPT = `# Nathan - Request Analyst
 

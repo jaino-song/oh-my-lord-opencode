@@ -80,6 +80,7 @@ export const HookNameSchema = z.enum([
   "tool-output-truncator",
   "directory-agents-injector",
   "directory-readme-injector",
+  "plan-summary-injector",
   "empty-task-response-detector",
   "think-mode",
   "anthropic-context-window-limit-recovery",

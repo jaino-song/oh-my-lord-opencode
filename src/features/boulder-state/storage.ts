@@ -4,10 +4,12 @@
  * Handles reading/writing boulder.json for active plan tracking.
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from "node:fs"
 import { dirname, join, basename } from "node:path"
 import type { BoulderState, PlanProgress } from "./types"
 import { BOULDER_DIR, BOULDER_FILE, PROMETHEUS_PLANS_DIR } from "./constants"
+
+const planProgressCache = new Map<string, { mtimeMs: number; progress: PlanProgress }>()
 
 export function getBoulderFilePath(directory: string): string {
   return join(directory, BOULDER_DIR, BOULDER_FILE)
@@ -104,10 +106,16 @@ export function findPrometheusPlans(directory: string): string[] {
  */
 export function getPlanProgress(planPath: string): PlanProgress {
   if (!existsSync(planPath)) {
+    planProgressCache.delete(planPath)
     return { total: 0, completed: 0, isComplete: true }
   }
 
   try {
+    const stats = statSync(planPath)
+    const cached = planProgressCache.get(planPath)
+    if (cached && cached.mtimeMs === stats.mtimeMs) {
+      return cached.progress
+    }
     const content = readFileSync(planPath, "utf-8")
     
     // Match markdown checkboxes: - [ ] or - [x] or - [X]
@@ -117,12 +125,15 @@ export function getPlanProgress(planPath: string): PlanProgress {
     const total = uncheckedMatches.length + checkedMatches.length
     const completed = checkedMatches.length
 
-    return {
+    const progress = {
       total,
       completed,
       isComplete: total === 0 || completed === total,
     }
+    planProgressCache.set(planPath, { mtimeMs: stats.mtimeMs, progress })
+    return progress
   } catch {
+    planProgressCache.delete(planPath)
     return { total: 0, completed: 0, isComplete: true }
   }
 }

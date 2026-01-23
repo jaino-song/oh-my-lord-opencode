@@ -39,15 +39,19 @@ interface SessionState {
   isRecovering?: boolean
   countdownStartedAt?: number
   abortDetectedAt?: number
+  lastActionableTodoSignature?: string
+  loopAttemptCount?: number
 }
 
 const CONTINUATION_PROMPT = `${createSystemDirective(SystemDirectiveTypes.TODO_CONTINUATION)}
 
-Incomplete tasks remain in your todo list. Continue working on the next pending task.
+Incomplete tasks remain in your todo list.
 
-- Proceed without asking for permission
-- Mark each task complete when finished
-- Do not stop until all tasks are done`
+ADVISORY: Consider continuing with the next pending task if appropriate.
+- Some tasks may require manual user action or cannot be automated
+- If a task is blocked or requires user input, you may skip it
+- Mark tasks complete when finished
+- If all remaining tasks are blocked, you may stop and report status`
 
 const COUNTDOWN_SECONDS = 2
 const TOAST_DURATION_MS = 900
@@ -69,6 +73,20 @@ function getMessageDir(sessionID: string): string | null {
 
 function getIncompleteCount(todos: Todo[]): number {
   return todos.filter(t => t.status !== "completed" && t.status !== "cancelled").length
+}
+
+function filterActionableTodos(todos: Todo[], agentName?: string): Todo[] {
+  const incomplete = todos.filter(t => t.status !== "completed" && t.status !== "cancelled")
+  
+  if (agentName === "planner-paul") {
+    return incomplete.filter(t => !t.content.trim().toLowerCase().startsWith("exec::"))
+  }
+  
+  return incomplete
+}
+
+function getTodoSignature(todos: Todo[]): string {
+  return todos.map(t => `${t.id}:${t.content}`).sort().join("|")
 }
 
 interface MessageInfo {
@@ -190,12 +208,6 @@ export function createTodoContinuationEnforcer(
       return
     }
 
-    const freshIncompleteCount = getIncompleteCount(todos)
-    if (freshIncompleteCount === 0) {
-      log(`[${HOOK_NAME}] Skipped injection: no incomplete todos`, { sessionID })
-      return
-    }
-
     let agentName = resolvedInfo?.agent
     let model = resolvedInfo?.model
     let tools = resolvedInfo?.tools
@@ -215,6 +227,61 @@ export function createTodoContinuationEnforcer(
       return
     }
 
+    const actionableTodos = filterActionableTodos(todos, agentName)
+    const actionableCount = actionableTodos.length
+    
+    if (actionableCount === 0) {
+      log(`[${HOOK_NAME}] Skipped injection: no actionable todos`, { sessionID, agent: agentName })
+      return
+    }
+
+    const todoSignature = getTodoSignature(actionableTodos)
+    
+    if (state?.lastActionableTodoSignature === todoSignature) {
+      state.loopAttemptCount = (state.loopAttemptCount ?? 0) + 1
+      
+      if (state.loopAttemptCount >= 3) {
+        log(`[${HOOK_NAME}] Loop detected: same todos after ${state.loopAttemptCount} attempts`, { 
+          sessionID, 
+          todoSignature,
+          actionableTodos: actionableTodos.map(t => ({ id: t.id, content: t.content }))
+        })
+        
+        const incidentEntry = `
+## Todo Continuation Loop Detected
+
+**Date**: ${new Date().toISOString()}
+**Session ID**: ${sessionID}
+**Agent**: ${agentName ?? "unknown"}
+**Loop Attempts**: ${state.loopAttemptCount}
+
+**Actionable Todos (stuck):**
+${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\n")}
+
+**Signature**: \`${todoSignature}\`
+
+**Action Taken**: Stopped auto-continuation to prevent infinite loop.
+`
+        
+        try {
+          const { appendFileSync } = await import("node:fs")
+          const { join } = await import("node:path")
+          const bugFixPath = join(ctx.directory, "bug-fix-oh-my-lord-opencode.md")
+          appendFileSync(bugFixPath, incidentEntry, "utf-8")
+          log(`[${HOOK_NAME}] Incident logged to bug-fix-oh-my-lord-opencode.md`, { sessionID })
+        } catch (err) {
+          log(`[${HOOK_NAME}] Failed to write incident log`, { sessionID, error: String(err) })
+        }
+        
+        return
+      }
+    } else {
+      if (state) {
+        state.lastActionableTodoSignature = todoSignature
+        state.loopAttemptCount = 1
+      }
+    }
+
     const editPermission = tools?.edit
     const writePermission = tools?.write
     const hasWritePermission = !tools ||
@@ -225,10 +292,11 @@ export function createTodoContinuationEnforcer(
       return
     }
 
-    const prompt = `${CONTINUATION_PROMPT}\n\n[Status: ${todos.length - freshIncompleteCount}/${todos.length} completed, ${freshIncompleteCount} remaining]`
+    const completedCount = todos.length - getIncompleteCount(todos)
+    const prompt = `${CONTINUATION_PROMPT}\n\n[Status: ${completedCount}/${todos.length} completed, ${actionableCount} remaining]`
 
     try {
-      log(`[${HOOK_NAME}] Injecting continuation`, { sessionID, agent: agentName, model, incompleteCount: freshIncompleteCount })
+      log(`[${HOOK_NAME}] Injecting continuation`, { sessionID, agent: agentName, model, actionableCount })
 
       await ctx.client.session.prompt({
         path: { id: sessionID },
@@ -366,12 +434,6 @@ export function createTodoContinuationEnforcer(
         return
       }
 
-      const incompleteCount = getIncompleteCount(todos)
-      if (incompleteCount === 0) {
-        log(`[${HOOK_NAME}] All todos complete`, { sessionID, total: todos.length })
-        return
-      }
-
       let resolvedInfo: ResolvedMessageInfo | undefined
       try {
         const messagesResp = await ctx.client.session.messages({
@@ -407,7 +469,15 @@ export function createTodoContinuationEnforcer(
         return
       }
 
-      startCountdown(sessionID, incompleteCount, todos.length, resolvedInfo)
+      const actionableTodos = filterActionableTodos(todos, resolvedInfo?.agent)
+      const actionableCount = actionableTodos.length
+      
+      if (actionableCount === 0) {
+        log(`[${HOOK_NAME}] All actionable todos complete`, { sessionID, total: todos.length, agent: resolvedInfo?.agent })
+        return
+      }
+
+      startCountdown(sessionID, actionableCount, todos.length, resolvedInfo)
       return
     }
 

@@ -23,6 +23,14 @@ function isSisyphusPath(filePath: string): boolean {
   return /\.sisyphus[/\\]/.test(filePath)
 }
 
+/**
+ * Cross-platform check if a path is inside .paul/plans/ directory.
+ * Handles both forward slashes (Unix) and backslashes (Windows).
+ */
+function isPaulPlanPath(filePath: string): boolean {
+  return /\.paul[/\\]plans[/\\]/.test(filePath)
+}
+
 const WRITE_EDIT_TOOLS = ["Write", "Edit", "write", "edit"]
 
 const DIRECT_WORK_REMINDER = `
@@ -397,7 +405,8 @@ function isCallerOrchestrator(sessionID?: string): boolean {
   const messageDir = getMessageDir(sessionID)
   if (!messageDir) return false
   const nearest = findNearestMessageWithFields(messageDir)
-  return nearest?.agent === "orchestrator-sisyphus"
+  // Both orchestrator-sisyphus and Paul are orchestrators who delegate, not implement
+  return nearest?.agent === "orchestrator-sisyphus" || nearest?.agent === "Paul"
 }
 
 interface SessionState {
@@ -650,6 +659,22 @@ export function createSisyphusOrchestratorHook(
       // Check Write/Edit tools for orchestrator - inject strong warning
       if (WRITE_EDIT_TOOLS.includes(input.tool)) {
         const filePath = (output.args.filePath ?? output.args.path ?? output.args.file) as string | undefined
+
+        // Special check: NEVER allow .paul/plans/* writes by orchestrators
+        if (filePath && isPaulPlanPath(filePath)) {
+          log(`[${HOOK_NAME}] BLOCKED: Attempt to modify plan file`, {
+            sessionID: input.sessionID,
+            tool: input.tool,
+            filePath,
+          })
+
+          throw new Error(
+            `[${HOOK_NAME}] CRITICAL VIOLATION: You attempted to modify a plan file '${filePath}'.\n` +
+            `Plans are READ-ONLY during execution. Only planner-paul can create/modify plans.\n` +
+            `Action: If you need to change the plan, tell the user to switch to @planner-paul.`
+          )
+        }
+
         if (filePath && !isSisyphusPath(filePath)) {
           // Store filePath for use in tool.execute.after
           if (input.callID) {
@@ -660,7 +685,7 @@ export function createSisyphusOrchestratorHook(
             tool: input.tool,
             filePath,
           })
-          
+
           throw new Error(
             `[${HOOK_NAME}] VIOLATION BLOCKED: You (Orchestrator) attempted to modify '${filePath}' directly.\n` +
             `Protocol: You MUST delegate implementation to subagents (Sisyphus-Junior, frontend-ui-ux, etc.).\n` +

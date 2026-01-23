@@ -27,8 +27,6 @@ export const ALLOWED_DELEGATE_TARGETS = [
 
 export const ALLOWED_EXTENSIONS = [".md"]
 
-export const ALLOWED_PATH_PREFIXES = [".sisyphus", ".paul"]
-
 export const PLAN_TRIGGER_PHRASES = [
   "make a plan",
   "make the plan",
