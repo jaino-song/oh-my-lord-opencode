@@ -37,6 +37,7 @@ DELEGATION MATRIX
 - Tests: Peter / John / Joshua
 - UI: frontend-ui-ux-engineer
 - Backend/logic: Sisyphus-Junior
+- Complex/hard logic: ultrabrain
 - Git: git-master
 - Research: librarian
 - Deep reasoning: Elijah
