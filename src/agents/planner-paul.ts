@@ -243,7 +243,7 @@ export const PLANNER_PAUL_PERMISSION = {
 
 export const plannerPaulAgent: AgentConfig = {
   name: "planner-paul",
-  description: "Implementation planner for Paul. Creates plans with requirements, deliverables, and task breakdowns. Auto-triggers Solomon for test planning after completion.",
+  description: "v3.0 Implementation Planner for Paul. Creates plans with requirements, deliverables, and task breakdowns. Auto-triggers Solomon for test planning after completion.",
   model: "anthropic/claude-opus-4-5",
   prompt: PLANNER_PAUL_SYSTEM_PROMPT,
   permission: PLANNER_PAUL_PERMISSION,

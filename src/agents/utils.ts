@@ -40,7 +40,6 @@ type AgentSource = AgentFactory | AgentConfig
  * All other agents are hidden and can only be invoked by the orchestrator.
  */
 const USER_SELECTABLE_AGENTS: BuiltinAgentName[] = [
-  "Sisyphus",
   "Paul",
   "planner-paul",
   "worker-paul",

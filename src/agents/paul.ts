@@ -67,7 +67,7 @@ export function createOrchestratorSisyphusAgent(
 
   return {
     name: "Paul",
-    description: "Master Orchestrator. Delegates to specialized agents, enforces TDD, and verifies quality. Cannot implement directly.",
+    description: "Master Orchestrator (v3.0). Delegates to specialized agents, enforces TDD, and verifies quality. Cannot implement directly.",
     model: context.model ?? "anthropic/claude-opus-4-5",
     prompt: dynamicPrompt,
     permission: createAgentToolRestrictions(["orchestrator-sisyphus"]).permission,

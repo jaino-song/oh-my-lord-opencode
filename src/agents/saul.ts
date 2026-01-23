@@ -42,7 +42,7 @@ export function createSaulAgentWithOverrides(
 
   const base: AgentConfig = {
     description: override?.description ??
-      "Saul - Bare AI model with tool access. Zero system prompt, zero framework overhead.",
+      "Saul (v3.0) - Bare AI model with tool access. Zero system prompt, zero framework overhead.",
     model,
     temperature,
     maxTokens: 64000,
@@ -69,7 +69,7 @@ export function createSaulAgentWithOverrides(
 }
 
 export const saulAgent: AgentConfig = {
-  description: "Saul - Bare AI model with tool access. Zero system prompt, zero framework overhead.",
+  description: "Saul (v3.0) - Bare AI model with tool access. Zero system prompt, zero framework overhead.",
   model: SAUL_DEFAULTS.model,
   temperature: SAUL_DEFAULTS.temperature,
   maxTokens: 64000,
