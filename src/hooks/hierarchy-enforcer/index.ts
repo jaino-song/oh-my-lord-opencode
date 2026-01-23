@@ -77,7 +77,7 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
       const tool = input.tool.toLowerCase()
       const currentAgent = getAgentFromSession(input.sessionID) || "User"
       
-      if (tool === "delegate_task" || tool === "task") {
+      if (tool === "delegate_task" || tool === "task" || tool === "call_omo_agent") {
         const category = output.args.category as string | undefined
         let targetAgent = (output.args.agent || output.args.subagent_type || output.args.name) as string | undefined
 

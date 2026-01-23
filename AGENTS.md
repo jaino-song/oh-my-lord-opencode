@@ -155,8 +155,8 @@ describe("feature-name", () => {
 | Joshua | openai/gpt-5.2 | Test runner (called by Paul) |
 | Peter | openai/gpt-5.2-codex-high | Unit test writer (called by Solomon or Paul) |
 | John | openai/gpt-5.2-codex-high | E2E test writer (called by Solomon or Paul) |
-| Sisyphus-Junior | anthropic/claude-sonnet-4-5 | Backend implementation (called by Paul, can delegate to frontend-ui-ux-engineer) |
-| frontend-ui-ux-engineer | gemini-3-pro-preview | UI implementation (called by Sisyphus-Junior for UI work) |
+| Sisyphus-Junior | anthropic/claude-sonnet-4-5 | Backend implementation (called by Paul, NO delegation) |
+| frontend-ui-ux-engineer | gemini-3-pro-preview | UI implementation (called by Paul for UI work) |
 | git-master | opencode/glm-4.7-free | Git operations (called by Paul) |
 | Sisyphus | claude-opus-4-5 | **Legacy escape hatch** - Bypasses all rules (use only if system deadlocks) |
 | oracle | gpt-5.2 | High-IQ debugging, architecture |
@@ -185,6 +185,7 @@ describe("feature-name", () => {
 - **Category Required** (HARD BLOCK): All delegations MUST specify `category` parameter (e.g., `category="unit-testing"`).
 - **TDD Mandatory** (HARD BLOCK): HARD BLOCKS if you try to write code before tests (not warnings - actual errors).
 - **No Coding for Orchestrators** (HARD BLOCK): Paul/planner-paul CANNOT write code directly - they MUST delegate.
+- **No Delegation for Subagents** (HARD BLOCK): Sisyphus-Junior cannot delegate to frontend-ui-ux-engineer. Paul must orchestrate.
 - **Competency Routing** (ADVISORY WARNING): Wrong specialist for task triggers warning (not block) - allows proceeding with caution.
 - **TODO Continuation** (ADVISORY SUGGESTION): Suggests continuing incomplete tasks - allows stopping if blocked.
 

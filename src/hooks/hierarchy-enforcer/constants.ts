@@ -15,16 +15,17 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
   "Timothy (Implementation Plan Reviewer)": [],
 
   "Solomon (TDD Planner)": [
-    "Thomas (TDD Plan Consultant)",
-    "Peter (Test Writer)",
-    "John (E2E Test Writer)"
+    "explore",
+    "librarian"
   ],
 
   "Thomas (TDD Plan Consultant)": [],
+  "Nathan (Request Analyst)": ["explore", "librarian"],
 
   "Paul": [
     "Joshua (Test Runner)",
     "Sisyphus-Junior",
+    "frontend-ui-ux-engineer",
     "ultrabrain",
     "git-master",
     "explore",
@@ -36,11 +37,12 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
     "John (E2E Test Writer)",
     "planner-paul",
     "Timothy (Implementation Plan Reviewer)",
-    "Nathan (Request Analyst)"
+    "Nathan (Request Analyst)",
+    "Thomas (TDD Plan Consultant)"
   ],
 
   "Joshua (Test Runner)": [],
-  "Sisyphus-Junior": ["frontend-ui-ux-engineer"],
+  "Sisyphus-Junior": ["explore", "librarian"],
   "frontend-ui-ux-engineer": [],
 }
 
