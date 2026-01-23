@@ -83,6 +83,9 @@ export type BuiltinAgentName =
   | "planner-paul"
   | "Timothy (Implementation Plan Reviewer)"
   | "worker-paul"
+  | "Sisyphus-Junior"
+  | "git-master"
+  | "ultrabrain"
 
 export type OverridableAgentName =
   | "build"

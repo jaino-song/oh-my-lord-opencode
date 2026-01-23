@@ -231,6 +231,8 @@ export const TIMOTHY_PERMISSION = {
   bash: "allow" as const,
   webfetch: "allow" as const,
   question: "allow" as const,
+  delegate_task: "deny" as const,
+  call_omo_agent: "deny" as const,
 }
 
 export function createTimothyAgent(model?: string): AgentConfig {

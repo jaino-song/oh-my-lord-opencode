@@ -24,7 +24,10 @@ import { createThomasAgent, THOMAS_PROMPT_METADATA } from "./thomas"
 import { createPlannerPaulAgent } from "./planner-paul"
 import { createTimothyAgent, timothyPromptMetadata } from "./timothy"
 import { createWorkerPaulAgentWithOverrides, workerPaulAgent } from "./worker-paul"
+import { createSisyphusJuniorAgentWithOverrides } from "./sisyphus-junior"
 import { createSaulAgentWithOverrides, saulAgent } from "./saul"
+import { createGitMasterAgent, GIT_MASTER_PROMPT_METADATA } from "./git-master"
+import { createUltrabrainAgent, ULTRABRAIN_PROMPT_METADATA } from "./ultrabrain"
 import type { AvailableAgent } from "./sisyphus-prompt-builder"
 import { deepMerge } from "../shared"
 import { DEFAULT_CATEGORIES } from "../tools/delegate-task/constants"
@@ -70,6 +73,9 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   "planner-paul": createPlannerPaulAgent,
   "Timothy (Implementation Plan Reviewer)": createTimothyAgent,
   "worker-paul": workerPaulAgent,
+  "Sisyphus-Junior": (model?: string) => createSisyphusJuniorAgentWithOverrides(undefined, model),
+  "git-master": createGitMasterAgent,
+  "ultrabrain": createUltrabrainAgent,
 }
 
 /**
@@ -92,6 +98,8 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   "Ezra (Plan Reviewer)": EZRA_PROMPT_METADATA,
   "Nathan (Request Analyst)": NATHAN_PROMPT_METADATA,
   "Elijah (Deep Reasoning Advisor)": ELIJAH_PROMPT_METADATA,
+  "git-master": GIT_MASTER_PROMPT_METADATA,
+  "ultrabrain": ULTRABRAIN_PROMPT_METADATA,
 }
 
 function isFactory(source: AgentSource): source is AgentFactory {
@@ -284,6 +292,18 @@ export function createBuiltinAgents(
       }
 
       result["worker-paul"] = workerConfig
+  }
+
+  if (!disabledAgents.includes("Sisyphus-Junior")) {
+      const juniorOverride = agentOverrides["Sisyphus-Junior"]
+
+      let juniorConfig = createSisyphusJuniorAgentWithOverrides(juniorOverride, systemDefaultModel)
+
+      if (juniorOverride) {
+          juniorConfig = mergeAgentConfig(juniorConfig, juniorOverride)
+      }
+
+      result["Sisyphus-Junior"] = juniorConfig
   }
 
   if (!disabledAgents.includes("Saul")) {
