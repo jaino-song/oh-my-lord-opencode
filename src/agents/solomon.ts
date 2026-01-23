@@ -14,7 +14,7 @@
  * - Red-Green-Refactor phases explicitly structured
  * - Test specifications are DETAILED and executable
  *
- * Can write .md files only (enforced by prometheus-md-only hook).
+ * Can write .md files only (enforced by planner-md-only hook).
  */
 
 import type { AgentConfig } from "@opencode-ai/sdk"
@@ -251,7 +251,7 @@ todoWrite([
   { id: "plan-4", content: "Thomas review: test coverage and quality audit", status: "pending", priority: "high" },
   { id: "plan-5", content: "Fix issues from Thomas's review", status: "pending", priority: "high" },
   { id: "plan-6", content: "Present summary with test coverage overview", status: "pending", priority: "high" },
-  { id: "plan-7", content: "Ask about high accuracy mode (Momus review)", status: "pending", priority: "medium" },
+  { id: "plan-7", content: "Ask about high accuracy mode (Ezra review)", status: "pending", priority: "medium" },
   { id: "plan-8", content: "Delete draft and guide user to switch to Paul", status: "pending", priority: "medium" }
 ])
 \`\`\`
@@ -395,8 +395,8 @@ Plan saved to: \`.paul/plans/{name}-tests.md\` or \`.sisyphus/plans/{name}.md\`
 \`\`\`
 "Do you want high accuracy validation?
 
-If yes, I'll have Momus (rigorous plan reviewer) verify every detail.
-Momus won't approve until the plan is airtight—no ambiguity, no gaps.
+If yes, I'll have Ezra (rigorous plan reviewer) verify every detail.
+Ezra won't approve until the plan is airtight—no ambiguity, no gaps.
 This adds a review loop but guarantees maximum precision.
 
 If no, the plan is ready. Run \`/start-work\` to begin."
@@ -408,13 +408,13 @@ If no, the plan is ready. Run \`/start-work\` to begin."
 
 **When user requests high accuracy, this is a NON-NEGOTIABLE commitment.**
 
-### The Momus Review Loop (ABSOLUTE REQUIREMENT)
+### The Ezra Review Loop (ABSOLUTE REQUIREMENT)
 
 \`\`\`typescript
 // After generating initial plan
 while (true) {
   const result = delegate_task(
-    agent="Momus (Plan Reviewer)",
+    agent="Ezra (Plan Reviewer)",
     prompt=".sisyphus/plans/{name}.md",
     background=false
   )
@@ -423,25 +423,25 @@ while (true) {
     break // Plan approved - exit loop
   }
   
-  // Momus rejected - YOU MUST FIX AND RESUBMIT
-  // Read Momus's feedback carefully
+  // Ezra rejected - YOU MUST FIX AND RESUBMIT
+  // Read Ezra's feedback carefully
   // Address EVERY issue raised
   // Regenerate the plan
-  // Resubmit to Momus
+  // Resubmit to Ezra
   // NO EXCUSES. NO SHORTCUTS. NO GIVING UP.
 }
 \`\`\`
 
 ### CRITICAL RULES FOR HIGH ACCURACY MODE
 
-1. **NO EXCUSES**: If Momus rejects, you FIX it. Period.
+1. **NO EXCUSES**: If Ezra rejects, you FIX it. Period.
    - "This is good enough" → NOT ACCEPTABLE
    - "The user can figure it out" → NOT ACCEPTABLE
    - "These issues are minor" → NOT ACCEPTABLE
 
-2. **FIX EVERY ISSUE**: Address ALL feedback from Momus, not just some.
-   - Momus says 5 issues → Fix all 5
-   - Partial fixes → Momus will reject again
+2. **FIX EVERY ISSUE**: Address ALL feedback from Ezra, not just some.
+   - Ezra says 5 issues → Fix all 5
+   - Partial fixes → Ezra will reject again
 
 3. **KEEP LOOPING**: There is no maximum retry limit.
    - First rejection → Fix and resubmit
@@ -451,17 +451,17 @@ while (true) {
 
 4. **QUALITY IS NON-NEGOTIABLE**: User asked for high accuracy.
    - They are trusting you to deliver a bulletproof plan
-   - Momus is the gatekeeper
-   - Your job is to satisfy Momus, not to argue with it
+   - Ezra is the gatekeeper
+   - Your job is to satisfy Ezra, not to argue with it
 
-5. **MOMUS INVOCATION RULE (CRITICAL)**:
-   When invoking Momus, provide ONLY the file path string as the prompt.
+5. **EZRA INVOCATION RULE (CRITICAL)**:
+   When invoking Ezra, provide ONLY the file path string as the prompt.
    - Do NOT wrap in explanations, markdown, or conversational text.
    - Example invocation: \`prompt=".sisyphus/plans/{name}.md"\`
 
 ### What "OKAY" Means for TDD Plans
 
-Momus only says "OKAY" when:
+Ezra only says "OKAY" when:
 - 100% of test file references are valid paths
 - All unit test specs have: input, expected output, assertions
 - All E2E test specs have: steps, locators, assertions
@@ -470,7 +470,7 @@ Momus only says "OKAY" when:
 - Clear RED-GREEN-REFACTOR phase structure
 - Zero critical red flags
 
-**Until you see "OKAY" from Momus, the plan is NOT ready.**
+**Until you see "OKAY" from Ezra, the plan is NOT ready.**
 
 ---
 
@@ -756,6 +756,8 @@ To begin execution, run:
  */
 export const SOLOMON_PERMISSION = {
   edit: "allow" as const,
+  write: "allow" as const,
+  todowrite: "allow" as const,
   bash: "allow" as const,
   webfetch: "allow" as const,
   question: "allow" as const,
