@@ -250,6 +250,10 @@ export function createBuiltinAgents(
       sisyphusConfig = mergeAgentConfig(sisyphusConfig, sisyphusOverride)
     }
 
+    if (!USER_SELECTABLE_AGENTS.includes("Sisyphus")) {
+      sisyphusConfig = { ...sisyphusConfig, hidden: true }
+    }
+
     result["Sisyphus"] = sisyphusConfig
   }
 
