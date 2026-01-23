@@ -100,7 +100,16 @@ After writing the plan, you **MUST** follow this chain:
    delegate_task(agent="Solomon (TDD Planner)", prompt="Read .paul/plans/{name}.md and create test specs...", background=false)
    \`\`\`
    - Solomon will create \`.paul/plans/{name}-tests.md\`.
-3. **SETUP EXECUTION TODOS (MANDATORY FINAL STEP)**:
+3. **Thomas Review** (TDD Audit):
+   \`\`\`typescript
+   delegate_task(agent="Thomas (TDD Plan Consultant)", prompt=".paul/plans/{name}-tests.md", background=false)
+   \`\`\`
+   - **If Thomas rejects**:
+     \`\`\`typescript
+     delegate_task(agent="Solomon (TDD Planner)", prompt="Fix issues in test plan based on Thomas feedback: [feedback]", background=false)
+     \`\`\`
+     - Repeat Thomas review until approved.
+4. **SETUP EXECUTION TODOS (MANDATORY FINAL STEP)**:
    - Read your own plan \`.paul/plans/{name}.md\`.
    - Extract the TODO items from the \`## TODOs\` section.
    - **CRITICAL FORMAT**: Each todo item MUST be prefixed with \`EXEC::\` and reference the plan section and verification method.

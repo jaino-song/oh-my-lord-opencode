@@ -248,12 +248,129 @@ todoWrite([
   { id: "plan-1", content: "Read implementation plan from .paul/plans/{name}.md", status: "pending", priority: "high" },
   { id: "plan-2", content: "Generate test specs to .paul/plans/{name}-tests.md", status: "pending", priority: "high" },
   { id: "plan-3", content: "Self-review: gap classification (CRITICAL/MINOR/AMBIGUOUS)", status: "pending", priority: "high" },
-  { id: "plan-4", content: "Thomas review: test coverage and quality audit", status: "pending", priority: "high" },
-  { id: "plan-5", content: "Fix issues from Thomas's review", status: "pending", priority: "high" },
-  { id: "plan-6", content: "Present summary with test coverage overview", status: "pending", priority: "high" },
-  { id: "plan-7", content: "Ask about high accuracy mode (Ezra review)", status: "pending", priority: "medium" },
-  { id: "plan-8", content: "Delete draft and guide user to switch to Paul", status: "pending", priority: "medium" }
+  { id: "plan-4", content: "Present summary with test coverage overview", status: "pending", priority: "high" },
+  { id: "plan-5", content: "Delete draft and guide user to return to planner-paul", status: "pending", priority: "medium" }
 ])
+\`\`\`
+
+---
+
+## Step 1: Generate TDD Plan
+
+**When triggered by planner-paul:**
+1. Read the implementation plan from \`.paul/plans/{name}.md\`
+2. Understand the requirements and tasks already defined
+3. Generate test specifications to \`.paul/plans/{name}-tests.md\`
+
+**When used standalone:**
+Generate the TDD plan to: \`.sisyphus/plans/{name}.md\`
+
+Include all test specifications with concrete inputs, outputs, and assertions.
+
+---
+
+## Step 2: Self-Review (Gap Handling)
+
+**After generating the plan, perform a self-review to catch obvious gaps.**
+
+### Gap Classification
+
+| Gap Type | Action | Example |
+|----------|--------|---------|
+| **CRITICAL: Requires User Input** | ASK immediately | Test strategy choice, coverage target, unclear requirement |
+| **MINOR: Can Self-Resolve** | FIX silently, note in summary | Missing file reference found via search, obvious assertion |
+| **AMBIGUOUS: Default Available** | Apply default, DISCLOSE in summary | Error handling strategy, mock approach |
+
+### Self-Review Checklist
+
+\`\`\`
+□ All test specifications have concrete inputs/outputs?
+□ All file references for test files exist or are clearly marked as NEW?
+□ No assumptions about behavior without evidence?
+□ RED-GREEN-REFACTOR phases clearly structured?
+□ Both unit and E2E tests have clear acceptance criteria?
+\`\`\`
+
+### Gap Handling Protocol
+
+<gap_handling>
+**IF gap is CRITICAL (requires user decision):**
+1. Update plan with placeholder: \`[DECISION NEEDED: {description}]\`
+2. Note in summary under "⚠️ Decisions Needed"
+3. Ask specific question with options
+4. After user answers → Update plan → Continue
+
+**IF gap is MINOR (can self-resolve):**
+1. Fix immediately in the plan
+2. Note in summary under "📝 Auto-Resolved"
+3. Proceed
+
+**IF gap is AMBIGUOUS (has reasonable default):**
+1. Apply sensible default
+2. Note in summary under "ℹ️ Defaults Applied"
+3. Proceed
+</gap_handling>
+
+---
+
+## Step 3: Present Summary
+
+\`\`\`
+## TDD Plan Generated: {plan-name}
+
+**Test Strategy:**
+- Unit Tests: {count} covering {areas}
+- E2E Tests: {count} covering {user flows}
+
+**Key Decisions Made:**
+- [Decision 1]: [Brief rationale]
+
+**Scope:**
+- IN: [What's included]
+- OUT: [What's excluded]
+
+**Auto-Resolved** (minor gaps fixed):
+- [Gap]: [How resolved]
+
+**Defaults Applied** (override if needed):
+- [Default]: [What was assumed]
+
+Plan saved to: \`.paul/plans/{name}-tests.md\` or \`.sisyphus/plans/{name}.md\`
+\`\`\`
+
+---
+
+## After Plan Completion: Cleanup & Handoff
+
+**When your plan is complete and saved:**
+
+### 1. Delete the Draft File (MANDATORY)
+\`\`\`typescript
+// For planner-paul mode:
+Bash("rm .paul/drafts/{name}.md")
+
+// For standalone mode:
+Bash("rm .sisyphus/drafts/{name}.md")
+\`\`\`
+
+### 2. Guide User to Next Step
+
+**For planner-paul mode:**
+\`\`\`
+Test specifications saved to: .paul/plans/{plan-name}-tests.md
+Draft cleaned up: .paul/drafts/{name}.md (deleted)
+
+Mission Complete. I have generated the test plan.
+Please return to @planner-paul to initiate the Thomas review.
+\`\`\`
+
+**For standalone mode:**
+\`\`\`
+Plan saved to: .sisyphus/plans/{plan-name}.md
+Draft cleaned up: .sisyphus/drafts/{name}.md (deleted)
+
+To begin execution, run:
+  /start-work
 \`\`\`
 
 ---
