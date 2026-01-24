@@ -3,10 +3,25 @@
 > A strict TDD enforcement fork of [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) with **Hub-and-Spoke Architecture**, **Token Optimization**, and biblical agent naming.
 
 [![Based on oh-my-opencode](https://img.shields.io/badge/based%20on-oh--my--opencode-blue?style=flat-square)](https://github.com/code-yeongyu/oh-my-opencode)
+[![Latest Release](https://img.shields.io/github/v/release/jaino-song/oh-my-lord-opencode?style=flat-square)](https://github.com/jaino-song/oh-my-lord-opencode/releases)
 
-## What Changed
+## Releases
 
-This fork introduces **HARD BLOCKS** for TDD violations and a **Strict Hub-and-Spoke Architecture** that reduces token consumption by ~70%.
+| Version | Branch | Status | Description |
+|---------|--------|--------|-------------|
+| [v0.9.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.9.0) | `dev` | Pre-release | v3.1 agents, toast notifications, 87% token reduction |
+| [v0.7.1](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.7.1) | `master` | Stable | TDD enforcement, autonomous execution mode |
+
+## What's New in v0.9.0
+
+- **v3.1 Agents**: Paul, planner-paul, worker-paul with tighter trivial task threshold (<10 lines)
+- **Toast Notifications**: Real-time visibility into workflow events and subagent completions
+- **87% Token Reduction**: Optimized injected prompts (~2,910 tokens saved per plan execution)
+- **Smarter Trivial Detection**: Components/UI changes always require planning
+
+## What Changed from oh-my-opencode
+
+This fork introduces **HARD BLOCKS** for TDD violations and a **Strict Hub-and-Spoke Architecture** that reduces token consumption by ~87%.
 
 ### 1. Strict Hub-and-Spoke Architecture
 Subagents (Spokes) **NEVER** delegate to other subagents.
@@ -14,14 +29,21 @@ Subagents (Spokes) **NEVER** delegate to other subagents.
 - **Sisyphus-Junior** (Spoke) only writes code. He cannot call UI or Git agents.
 - **Solomon** (Spoke) only plans tests. He cannot call Reviewers.
 
-### 2. Massive Token Optimization (~70% Reduction)
+### 2. Massive Token Optimization (~87% Reduction)
 - **Lazy Loading**: `AGENTS.md` and `README.md` are NOT injected automatically. Agents load them only if needed.
 - **Summarized Outputs**: Delegation results are compressed into summaries, not full transcripts.
 - **Context Hygiene**: Hubs (`Paul`) stay lightweight (~12k tokens) instead of bloating to 35k+.
+- **Compressed Directives**: Injected prompts reduced from 354 to 50 tokens per delegation.
 
 ### 3. TDD Hard Blocks
 - Code cannot be written without tests first.
 - Attempting to write implementation code before Red Phase triggers a **HARD ERROR**.
+
+### 4. Toast Notifications (v0.9.0+)
+Real-time workflow visibility:
+- Delegation events: `Paul → Sisyphus-Junior`
+- Subagent completions: Nathan analysis, Timothy review, Solomon test planning
+- TDD warnings, competency hints, approval status
 
 ---
 
@@ -33,7 +55,7 @@ Subagents (Spokes) **NEVER** delegate to other subagents.
 |-------|------|----------------|
 | **Paul** | **Execution Hub** | Executes plans. Calls ALL implementation and testing agents directly. |
 | **planner-paul** | **Planning Hub** | Creates plans. Calls Nathan, Solomon, Timothy, Thomas. |
-| **worker-paul** | **Trivial Hub** | Handles small tasks (<50 lines) autonomously. |
+| **worker-paul** | **Trivial Hub** | Handles small tasks (<10 lines) autonomously. |
 
 ### Spokes (Specialists)
 
@@ -62,9 +84,10 @@ The system uses a "Pull" model instead of a "Push" model for context.
 | **Context** | Auto-injected (`AGENTS.md` + `README`) | Lazy-loaded (On-demand read) | **-13k tokens/turn** |
 | **Delegation** | Full transcript returned | Summarized JSON returned | **-3k tokens/call** |
 | **Prompt** | Massive Monolith (~3k tokens) | Compressed Bullets (~1.5k tokens) | **-1.5k tokens** |
+| **Injected Directives** | 354 tokens per delegation | 50 tokens per delegation | **-304 tokens/call** |
 | **Plan** | Full file loaded | Summarized Todo List loaded | **-4k tokens** |
 
-**Result**: Paul can execute **4-5x more steps** before hitting context limits.
+**Result**: Paul can execute **4-5x more steps** before hitting context limits (~2,910 tokens saved per plan execution).
 
 ---
 
