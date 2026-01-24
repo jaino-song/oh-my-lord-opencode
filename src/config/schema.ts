@@ -109,6 +109,7 @@ export const HookNameSchema = z.enum([
   "strict-workflow",
   "hierarchy-enforcer",
   "parallel-safety-enforcer",
+  "worker-paul-ultrawork",
 ])
 
 export const BuiltinCommandNameSchema = z.enum([

@@ -92,7 +92,8 @@
           "tdd-enforcement",
           "strict-workflow",
           "hierarchy-enforcer",
-          "parallel-safety-enforcer"
+          "parallel-safety-enforcer",
+          "worker-paul-ultrawork"
         ]
       }
     },

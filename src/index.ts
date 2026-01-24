@@ -36,6 +36,7 @@ import {
   createStrictWorkflowHook,
   createHierarchyEnforcerHook,
   createParallelSafetyEnforcerHook,
+  createWorkerPaulUltraworkHook,
 } from "./hooks";
 import {
   contextCollector,
@@ -232,6 +233,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createParallelSafetyEnforcerHook(ctx)
     : null;
 
+  const workerPaulUltrawork = isHookEnabled("worker-paul-ultrawork")
+    ? createWorkerPaulUltraworkHook(ctx, contextCollector)
+    : null;
+
   const taskResumeInfo = createTaskResumeInfoHook();
 
   const backgroundManager = new BackgroundManager(ctx);
@@ -352,6 +357,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await claudeCodeHooks["chat.message"]?.(input, output);
       await autoSlashCommand?.["chat.message"]?.(input, output);
       await startWork?.["chat.message"]?.(input, output);
+      await workerPaulUltrawork?.["chat.message"]?.(input, output);
 
       if (ralphLoop) {
         const parts = (
