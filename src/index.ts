@@ -38,6 +38,7 @@ import {
   createParallelSafetyEnforcerHook,
   createWorkerPaulUltraworkHook,
 } from "./hooks";
+import { TokenAnalyticsManager, createTokenAnalyticsHook } from "./features/token-analytics";
 import {
   contextCollector,
   createContextInjectorMessagesTransformHook,
@@ -243,6 +244,9 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
 
   initTaskToastManager(ctx.client);
 
+  const tokenAnalyticsManager = new TokenAnalyticsManager();
+  const tokenAnalyticsHook = createTokenAnalyticsHook(ctx, tokenAnalyticsManager);
+
   const todoContinuationEnforcer = isHookEnabled("todo-continuation-enforcer")
     ? createTodoContinuationEnforcer(ctx, { backgroundManager })
     : null;
@@ -447,6 +451,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await interactiveBashSession?.event(input);
       await ralphLoop?.event(input);
       await sisyphusOrchestrator?.handler(input);
+      await tokenAnalyticsHook.event?.(input);
 
       const { event } = input;
       const props = event.properties as Record<string, unknown> | undefined;
@@ -482,6 +487,9 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
         const role = info?.role as string | undefined;
         if (sessionID && agent && role === "user") {
           updateSessionAgent(sessionID, agent);
+        }
+        if (sessionID) {
+          await tokenAnalyticsHook["message.updated"]?.({ sessionID });
         }
       }
 
@@ -591,6 +599,7 @@ await editErrorRecovery?.["tool.execute.after"](input, output);
         await hierarchyEnforcer?.["tool.execute.after"]?.(input, output);
         await parallelSafetyEnforcer?.["tool.execute.after"]?.(input, output);
       await taskResumeInfo["tool.execute.after"](input, output);
+      await tokenAnalyticsHook["tool.execute.after"]?.(input, output);
     },
   };
 };
