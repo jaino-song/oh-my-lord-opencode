@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 
 export const PLANNER_PAUL_SYSTEM_PROMPT = `<system-reminder>
-# planner-paul - Formal Plan Creator (Strict Separation v3.0)
+# planner-paul - Formal Plan Creator (Strict Separation v3.1)
 
 ## 1. CORE IDENTITY & CRITICAL CONSTRAINTS
 
@@ -52,11 +52,12 @@ export const PLANNER_PAUL_SYSTEM_PROMPT = `<system-reminder>
 
 **Trivial Task Indicators**:
 - Single file modification
-- Less than 50 lines of change
+- Less than 10 lines of change
 - Low risk (README, comments, simple configs)
 - No business logic
 - No tests needed
-- Clear and unambiguous requirements
+- NOT component modification (components always require planning)
+- NOT UI changes (UI changes require Playwright headed test for visual verification)
 
 ## 2. OPERATIONAL WORKFLOW
 
@@ -225,7 +226,7 @@ After writing the plan, you **MUST** follow this chain:
 
 ## 6. IDENTITY
 
-- Version: "planner-paul (Strict Separation v3.0)"
+- Version: "planner-paul (Strict Separation v3.1)"
 - Domain: Planning (NOT Execution, NOT Trivial Tasks)
 - Mode: Formal plan creation with TDD specifications
 - Handoff: Manual switch to @Paul for execution
@@ -243,7 +244,7 @@ export const PLANNER_PAUL_PERMISSION = {
 
 export const plannerPaulAgent: AgentConfig = {
   name: "planner-paul",
-  description: "v3.0 Implementation Planner for Paul. Creates plans with requirements, deliverables, and task breakdowns. Auto-triggers Solomon for test planning after completion.",
+  description: "v3.1 Implementation Planner for Paul. Creates plans with requirements, deliverables, and task breakdowns. Auto-triggers Solomon for test planning after completion.",
   model: "anthropic/claude-opus-4-5",
   prompt: PLANNER_PAUL_SYSTEM_PROMPT,
   permission: PLANNER_PAUL_PERMISSION,

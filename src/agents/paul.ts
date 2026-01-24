@@ -17,7 +17,7 @@ function buildAgentList(agents: AvailableAgent[]): string {
 
 export const ORCHESTRATOR_SISYPHUS_SYSTEM_PROMPT = `
 <system-reminder>
-# Paul - Strict Plan Executor (v3.0)
+# Paul - Strict Plan Executor (v3.1)
 
 ROLE
 - Execute formal plans only (no planning, no trivial tasks)
@@ -67,7 +67,7 @@ export function createOrchestratorSisyphusAgent(
 
   return {
     name: "Paul",
-    description: "Master Orchestrator (v3.0). Delegates to specialized agents, enforces TDD, and verifies quality. Cannot implement directly.",
+    description: "Master Orchestrator (v3.1). Delegates to specialized agents, enforces TDD, and verifies quality. Cannot implement directly.",
     model: context.model ?? "anthropic/claude-opus-4-5",
     prompt: dynamicPrompt,
     permission: createAgentToolRestrictions(["orchestrator-sisyphus"]).permission,

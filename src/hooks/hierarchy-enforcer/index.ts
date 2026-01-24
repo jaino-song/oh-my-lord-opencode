@@ -231,19 +231,103 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
       if (input.tool.toLowerCase() === "delegate_task") {
         const result = output.output
         const targetAgent = (output.args?.agent || output.args?.subagent_type || output.args?.name) as string | undefined
+        const normalizedAgent = targetAgent?.toLowerCase() || ""
         
         if (typeof result === "string") {
           const lowerResult = result.toLowerCase()
           
-          if (lowerResult.includes("error") || lowerResult.includes("failed") || lowerResult.includes("exception")) {
-            await showToast(client, `❌ ${targetAgent || "Task"} Failed`, "Check output for details", "error", 4000)
-          } else if (lowerResult.includes("approved") || lowerResult.includes("passed") || lowerResult.includes("verified") || lowerResult.includes("success")) {
-            await showToast(client, `✅ ${targetAgent || "Task"} Complete`, "Delegation successful", "success", 2500)
+          if (normalizedAgent.includes("nathan")) {
+            const complexityMatch = result.match(/complexity[:\s]*(low|medium|high)/i)
+            const scopeMatch = result.match(/scope[:\s]*([^\n]{10,50})/i)
+            const complexity = complexityMatch ? complexityMatch[1].toUpperCase() : null
+            const scope = scopeMatch ? scopeMatch[1].trim().slice(0, 40) : null
+            const summary = complexity ? `Complexity: ${complexity}` : (scope ? scope : "Analysis complete")
+            await showToast(client, "🔍 Nathan Analysis", summary, "info", 3500)
           }
           
-          if (input.tool.includes("Joshua") || result.includes("Agent: Joshua")) {
-             recordApproval(ctx.directory, input.callID, "Joshua", "approved")
-             await showToast(client, "🧪 Joshua Approved", "Tests passed - ready for completion", "success", 3000)
+          else if (normalizedAgent.includes("timothy")) {
+            const approvedMatch = lowerResult.includes("approved") || lowerResult.includes("lgtm") || lowerResult.includes("looks good")
+            const issuesMatch = result.match(/issues?[:\s]*(\d+)/i) || result.match(/(\d+)\s*issues?/i)
+            const issues = issuesMatch ? parseInt(issuesMatch[1]) : 0
+            if (approvedMatch && issues === 0) {
+              await showToast(client, "✅ Timothy Approved", "Plan review passed", "success", 3000)
+              recordApproval(ctx.directory, input.callID, "Timothy", "approved")
+            } else if (issues > 0) {
+              await showToast(client, "📝 Timothy Review", `${issues} issue(s) to address`, "warning", 3500)
+            } else {
+              await showToast(client, "📋 Timothy Review", "Plan review complete", "info", 2500)
+            }
+          }
+          
+          else if (normalizedAgent.includes("solomon")) {
+            const testCountMatch = result.match(/(\d+)\s*test/i)
+            const testCount = testCountMatch ? testCountMatch[1] : null
+            const summary = testCount ? `${testCount} test cases planned` : "TDD spec complete"
+            await showToast(client, "🧪 Solomon TDD", summary, "info", 3000)
+          }
+          
+          else if (normalizedAgent.includes("thomas")) {
+            const approvedMatch = lowerResult.includes("approved") || lowerResult.includes("valid")
+            if (approvedMatch) {
+              await showToast(client, "✅ Thomas Approved", "Spec review passed", "success", 3000)
+              recordApproval(ctx.directory, input.callID, "Thomas", "approved")
+            } else {
+              await showToast(client, "📄 Thomas Review", "Spec review complete", "info", 2500)
+            }
+          }
+          
+          else if (normalizedAgent.includes("joshua")) {
+            const passedMatch = lowerResult.includes("passed") || lowerResult.includes("success") || lowerResult.includes("✓")
+            const failedMatch = lowerResult.includes("failed") || lowerResult.includes("error") || lowerResult.includes("✗")
+            const testCountMatch = result.match(/(\d+)\s*(?:tests?|specs?)\s*(?:passed|passing)/i)
+            const failCountMatch = result.match(/(\d+)\s*(?:tests?|specs?)\s*(?:failed|failing)/i)
+            
+            if (failedMatch || (failCountMatch && parseInt(failCountMatch[1]) > 0)) {
+              const failCount = failCountMatch ? failCountMatch[1] : "some"
+              await showToast(client, "❌ Joshua: Tests Failed", `${failCount} test(s) failing`, "error", 4000)
+            } else if (passedMatch) {
+              const passCount = testCountMatch ? testCountMatch[1] : "all"
+              await showToast(client, "✅ Joshua: Tests Passed", `${passCount} test(s) passing`, "success", 3000)
+              recordApproval(ctx.directory, input.callID, "Joshua", "approved")
+            } else {
+              await showToast(client, "🧪 Joshua Complete", "Test run finished", "info", 2500)
+            }
+          }
+          
+          else if (normalizedAgent.includes("sisyphus-junior") || normalizedAgent.includes("frontend-ui-ux") || normalizedAgent.includes("ultrabrain")) {
+            if (lowerResult.includes("error") || lowerResult.includes("failed")) {
+              await showToast(client, `❌ ${targetAgent} Failed`, "Implementation error", "error", 4000)
+            } else {
+              await showToast(client, `✅ ${targetAgent}`, "Implementation complete", "success", 2500)
+            }
+          }
+          
+          else if (normalizedAgent.includes("git-master")) {
+            const commitMatch = result.match(/commit[:\s]*([a-f0-9]{7,8})/i)
+            const commit = commitMatch ? commitMatch[1] : null
+            if (commit) {
+              await showToast(client, "📦 Git Commit", `Committed: ${commit}`, "success", 3000)
+            } else if (lowerResult.includes("push")) {
+              await showToast(client, "🚀 Git Push", "Changes pushed", "success", 2500)
+            } else {
+              await showToast(client, "🔧 Git Operation", "Complete", "info", 2000)
+            }
+          }
+          
+          else if (normalizedAgent.includes("explore") || normalizedAgent.includes("librarian")) {
+            const filesMatch = result.match(/(\d+)\s*files?/i)
+            const files = filesMatch ? filesMatch[1] : null
+            if (files) {
+              await showToast(client, `🔎 ${targetAgent}`, `Found ${files} file(s)`, "info", 2500)
+            }
+          }
+          
+          else {
+            if (lowerResult.includes("error") || lowerResult.includes("failed") || lowerResult.includes("exception")) {
+              await showToast(client, `❌ ${targetAgent || "Task"} Failed`, "Check output for details", "error", 4000)
+            } else if (lowerResult.includes("approved") || lowerResult.includes("passed") || lowerResult.includes("verified") || lowerResult.includes("success")) {
+              await showToast(client, `✅ ${targetAgent || "Task"} Complete`, "Delegation successful", "success", 2500)
+            }
           }
 
           if (lowerResult.includes("approved") || lowerResult.includes("passed") || lowerResult.includes("verified")) {
@@ -251,9 +335,10 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
                const match = result.match(/Agent:\s*([^\n]+)/)
                if (match) {
                  const approver = match[1].trim()
-                 recordApproval(ctx.directory, input.callID, approver, "approved")
-                 log(`[${HOOK_NAME}] Recorded approval from ${approver}`, { sessionID: input.sessionID })
-                 await showToast(client, `✓ ${approver} Approved`, "Verification passed", "success", 2500)
+                 if (!normalizedAgent.includes(approver.toLowerCase())) {
+                   recordApproval(ctx.directory, input.callID, approver, "approved")
+                   log(`[${HOOK_NAME}] Recorded approval from ${approver}`, { sessionID: input.sessionID })
+                 }
                }
             }
           }

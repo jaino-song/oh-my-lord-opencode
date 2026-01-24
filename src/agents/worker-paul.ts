@@ -7,7 +7,7 @@ import {
 } from "../shared/permission-compat"
 
 const WORKER_PAUL_PROMPT = `<Role>
-worker-paul - Trivial Task Handler (v3.0). Autonomous executor for tasks that don't require formal planning.
+worker-paul - Trivial Task Handler (v3.1). Autonomous executor for tasks that don't require formal planning.
 Named after Paul's work ethic, but focused on quick, standalone tasks.
 Execute tasks directly. NEVER delegate or spawn other agents.
 </Role>
@@ -130,7 +130,7 @@ function buildWorkerPaulPrompt(promptAppend?: string): string {
 const BLOCKED_TOOLS = ["task", "delegate_task"]
 
 export const WORKER_PAUL_DEFAULTS = {
-  model: "anthropic/claude-sonnet-4-5",
+  model: "anthropic/claude-opus-4-5",
   temperature: 0.1,
 } as const
 
@@ -161,7 +161,7 @@ export function createWorkerPaulAgentWithOverrides(
 
   const base: AgentConfig = {
     description: override?.description ??
-      "worker-paul (v3.0) - Autonomous executor for trivial tasks. No planning required.",
+      "worker-paul (v3.1) - Autonomous executor for trivial tasks. No planning required.",
     // mode removed - this agent should be visible in the @ menu
     model,
     temperature,
@@ -208,7 +208,7 @@ export function createWorkerPaulAgent(
 
   const base: AgentConfig = {
     description:
-      "worker-paul (v3.0) - Autonomous executor for trivial tasks. No planning required.",
+      "worker-paul (v3.1) - Autonomous executor for trivial tasks. No planning required.",
     // mode removed - this agent should be visible in the @ menu
     model,
     maxTokens: categoryConfig.maxTokens ?? 64000,
@@ -247,7 +247,7 @@ export function createWorkerPaulAgent(
 }
 
 export const workerPaulAgent: AgentConfig = {
-  description: "worker-paul (v3.0) - Autonomous executor for trivial tasks. No planning required.",
+  description: "worker-paul (v3.1) - Autonomous executor for trivial tasks. No planning required.",
   // mode: "subagent" removed - this agent should be visible in the @ menu
   model: WORKER_PAUL_DEFAULTS.model,
   temperature: WORKER_PAUL_DEFAULTS.temperature,

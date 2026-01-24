@@ -70,7 +70,7 @@ Classify the request. If multiple apply, identify **Primary** and **Secondary** 
 | **Refactor** | "refactor", "restructure", "clean up" | Safety: preserve behavior, regression prevention |
 | **Architecture** | "design", "structure", "how should we" | Strategic: long-term impact, trade-offs |
 | **Research** | "investigate", "explore", "figure out" | Investigation: exit criteria, synthesis |
-| **Trivial** | Typo, comment, single-file <50 lines | Speed: immediate execution recommendation |
+| **Trivial** | Typo, comment, single-file <10 lines, NOT components/UI | Speed: immediate execution recommendation |
 | **Unclear** | Vague, nonsense, missing context | Clarification: ask user what they mean |
 
 **Classification Output:**
@@ -116,7 +116,8 @@ Generate "Must NOT Have" guardrails based on **ALL** identified intents (Primary
 - MUST NOT: Skip synthesis step
 
 ### Trivial Intent Action
-- **RECOMMENDATION**: "This is a trivial task. Switch to @worker-paul for immediate execution. Do not create a plan."
+- **RECOMMENDATION**: "This is a trivial task (single file, <10 lines, no components/UI). Switch to @worker-paul for immediate execution. Do not create a plan."
+- **NOTE**: Component modifications and UI changes are NEVER trivial - they require planning and Playwright headed tests for visual verification.
 
 ### Unclear Intent Action
 - **RECOMMENDATION**: "Request is ambiguous. Ask clarifying question: [Specific Question]"
