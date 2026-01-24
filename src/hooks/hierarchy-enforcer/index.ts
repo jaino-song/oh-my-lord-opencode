@@ -7,6 +7,25 @@ import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS, CATEGORY_TO_AGENT } from
 import { hasRecentApproval, recordApproval, getApprovalPath } from "./approval-state"
 import { log } from "../../shared/logger"
 
+type ToastVariant = "info" | "success" | "warning" | "error"
+
+interface ToastClient {
+  tui?: {
+    showToast?: (opts: { body: { title: string; message: string; variant: ToastVariant; duration?: number } }) => Promise<void>
+  }
+}
+
+async function showToast(
+  client: ToastClient,
+  title: string,
+  message: string,
+  variant: ToastVariant = "info",
+  duration = 3000
+): Promise<void> {
+  if (!client.tui?.showToast) return
+  await client.tui.showToast({ body: { title, message, variant, duration } }).catch(() => {})
+}
+
 function getMessageDir(sessionID: string): string | null {
   if (!existsSync(MESSAGE_STORAGE)) return null
   const directPath = join(MESSAGE_STORAGE, sessionID)
@@ -69,6 +88,8 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
     } catch {}
   }
 
+  const client = ctx.client as unknown as ToastClient
+
   return {
     "tool.execute.before": async (
       input: { tool: string; sessionID: string; callID: string },
@@ -80,6 +101,7 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
       if (tool === "delegate_task" || tool === "task" || tool === "call_omo_agent") {
         const category = output.args.category as string | undefined
         let targetAgent = (output.args.agent || output.args.subagent_type || output.args.name) as string | undefined
+        const description = (output.args.description as string) || ""
 
         if (!targetAgent && category) {
           targetAgent = CATEGORY_TO_AGENT[category]
@@ -102,6 +124,7 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
 
           if (!isAllowed) {
             log(`[${HOOK_NAME}] BLOCKED: ${currentAgent} tried to call ${targetAgent}`, { sessionID: input.sessionID })
+            await showToast(client, `🚫 ${currentAgent}`, `Blocked: Cannot call ${targetAgent}`, "error", 4000)
             throw new Error(
               `[${HOOK_NAME}] HIERARCHY VIOLATION: Agent '${currentAgent}' is not authorized to call '${targetAgent}'.\n` +
               `Allowed delegates for ${currentAgent}: ${allowedTargets.join(", ") || "None"}.\n` +
@@ -110,10 +133,14 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
           }
 
           if (currentAgent === "Paul" || currentAgent === "orchestrator-sisyphus") {
+            const shortDesc = description.slice(0, 50) + (description.length > 50 ? "..." : "")
+            await showToast(client, `⚡ Paul → ${targetAgent}`, shortDesc || "Delegating task...", "info", 2500)
+            
             if (normalizedTarget === "sisyphus-junior" || normalizedTarget === "ultrabrain" || normalizedTarget === "frontend-ui-ux-engineer") {
               const hasRecentTestRun = hasRecentApproval(ctx.directory, "joshua", 600000)
               if (!hasRecentTestRun) {
                 log(`[${HOOK_NAME}] TDD Warning Injected`, { sessionID: input.sessionID })
+                await showToast(client, "⚠️ TDD Warning", "No recent test run (Joshua)", "warning", 3000)
                 output.args.prompt = `[TDD: No recent test run. Run tests first if needed.]\n\n` + prompt
               }
             }
@@ -133,9 +160,15 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
                   target: targetAgent 
                 })
                 
+                await showToast(client, `💡 Competency Hint`, `${rule.category} → consider ${rule.requiredAgent}`, "warning", 3000)
                 output.args.prompt = `[ADVISORY: ${rule.category} task → consider ${rule.requiredAgent}]\n\n` + rawPrompt
               }
             }
+          }
+          
+          if (currentAgent === "planner-paul") {
+            const shortDesc = description.slice(0, 50) + (description.length > 50 ? "..." : "")
+            await showToast(client, `📋 Planner → ${targetAgent}`, shortDesc || "Planning consultation...", "info", 2500)
           }
         }
       }
@@ -148,16 +181,12 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
               const content = todo.content.toLowerCase()
               let requiredApproverPattern: string | null = null
               
-              // Check for implementation/code tasks (requires test approval)
               if (content.includes("implement") || content.includes("refactor") || content.includes("fix") || content.startsWith("exec::")) {
                 requiredApproverPattern = "joshua"
               } 
-              // Check for planning tasks (only for planner-paul, not Paul)
-              // Be specific: "create plan", "review plan", "write plan" - not just "plan" (too generic)
               else if (content.match(/\b(create|write|review|update)\s+plan\b/) || content.startsWith("plan::")) {
                 requiredApproverPattern = "timothy"
               } 
-              // Check for spec tasks
               else if (content.match(/\b(create|write|review|update)\s+spec\b/) || content.startsWith("spec::")) {
                 requiredApproverPattern = "thomas"
               }
@@ -170,13 +199,25 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
                     missingApprover: requiredApproverPattern 
                   })
                   
+                  const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
+                  await showToast(client, "🚫 Approval Required", `Need ${requiredApproverPattern} approval for: ${shortTask}`, "error", 4000)
+                  
                   throw new Error(
                     `[${HOOK_NAME}] APPROVAL REQUIRED: Cannot mark task '${todo.content}' as completed.\n` +
                     `Missing recent approval from: ${requiredApproverPattern}.\n` +
                     `Action: Delegate verification to the required agent, wait for their 'Approved' signal, then try again.`
                   )
+                } else {
+                  const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
+                  await showToast(client, "✅ Task Completed", shortTask, "success", 2500)
                 }
+              } else {
+                const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
+                await showToast(client, "✅ Task Completed", shortTask, "success", 2000)
               }
+            } else if (todo.status === "in_progress") {
+              const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
+              await showToast(client, "🔄 Task Started", shortTask, "info", 2000)
             }
           }
         }
@@ -189,10 +230,20 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
     ): Promise<void> => {
       if (input.tool.toLowerCase() === "delegate_task") {
         const result = output.output
+        const targetAgent = (output.args?.agent || output.args?.subagent_type || output.args?.name) as string | undefined
+        
         if (typeof result === "string") {
           const lowerResult = result.toLowerCase()
+          
+          if (lowerResult.includes("error") || lowerResult.includes("failed") || lowerResult.includes("exception")) {
+            await showToast(client, `❌ ${targetAgent || "Task"} Failed`, "Check output for details", "error", 4000)
+          } else if (lowerResult.includes("approved") || lowerResult.includes("passed") || lowerResult.includes("verified") || lowerResult.includes("success")) {
+            await showToast(client, `✅ ${targetAgent || "Task"} Complete`, "Delegation successful", "success", 2500)
+          }
+          
           if (input.tool.includes("Joshua") || result.includes("Agent: Joshua")) {
              recordApproval(ctx.directory, input.callID, "Joshua", "approved")
+             await showToast(client, "🧪 Joshua Approved", "Tests passed - ready for completion", "success", 3000)
           }
 
           if (lowerResult.includes("approved") || lowerResult.includes("passed") || lowerResult.includes("verified")) {
@@ -202,6 +253,7 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
                  const approver = match[1].trim()
                  recordApproval(ctx.directory, input.callID, approver, "approved")
                  log(`[${HOOK_NAME}] Recorded approval from ${approver}`, { sessionID: input.sessionID })
+                 await showToast(client, `✓ ${approver} Approved`, "Verification passed", "success", 2500)
                }
             }
           }
