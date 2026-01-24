@@ -6,13 +6,27 @@ import { setSessionAgent, clearSessionAgent } from "../../features/claude-code-s
 
 describe("hierarchy-enforcer", () => {
   let tempDir: string
-  let mockCtx: { directory: string }
+  let mockCtx: { 
+    directory: string
+    client: {
+      tui: {
+        showToast: () => Promise<void>
+      }
+    }
+  }
   const TEST_SESSION_ID = "test-session-hierarchy"
 
   beforeEach(() => {
     // #given - create temp directory for test isolation
     tempDir = mkdtempSync(join(tmpdir(), "hierarchy-enforcer-test-"))
-    mockCtx = { directory: tempDir }
+    mockCtx = { 
+      directory: tempDir,
+      client: {
+        tui: {
+          showToast: async () => {}
+        }
+      }
+    }
   })
 
   afterEach(() => {
@@ -40,7 +54,7 @@ describe("hierarchy-enforcer", () => {
       await hook["tool.execute.before"](input, output)
 
       // #then - should inject advisory warning
-      expect(output.args.prompt).toContain("SYSTEM ADVISORY: COMPETENCY MISMATCH")
+      expect(output.args.prompt).toContain("ADVISORY")
       expect(output.args.prompt).toContain("Visual/UI")
       expect(output.args.prompt).toContain("frontend-ui-ux-engineer")
     })

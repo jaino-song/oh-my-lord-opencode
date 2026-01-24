@@ -60,6 +60,14 @@ function stripTddWarning(prompt: string): string {
   return prompt.slice(dividerIndex + 2)
 }
 
+function stripSystemReminders(text: string): string {
+  const reminderStart = text.indexOf("---\n\n**MANDATORY:")
+  if (reminderStart !== -1) {
+    return text.slice(0, reminderStart).trim()
+  }
+  return text
+}
+
 const COMPETENCY_RULES = [
   {
     category: "Visual/UI",
@@ -308,10 +316,15 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
           }
           
           else if (normalizedAgent.includes("sisyphus-junior") || normalizedAgent.includes("frontend-ui-ux") || normalizedAgent.includes("ultrabrain")) {
-            if (lowerResult.includes("error") || lowerResult.includes("failed")) {
-              await showToast(client, `❌ ${targetAgent} Failed`, "Implementation error", "error", 4000)
+            const cleanResult = stripSystemReminders(result)
+            const cleanLower = cleanResult.toLowerCase()
+            const hasSuccess = cleanLower.includes("✅") || cleanLower.startsWith("done") || cleanLower.includes("complete") || cleanLower.includes("success")
+            const hasRealError = cleanLower.includes("❌") || /\b(error|failed|exception):/i.test(cleanLower) || cleanLower.includes("threw")
+            
+            if (hasRealError && !hasSuccess) {
+              await showToast(client, `❌ ${targetAgent} failed`, "implementation error", "error", 4000)
             } else {
-              await showToast(client, `✅ ${targetAgent}`, "Implementation complete", "success", 2500)
+              await showToast(client, `✅ ${targetAgent}`, "implementation complete", "success", 2500)
             }
           }
           
@@ -336,10 +349,15 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
           }
           
           else {
-            if (lowerResult.includes("error") || lowerResult.includes("failed") || lowerResult.includes("exception")) {
-              await showToast(client, `❌ ${targetAgent || "Task"} Failed`, "Check output for details", "error", 4000)
-            } else if (lowerResult.includes("approved") || lowerResult.includes("passed") || lowerResult.includes("verified") || lowerResult.includes("success")) {
-              await showToast(client, `✅ ${targetAgent || "Task"} Complete`, "Delegation successful", "success", 2500)
+            const cleanResult = stripSystemReminders(result)
+            const cleanLower = cleanResult.toLowerCase()
+            const hasSuccess = cleanLower.includes("✅") || cleanLower.includes("approved") || cleanLower.includes("passed") || cleanLower.includes("success") || cleanLower.includes("complete")
+            const hasRealError = cleanLower.includes("❌") || /\b(error|failed|exception):/i.test(cleanLower)
+            
+            if (hasRealError && !hasSuccess) {
+              await showToast(client, `❌ ${targetAgent || "task"} failed`, "check output for details", "error", 4000)
+            } else if (hasSuccess) {
+              await showToast(client, `✅ ${targetAgent || "task"} complete`, "delegation successful", "success", 2500)
             }
           }
 
