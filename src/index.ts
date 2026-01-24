@@ -38,7 +38,7 @@ import {
   createParallelSafetyEnforcerHook,
   createWorkerPaulUltraworkHook,
 } from "./hooks";
-import { TokenAnalyticsManager, createTokenAnalyticsHook } from "./features/token-analytics";
+import { TokenAnalyticsManager, createTokenAnalyticsHook, createTokenReportTool } from "./features/token-analytics";
 import {
   contextCollector,
   createContextInjectorMessagesTransformHook,
@@ -246,6 +246,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
 
   const tokenAnalyticsManager = new TokenAnalyticsManager();
   const tokenAnalyticsHook = createTokenAnalyticsHook(ctx, tokenAnalyticsManager);
+  const tokenReportTool = createTokenReportTool(tokenAnalyticsManager);
 
   const todoContinuationEnforcer = isHookEnabled("todo-continuation-enforcer")
     ? createTodoContinuationEnforcer(ctx, { backgroundManager })
@@ -339,6 +340,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       skill_mcp: skillMcpTool,
       slashcommand: slashcommandTool,
       interactive_bash,
+      token_report: tokenReportTool,
     },
 
     "chat.message": async (input, output) => {
