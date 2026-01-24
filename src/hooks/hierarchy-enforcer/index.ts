@@ -175,13 +175,19 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
 
       if (tool === "todowrite") {
         const todos = output.args.todos as Array<{ content: string; status: string; id: string }> | undefined
+        const callingAgent = getAgentFromSession(input.sessionID) || "user"
+        const isPlannerAgent = ["planner-paul", "prometheus", "solomon"].some(
+          p => callingAgent.toLowerCase().includes(p.toLowerCase())
+        )
         if (todos) {
           for (const todo of todos) {
             if (todo.status === "completed") {
               const content = todo.content.toLowerCase()
               let requiredApproverPattern: string | null = null
               
-              if (content.includes("implement") || content.includes("refactor") || content.includes("fix") || content.startsWith("exec::")) {
+              if (content.startsWith("exec::") || 
+                  content.match(/^(implement|refactor|fix)\s/i) || 
+                  content.match(/\b(implement|refactor|fix)\s+(the|a|this)\s/i)) {
                 requiredApproverPattern = "joshua"
               } 
               else if (content.match(/\b(create|write|review|update)\s+plan\b/) || content.startsWith("plan::")) {
@@ -192,6 +198,13 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
               }
 
               if (requiredApproverPattern) {
+                // Planners can complete planning tasks without implementation approval
+                if (isPlannerAgent && !todo.content.toLowerCase().startsWith("exec::")) {
+                  const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
+                  await showToast(client, "✅ Planning Task", shortTask, "success", 2000)
+                  continue
+                }
+                
                 if (!hasRecentApproval(ctx.directory, requiredApproverPattern)) {
                   log(`[${HOOK_NAME}] BLOCKED: Task completion without approval`, { 
                     sessionID: input.sessionID, 

@@ -125,6 +125,7 @@ export const SAFE_BASH_PATTERNS = [
   /^file\s/,
   /^stat\s/,
   /^tree(\s|$)/,
+  /^mkdir\s+(-p\s+)?\.?(paul|sisyphus)\//,
 ]
 
 export const PLANNING_CONSULT_WARNING = `
