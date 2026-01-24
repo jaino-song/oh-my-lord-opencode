@@ -50,9 +50,11 @@ export function hasRecentApproval(root: string, approverPattern: string, duratio
   const state = loadApprovalState(root)
   const cutoff = Date.now() - durationMs
   
-  return state.approvals.some(a => 
-    a.status === "approved" && 
-    a.timestamp > cutoff && 
-    (a.approver.includes(approverPattern) || approverPattern.includes(a.approver))
-  )
+  return state.approvals.some(a => {
+    const approverLower = a.approver.toLowerCase()
+    const patternLower = approverPattern.toLowerCase()
+    return a.status === "approved" && 
+      a.timestamp > cutoff && 
+      (approverLower.includes(patternLower) || patternLower.includes(approverLower))
+  })
 }
