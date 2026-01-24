@@ -114,12 +114,7 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
               const hasRecentTestRun = hasRecentApproval(ctx.directory, "joshua", 600000)
               if (!hasRecentTestRun) {
                 log(`[${HOOK_NAME}] TDD Warning Injected`, { sessionID: input.sessionID })
-                output.args.prompt = `[SYSTEM WARNING: TDD VIOLATION DETECTED]\n` +
-                  `You are starting implementation without a recent test run (Joshua).\n` +
-                  `Protocol requires a FAILING test (RED) before implementation (GREEN).\n` +
-                  `If this is a mistake, STOP and run tests first.\n` +
-                  `If you are proceeding anyway (e.g. config/docs/untestable), ignore this.\n\n` +
-                  prompt
+                output.args.prompt = `[TDD: No recent test run. Run tests first if needed.]\n\n` + prompt
               }
             }
 
@@ -138,14 +133,7 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
                   target: targetAgent 
                 })
                 
-                // Inject advisory warning instead of blocking
-                output.args.prompt = `[SYSTEM ADVISORY: COMPETENCY MISMATCH]\n` +
-                  `Your prompt contains '${rule.category}' keywords.\n` +
-                  `${rule.errorMsg}\n` +
-                  `You are delegating to: '${targetAgent}'.\n` +
-                  `RECOMMENDATION: Consider delegating to '${rule.requiredAgent}' instead.\n` +
-                  `If you have a good reason to proceed with '${targetAgent}', you may continue.\n\n` +
-                  rawPrompt
+                output.args.prompt = `[ADVISORY: ${rule.category} task → consider ${rule.requiredAgent}]\n\n` + rawPrompt
               }
             }
           }
@@ -160,11 +148,17 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
               const content = todo.content.toLowerCase()
               let requiredApproverPattern: string | null = null
               
-              if (content.includes("implement") || content.includes("refactor") || content.includes("fix")) {
+              // Check for implementation/code tasks (requires test approval)
+              if (content.includes("implement") || content.includes("refactor") || content.includes("fix") || content.startsWith("exec::")) {
                 requiredApproverPattern = "joshua"
-              } else if (content.includes("plan")) {
+              } 
+              // Check for planning tasks (only for planner-paul, not Paul)
+              // Be specific: "create plan", "review plan", "write plan" - not just "plan" (too generic)
+              else if (content.match(/\b(create|write|review|update)\s+plan\b/) || content.startsWith("plan::")) {
                 requiredApproverPattern = "timothy"
-              } else if (content.includes("spec")) {
+              } 
+              // Check for spec tasks
+              else if (content.match(/\b(create|write|review|update)\s+spec\b/) || content.startsWith("spec::")) {
                 requiredApproverPattern = "thomas"
               }
 

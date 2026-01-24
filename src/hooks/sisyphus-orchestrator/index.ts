@@ -162,28 +162,8 @@ delegate_task(
 `
 
 const SINGLE_TASK_DIRECTIVE = `
-
 ${createSystemDirective(SystemDirectiveTypes.SINGLE_TASK_ONLY)}
-
-**STOP. READ THIS BEFORE PROCEEDING.**
-
-If you were NOT given **exactly ONE atomic task**, you MUST:
-1. **IMMEDIATELY REFUSE** this request
-2. **DEMAND** the orchestrator provide a single, specific task
-
-**Your response if multiple tasks detected:**
-> "I refuse to proceed. You provided multiple tasks. An orchestrator's impatience destroys work quality.
-> 
-> PROVIDE EXACTLY ONE TASK. One file. One change. One verification.
-> 
-> Your rushing will cause: incomplete work, missed edge cases, broken tests, wasted context."
-
-**WARNING TO ORCHESTRATOR:**
-- Your hasty batching RUINS deliverables
-- Each task needs FULL attention and PROPER verification  
-- Batch delegation = sloppy work = rework = wasted tokens
-
-**REFUSE multi-task requests. DEMAND single-task clarity.**
+ONE task only. If given multiple tasks, REFUSE and demand single-task clarity.
 `
 
 function buildVerificationReminder(sessionId: string): string {
