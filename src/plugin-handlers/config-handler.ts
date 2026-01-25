@@ -127,12 +127,12 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       ])
     );
 
-    const isSisyphusEnabled = pluginConfig.sisyphus_agent?.disabled !== true;
+    const isSisyphusEnabled = pluginConfig.paul_agent?.disabled !== true;
     const builderEnabled =
-      pluginConfig.sisyphus_agent?.default_builder_enabled ?? false;
+      pluginConfig.paul_agent?.default_builder_enabled ?? false;
     const plannerEnabled =
-      pluginConfig.sisyphus_agent?.planner_enabled ?? true;
-    const replacePlan = pluginConfig.sisyphus_agent?.replace_plan ?? true;
+      pluginConfig.paul_agent?.planner_enabled ?? true;
+    const replacePlan = pluginConfig.paul_agent?.replace_plan ?? true;
 
     type AgentConfig = Record<
       string,
@@ -148,7 +148,7 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     };
     const configAgent = config.agent as AgentConfig | undefined;
 
-    const preferOrchestrator = pluginConfig.sisyphus_agent?.prefer_orchestrator ?? false;
+    const preferOrchestrator = pluginConfig.paul_agent?.prefer_orchestrator ?? false;
     
     if (isSisyphusEnabled && builtinAgents.Sisyphus) {
       if (preferOrchestrator && builtinAgents["orchestrator-sisyphus"]) {

@@ -166,7 +166,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   const autoUpdateChecker = isHookEnabled("auto-update-checker")
     ? createAutoUpdateCheckerHook(ctx, {
         showStartupToast: isHookEnabled("startup-toast"),
-        isSisyphusEnabled: pluginConfig.sisyphus_agent?.disabled !== true,
+        isSisyphusEnabled: pluginConfig.paul_agent?.disabled !== true,
         autoUpdate: pluginConfig.auto_update ?? true,
       })
     : null;

@@ -17,22 +17,21 @@ const AgentPermissionSchema = z.object({
 })
 
 export const BuiltinAgentNameSchema = z.enum([
-  "oracle",
-  "librarian",
-  "explore",
-  "frontend-ui-ux-engineer",
-  "document-writer",
-  "multimodal-looker",
-  "Metis (Plan Consultant)",
-  "Momus (Plan Reviewer)",
-  "Paul",
-  "orchestrator-sisyphus",
-  "Solomon (TDD Planner)",
-  "Peter (Test Writer)",
-  "John (E2E Test Writer)",
-  "Joshua (Test Runner)",
-  "Thomas (TDD Plan Consultant)",
-  "planner-paul",
+   "oracle",
+   "librarian",
+   "explore",
+   "frontend-ui-ux-engineer",
+   "document-writer",
+   "multimodal-looker",
+   "Metis (Plan Consultant)",
+   "Momus (Plan Reviewer)",
+   "Paul",
+   "Solomon (TDD Planner)",
+   "Peter (Test Writer)",
+   "John (E2E Test Writer)",
+   "Joshua (Test Runner)",
+   "Thomas (TDD Plan Consultant)",
+   "planner-paul",
 ])
 
 export const BuiltinSkillNameSchema = z.enum([
@@ -42,28 +41,27 @@ export const BuiltinSkillNameSchema = z.enum([
 ])
 
 export const OverridableAgentNameSchema = z.enum([
-   "build",
-   "plan",
-   "Paul-Junior",
-   "OpenCode-Builder",
-  "Prometheus (Planner)",
-  "Metis (Plan Consultant)",
-  "Momus (Plan Reviewer)",
-  "Paul",
-  "oracle",
-  "librarian",
-  "explore",
-  "frontend-ui-ux-engineer",
-  "document-writer",
-  "multimodal-looker",
-  "orchestrator-sisyphus",
-  "Solomon (TDD Planner)",
-  "Peter (Test Writer)",
-  "John (E2E Test Writer)",
-  "Joshua (Test Runner)",
-  "Thomas (TDD Plan Consultant)",
-  "planner-paul",
-  "Timothy (Implementation Plan Reviewer)",
+    "build",
+    "plan",
+    "Paul-Junior",
+    "OpenCode-Builder",
+   "Prometheus (Planner)",
+   "Metis (Plan Consultant)",
+   "Momus (Plan Reviewer)",
+   "Paul",
+   "oracle",
+   "librarian",
+   "explore",
+   "frontend-ui-ux-engineer",
+   "document-writer",
+   "multimodal-looker",
+   "Solomon (TDD Planner)",
+   "Peter (Test Writer)",
+   "John (E2E Test Writer)",
+   "Joshua (Test Runner)",
+   "Thomas (TDD Plan Consultant)",
+   "planner-paul",
+   "Timothy (Implementation Plan Reviewer)",
 ])
 
 export const AgentNameSchema = BuiltinAgentNameSchema
@@ -139,28 +137,26 @@ export const AgentOverrideConfigSchema = z.object({
 })
 
 export const AgentOverridesSchema = z.object({
-  build: AgentOverrideConfigSchema.optional(),
-  plan: AgentOverrideConfigSchema.optional(),
-   Sisyphus: AgentOverrideConfigSchema.optional(),
-   "Paul-Junior": AgentOverrideConfigSchema.optional(),
-   "OpenCode-Builder": AgentOverrideConfigSchema.optional(),
-  "Prometheus (Planner)": AgentOverrideConfigSchema.optional(),
-  "Metis (Plan Consultant)": AgentOverrideConfigSchema.optional(),
-  "Momus (Plan Reviewer)": AgentOverrideConfigSchema.optional(),
-  oracle: AgentOverrideConfigSchema.optional(),
-  librarian: AgentOverrideConfigSchema.optional(),
-  explore: AgentOverrideConfigSchema.optional(),
-  "frontend-ui-ux-engineer": AgentOverrideConfigSchema.optional(),
-  "document-writer": AgentOverrideConfigSchema.optional(),
-  "multimodal-looker": AgentOverrideConfigSchema.optional(),
-  "orchestrator-sisyphus": AgentOverrideConfigSchema.optional(),
-  "Solomon (TDD Planner)": AgentOverrideConfigSchema.optional(),
-  "Peter (Test Writer)": AgentOverrideConfigSchema.optional(),
-  "John (E2E Test Writer)": AgentOverrideConfigSchema.optional(),
-  "Joshua (Test Runner)": AgentOverrideConfigSchema.optional(),
-  "Thomas (TDD Plan Consultant)": AgentOverrideConfigSchema.optional(),
-  "planner-paul": AgentOverrideConfigSchema.optional(),
-  "Timothy (Implementation Plan Reviewer)": AgentOverrideConfigSchema.optional(),
+   build: AgentOverrideConfigSchema.optional(),
+   plan: AgentOverrideConfigSchema.optional(),
+    "Paul-Junior": AgentOverrideConfigSchema.optional(),
+    "OpenCode-Builder": AgentOverrideConfigSchema.optional(),
+   "Prometheus (Planner)": AgentOverrideConfigSchema.optional(),
+   "Metis (Plan Consultant)": AgentOverrideConfigSchema.optional(),
+   "Momus (Plan Reviewer)": AgentOverrideConfigSchema.optional(),
+   oracle: AgentOverrideConfigSchema.optional(),
+   librarian: AgentOverrideConfigSchema.optional(),
+   explore: AgentOverrideConfigSchema.optional(),
+   "frontend-ui-ux-engineer": AgentOverrideConfigSchema.optional(),
+   "document-writer": AgentOverrideConfigSchema.optional(),
+   "multimodal-looker": AgentOverrideConfigSchema.optional(),
+   "Solomon (TDD Planner)": AgentOverrideConfigSchema.optional(),
+   "Peter (Test Writer)": AgentOverrideConfigSchema.optional(),
+   "John (E2E Test Writer)": AgentOverrideConfigSchema.optional(),
+   "Joshua (Test Runner)": AgentOverrideConfigSchema.optional(),
+   "Thomas (TDD Plan Consultant)": AgentOverrideConfigSchema.optional(),
+   "planner-paul": AgentOverrideConfigSchema.optional(),
+   "Timothy (Implementation Plan Reviewer)": AgentOverrideConfigSchema.optional(),
 })
 
 export const ClaudeCodeConfigSchema = z.object({
@@ -173,12 +169,12 @@ export const ClaudeCodeConfigSchema = z.object({
   plugins_override: z.record(z.string(), z.boolean()).optional(),
 })
 
-export const SisyphusAgentConfigSchema = z.object({
-  disabled: z.boolean().optional(),
-  default_builder_enabled: z.boolean().optional(),
-  planner_enabled: z.boolean().optional(),
-  replace_plan: z.boolean().optional(),
-  prefer_orchestrator: z.boolean().optional(),
+export const PaulAgentConfigSchema = z.object({
+   disabled: z.boolean().optional(),
+   default_builder_enabled: z.boolean().optional(),
+   planner_enabled: z.boolean().optional(),
+   replace_plan: z.boolean().optional(),
+   prefer_orchestrator: z.boolean().optional(),
 })
 
 export const CategoryConfigSchema = z.object({
@@ -325,24 +321,24 @@ export const GitMasterConfigSchema = z.object({
 })
 
 export const OhMyOpenCodeConfigSchema = z.object({
-  $schema: z.string().optional(),
-  disabled_mcps: z.array(AnyMcpNameSchema).optional(),
-  disabled_agents: z.array(BuiltinAgentNameSchema).optional(),
-  disabled_skills: z.array(BuiltinSkillNameSchema).optional(),
-  disabled_hooks: z.array(HookNameSchema).optional(),
-  disabled_commands: z.array(BuiltinCommandNameSchema).optional(),
-  agents: AgentOverridesSchema.optional(),
-  categories: CategoriesConfigSchema.optional(),
-  claude_code: ClaudeCodeConfigSchema.optional(),
-  sisyphus_agent: SisyphusAgentConfigSchema.optional(),
-  comment_checker: CommentCheckerConfigSchema.optional(),
-  experimental: ExperimentalConfigSchema.optional(),
-  auto_update: z.boolean().optional(),
-  skills: SkillsConfigSchema.optional(),
-  ralph_loop: RalphLoopConfigSchema.optional(),
-  background_task: BackgroundTaskConfigSchema.optional(),
-  notification: NotificationConfigSchema.optional(),
-  git_master: GitMasterConfigSchema.optional(),
+   $schema: z.string().optional(),
+   disabled_mcps: z.array(AnyMcpNameSchema).optional(),
+   disabled_agents: z.array(BuiltinAgentNameSchema).optional(),
+   disabled_skills: z.array(BuiltinSkillNameSchema).optional(),
+   disabled_hooks: z.array(HookNameSchema).optional(),
+   disabled_commands: z.array(BuiltinCommandNameSchema).optional(),
+   agents: AgentOverridesSchema.optional(),
+   categories: CategoriesConfigSchema.optional(),
+   claude_code: ClaudeCodeConfigSchema.optional(),
+   paul_agent: PaulAgentConfigSchema.optional(),
+   comment_checker: CommentCheckerConfigSchema.optional(),
+   experimental: ExperimentalConfigSchema.optional(),
+   auto_update: z.boolean().optional(),
+   skills: SkillsConfigSchema.optional(),
+   ralph_loop: RalphLoopConfigSchema.optional(),
+   background_task: BackgroundTaskConfigSchema.optional(),
+   notification: NotificationConfigSchema.optional(),
+   git_master: GitMasterConfigSchema.optional(),
 })
 
 export type OhMyOpenCodeConfig = z.infer<typeof OhMyOpenCodeConfigSchema>
@@ -353,7 +349,7 @@ export type AgentName = z.infer<typeof AgentNameSchema>
 export type HookName = z.infer<typeof HookNameSchema>
 export type BuiltinCommandName = z.infer<typeof BuiltinCommandNameSchema>
 export type BuiltinSkillName = z.infer<typeof BuiltinSkillNameSchema>
-export type SisyphusAgentConfig = z.infer<typeof SisyphusAgentConfigSchema>
+export type PaulAgentConfig = z.infer<typeof PaulAgentConfigSchema>
 export type CommentCheckerConfig = z.infer<typeof CommentCheckerConfigSchema>
 export type ExperimentalConfig = z.infer<typeof ExperimentalConfigSchema>
 export type DynamicContextPruningConfig = z.infer<typeof DynamicContextPruningConfigSchema>
