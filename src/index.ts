@@ -222,31 +222,31 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createTddEnforcementHook(ctx)
     : null;
 
-  const strictWorkflow = isHookEnabled("strict-workflow")
-    ? createStrictWorkflowHook(ctx)
-    : null;
+   const strictWorkflow = isHookEnabled("strict-workflow")
+     ? createStrictWorkflowHook(ctx)
+     : null;
 
-  const hierarchyEnforcer = isHookEnabled("hierarchy-enforcer")
-    ? createHierarchyEnforcerHook(ctx)
-    : null;
+   const parallelSafetyEnforcer = isHookEnabled("parallel-safety-enforcer")
+     ? createParallelSafetyEnforcerHook(ctx)
+     : null;
 
-  const parallelSafetyEnforcer = isHookEnabled("parallel-safety-enforcer")
-    ? createParallelSafetyEnforcerHook(ctx)
-    : null;
+   const workerPaulUltrawork = isHookEnabled("worker-paul-ultrawork")
+     ? createWorkerPaulUltraworkHook(ctx, contextCollector)
+     : null;
 
-  const workerPaulUltrawork = isHookEnabled("worker-paul-ultrawork")
-    ? createWorkerPaulUltraworkHook(ctx, contextCollector)
-    : null;
+   const taskResumeInfo = createTaskResumeInfoHook();
 
-  const taskResumeInfo = createTaskResumeInfoHook();
+   const backgroundManager = new BackgroundManager(ctx);
 
-  const backgroundManager = new BackgroundManager(ctx);
+   initTaskToastManager(ctx.client);
 
-  initTaskToastManager(ctx.client);
+   const tokenAnalyticsManager = new TokenAnalyticsManager();
+   const tokenAnalyticsHook = createTokenAnalyticsHook(ctx, tokenAnalyticsManager);
+   const tokenReportTool = createTokenReportTool(tokenAnalyticsManager);
 
-  const tokenAnalyticsManager = new TokenAnalyticsManager();
-  const tokenAnalyticsHook = createTokenAnalyticsHook(ctx, tokenAnalyticsManager);
-  const tokenReportTool = createTokenReportTool(tokenAnalyticsManager);
+   const hierarchyEnforcer = isHookEnabled("hierarchy-enforcer")
+     ? createHierarchyEnforcerHook(ctx, { tokenAnalytics: tokenAnalyticsManager })
+     : null;
 
   const todoContinuationEnforcer = isHookEnabled("todo-continuation-enforcer")
     ? createTodoContinuationEnforcer(ctx, { backgroundManager })
