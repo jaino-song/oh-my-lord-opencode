@@ -783,7 +783,7 @@ describe("sisyphus-task", () => {
       
       // #then - should return the task result content
       expect(result).toContain("Sync task completed successfully")
-      expect(result).toContain("Task completed")
+      expect(result).toContain("✅ task complete")
     }, { timeout: 20000 })
 
     test("sync mode agent not found returns helpful error", async () => {

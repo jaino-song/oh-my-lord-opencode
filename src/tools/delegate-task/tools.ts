@@ -10,6 +10,7 @@ import { resolveMultipleSkillsAsync } from "../../features/opencode-skill-loader
 import { discoverSkills } from "../../features/opencode-skill-loader"
 import { getTaskToastManager } from "../../features/task-toast-manager"
 import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
+import { getsessiontokenusage } from "../../features/task-toast-manager/token-utils"
 import { subagentSessions, getSessionAgent } from "../../features/claude-code-session-state"
 import { log, getAgentToolRestrictions } from "../../shared"
 import { truncateToTokenLimit } from "../../shared/dynamic-truncator"
@@ -309,9 +310,10 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
           metadata: { sessionId: args.resume, sync: true },
         })
 
+        let resumeAgent: string | undefined
+        let resumeModel: { providerID: string; modelID: string } | undefined
+
         try {
-          let resumeAgent: string | undefined
-          let resumeModel: { providerID: string; modelID: string } | undefined
 
           try {
             const messagesResp = await client.session.messages({ path: { id: args.resume } })
@@ -405,10 +407,6 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
           .sort((a, b) => (b.info?.time?.created ?? 0) - (a.info?.time?.created ?? 0))
         const lastMessage = assistantMessages[0]
 
-        if (toastManager) {
-          toastManager.removeTask(taskId)
-        }
-
         if (!lastMessage) {
           return `❌ No assistant response found.\n\nSession ID: ${args.resume}`
         }
@@ -420,9 +418,33 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
 
         const duration = formatDuration(startTime)
 
-        return `Task resumed and completed in ${duration}.
+        // fetch tokens (non-blocking, returns null on failure)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tokens = await getsessiontokenusage(client as any, args.resume)
 
-Session ID: ${args.resume}
+        if (toastManager) {
+          toastManager.showCompletionToast({
+            id: taskId,
+            description: args.description,
+            agent: resumeAgent ?? "resume",
+            duration: duration,
+            tokens: tokens ?? undefined,
+            result: formattedOutput.slice(0, 200),
+          })
+        }
+
+        const total = tokens ? tokens.input + tokens.output : 0
+        const tokenline = tokens 
+          ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
+          : ""
+
+        return `⚡ paul → ${resumeAgent ?? "agent"}
+task: ${args.description}
+${tokenline}
+duration: ${duration}
+✅ task complete
+
+session id: ${args.resume}
 
 ---
 
@@ -557,15 +579,14 @@ ${formattedOutput}`
             metadata: { sessionId: task.sessionID, category: args.category },
           })
 
-          return `Background task launched.
+          return `paul → ${task.agent}
+task: ${task.description}
+parallelism: yes
 
-Task ID: ${task.id}
-Session ID: ${task.sessionID}
-Description: ${task.description}
-Agent: ${task.agent}${args.category ? ` (category: ${args.category})` : ""}
-Status: ${task.status}
+task id: ${task.id}
+session id: ${task.sessionID}
 
-System notifies on completion. Use \`background_output\` with task_id="${task.id}" to check.`
+task launched in background. use \`background_output\` with task_id="${task.id}" to check.`
         } catch (error) {
           return formatDetailedError(error, {
             operation: "Launch background task",
@@ -758,16 +779,35 @@ System notifies on completion. Use \`background_output\` with task_id="${task.id
 
         const duration = formatDuration(startTime)
 
+        // fetch tokens (non-blocking, returns null on failure)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tokens = await getsessiontokenusage(client as any, sessionID)
+
         if (toastManager) {
-          toastManager.removeTask(taskId)
+          toastManager.showCompletionToast({
+            id: taskId,
+            description: args.description,
+            agent: agentToUse,
+            duration,
+            tokens: tokens ?? undefined,
+            result: formattedOutput.slice(0, 200),
+          })
         }
 
         subagentSessions.delete(sessionID)
 
-        return `Task completed in ${duration}.
+        const total = tokens ? tokens.input + tokens.output : 0
+        const tokenline = tokens 
+          ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
+          : ""
 
-Agent: ${agentToUse}${args.category ? ` (category: ${args.category})` : ""}
-Session ID: ${sessionID}
+        return `⚡ paul → ${agentToUse}
+task: ${args.description}
+${tokenline}
+duration: ${duration}
+✅ task complete
+
+session id: ${sessionID}
 
 ---
 

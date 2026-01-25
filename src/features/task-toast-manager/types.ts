@@ -14,6 +14,11 @@ export interface TrackedTask {
   isBackground: boolean
   skills?: string[]
   modelInfo?: ModelFallbackInfo
+  tokens?: {
+    input: number
+    output: number
+  }
+  result?: string  // summary of task result
 }
 
 export interface TaskToastOptions {
@@ -21,4 +26,22 @@ export interface TaskToastOptions {
   message: string
   variant: "info" | "success" | "warning" | "error"
   duration?: number
+}
+
+export interface CompletionToastData {
+  id: string
+  description: string
+  agent: string
+  duration: string
+  tokens?: { input: number; output: number }
+  result?: string
+}
+
+export interface ProgressToastData {
+  id: string
+  description: string
+  agent: string
+  progress: string
+  toolcalls?: number
+  elapsed: string
 }

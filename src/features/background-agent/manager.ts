@@ -11,12 +11,14 @@ import type { BackgroundTaskConfig } from "../../config/schema"
 
 import { subagentSessions } from "../claude-code-session-state"
 import { getTaskToastManager } from "../task-toast-manager"
+import { getsessiontokenusage } from "../task-toast-manager/token-utils"
 import { findNearestMessageWithFields, MESSAGE_STORAGE } from "../hook-message-injector"
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
 const TASK_TTL_MS = 30 * 60 * 1000
 const MIN_STABILITY_TIME_MS = 10 * 1000  // Must run at least 10s before stability detection kicks in
+const PROGRESS_TOAST_INTERVAL_MS = 10000  // 10 seconds between progress toasts
 
 type ProcessCleanupEvent = NodeJS.Signals | "beforeExit" | "exit"
 
@@ -60,7 +62,7 @@ export class BackgroundManager {
   private pollingInterval?: ReturnType<typeof setInterval>
   private concurrencyManager: ConcurrencyManager
   private shutdownTriggered = false
-
+  private lastProgressToast: Map<string, number> = new Map()
 
   constructor(ctx: PluginInput, config?: BackgroundTaskConfig) {
     this.tasks = new Map()
@@ -734,6 +736,8 @@ export class BackgroundManager {
       return false
     }
 
+    this.lastProgressToast.delete(task.id)
+
     // Atomically mark as completed to prevent race conditions
     task.status = "completed"
     task.completedAt = new Date()
@@ -765,15 +769,18 @@ export class BackgroundManager {
 
     log("[background-agent] notifyParentSession called for task:", task.id)
 
-    // Show toast notification
-    const toastManager = getTaskToastManager()
-    if (toastManager) {
-      toastManager.showCompletionToast({
-        id: task.id,
-        description: task.description,
-        duration,
-      })
-    }
+     // Show toast notification
+     const toastManager = getTaskToastManager()
+     if (toastManager) {
+       toastManager.showCompletionToast({
+         id: task.id,
+         description: task.description,
+         agent: task.agent,
+         duration,
+         tokens: task.progress?.toolCalls ? { input: 0, output: task.progress.toolCalls } : undefined,
+         result: task.result,
+       })
+     }
 
     // Update pending tracking and check if all tasks complete
     const pendingSet = this.pendingByParent.get(task.parentSessionID)
@@ -793,32 +800,46 @@ export class BackgroundManager {
     
     let notification: string
     if (allComplete) {
-      // All tasks complete - build summary
+      // All tasks complete - get token usage
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tokens = await getsessiontokenusage(this.client as any, task.sessionID)
+      const total = tokens ? tokens.input + tokens.output : 0
+      const tokenLine = tokens 
+        ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
+        : ""
+      
       const completedTasks = Array.from(this.tasks.values())
         .filter(t => t.parentSessionID === task.parentSessionID && t.status !== "running")
         .map(t => `- \`${t.id}\`: ${t.description}`)
         .join("\n")
 
       notification = `<system-reminder>
-[ALL BACKGROUND TASKS COMPLETE]
+✅ all background tasks complete
+${tokenLine}
 
-**Completed:**
 ${completedTasks || `- \`${task.id}\`: ${task.description}`}
 
 Use \`background_output(task_id="<id>")\` to retrieve each result.
 </system-reminder>`
     } else {
-      // Individual completion - silent notification
+      // Individual completion - get token usage
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tokens = await getsessiontokenusage(this.client as any, task.sessionID)
+      const total = tokens ? tokens.input + tokens.output : 0
+      const tokenLine = tokens 
+        ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
+        : ""
+      
       notification = `<system-reminder>
-[BACKGROUND TASK ${statusText}]
-**ID:** \`${task.id}\`
-**Description:** ${task.description}
-**Duration:** ${duration}${errorInfo}
+⚡ paul → ${task.agent}
+task: ${task.description}
+${tokenLine}
+duration: ${duration}
+${statusText === "COMPLETED" ? "✅ task complete" : `❌ task ${statusText.toLowerCase()}`}${errorInfo}
 
-**${remainingCount} task${remainingCount === 1 ? "" : "s"} still in progress.** You WILL be notified when ALL complete.
-Do NOT poll - continue productive work.
+${remainingCount > 0 ? `${remainingCount} task${remainingCount === 1 ? "" : "s"} still running.` : ""}
 
-Use \`background_output(task_id="${task.id}")\` to retrieve this result when ready.
+Use \`background_output(task_id="${task.id}")\` to retrieve result.
 </system-reminder>`
     }
 
@@ -1013,12 +1034,31 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
           task.progress.toolCalls = toolCalls
           task.progress.lastTool = lastTool
           task.progress.lastUpdate = new Date()
-          if (lastMessage) {
-            task.progress.lastMessage = lastMessage
-            task.progress.lastMessageAt = new Date()
+           if (lastMessage) {
+             task.progress.lastMessage = lastMessage
+             task.progress.lastMessageAt = new Date()
+           }
+
+          // show progress toast (throttled to every 10 seconds)
+          const now = Date.now()
+          const lastToast = this.lastProgressToast.get(task.id) ?? 0
+          if (now - lastToast >= PROGRESS_TOAST_INTERVAL_MS && task.progress?.lastMessage) {
+            const toastManager = getTaskToastManager()
+            if (toastManager) {
+              const elapsed = this.formatDuration(task.startedAt, new Date())
+              toastManager.showProgressToast({
+                id: task.id,
+                description: task.description,
+                agent: task.agent,
+                progress: task.progress.lastMessage,
+                toolcalls: task.progress.toolCalls,
+                elapsed,
+              })
+              this.lastProgressToast.set(task.id, now)
+            }
           }
 
-          // Stability detection: complete when message count unchanged for 3 polls
+           // Stability detection: complete when message count unchanged for 3 polls
           const currentMsgCount = messages.length
           const elapsedMs = Date.now() - task.startedAt.getTime()
 

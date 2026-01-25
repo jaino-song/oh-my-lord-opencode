@@ -245,5 +245,158 @@ describe("TaskToastManager", () => {
       const call = mockClient.tui.showToast.mock.calls[0][0]
       expect(call.body.message).not.toContain("⚠️ Model:")
     })
+   })
+})
+
+describe("showCompletionToast", () => {
+  let mockClient: {
+    tui: {
+      showToast: ReturnType<typeof mock>
+    }
+  }
+  let toastManager: TaskToastManager
+  let mockConcurrencyManager: ConcurrencyManager
+
+  beforeEach(() => {
+    mockClient = {
+      tui: {
+        showToast: mock(() => Promise.resolve()),
+      },
+    }
+    mockConcurrencyManager = {
+      getConcurrencyLimit: mock(() => 5),
+    } as unknown as ConcurrencyManager
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    toastManager = new TaskToastManager(mockClient as any, mockConcurrencyManager)
+  })
+
+  test("should display completion toast with tokens", () => {
+    // #given - a task that was added
+    toastManager.addTask({
+      id: "task_1",
+      description: "test task",
+      agent: "Sisyphus-Junior",
+      isBackground: false,
+    })
+    mockClient.tui.showToast.mockClear()
+
+    // #when - showCompletionToast is called with tokens
+    toastManager.showCompletionToast({
+      id: "task_1",
+      description: "test task",
+      agent: "Sisyphus-Junior",
+      duration: "1m 30s",
+      tokens: { input: 1500, output: 500 },
+    })
+
+    // #then - toast should show token info
+    expect(mockClient.tui.showToast).toHaveBeenCalled()
+    const call = mockClient.tui.showToast.mock.calls[0][0]
+    expect(call.body.title).toBe("[TASK COMPLETED]")
+    expect(call.body.message).toContain("1500in / 500out")
+    expect(call.body.variant).toBe("success")
+  })
+
+  test("should display completion toast with result", () => {
+    // #given - a task that was added
+    toastManager.addTask({
+      id: "task_2",
+      description: "test task",
+      agent: "explore",
+      isBackground: true,
+    })
+    mockClient.tui.showToast.mockClear()
+
+    // #when - showCompletionToast is called with result
+    toastManager.showCompletionToast({
+      id: "task_2",
+      description: "test task",
+      agent: "explore",
+      duration: "30s",
+      result: "found 5 files matching pattern",
+    })
+
+    // #then - toast should show result
+    expect(mockClient.tui.showToast).toHaveBeenCalled()
+    const call = mockClient.tui.showToast.mock.calls[0][0]
+    expect(call.body.message).toContain("report: found 5 files matching pattern")
+  })
+
+  test("should truncate long result to 100 chars", () => {
+    // #given - a task that was added
+    toastManager.addTask({
+      id: "task_3",
+      description: "test task",
+      agent: "librarian",
+      isBackground: true,
+    })
+    mockClient.tui.showToast.mockClear()
+
+    // #when - showCompletionToast is called with long result
+    const longResult = "a".repeat(150)
+    toastManager.showCompletionToast({
+      id: "task_3",
+      description: "test task",
+      agent: "librarian",
+      duration: "2m",
+      result: longResult,
+    })
+
+    // #then - toast should truncate result
+    expect(mockClient.tui.showToast).toHaveBeenCalled()
+    const call = mockClient.tui.showToast.mock.calls[0][0]
+    expect(call.body.message).toContain("a".repeat(100) + "...")
+    expect(call.body.message).not.toContain("a".repeat(101))
+  })
+
+  test("should work without tokens and result (backward compat)", () => {
+    // #given - a task that was added
+    toastManager.addTask({
+      id: "task_4",
+      description: "simple task",
+      agent: "explore",
+      isBackground: false,
+    })
+    mockClient.tui.showToast.mockClear()
+
+    // #when - showCompletionToast is called without optional fields
+    toastManager.showCompletionToast({
+      id: "task_4",
+      description: "simple task",
+      agent: "explore",
+      duration: "10s",
+    })
+
+    // #then - toast should still work
+    expect(mockClient.tui.showToast).toHaveBeenCalled()
+    const call = mockClient.tui.showToast.mock.calls[0][0]
+    expect(call.body.title).toBe("[TASK COMPLETED]")
+    expect(call.body.message).toContain("task: simple task")
+    expect(call.body.message).toContain("agent: explore")
+    expect(call.body.message).toContain("duration: 10s")
+    expect(call.body.message).not.toContain("tokens:")
+    expect(call.body.message).not.toContain("report:")
+  })
+
+  test("should remove task from tracking after completion", () => {
+    // #given - a task that was added
+    toastManager.addTask({
+      id: "task_5",
+      description: "task to remove",
+      agent: "explore",
+      isBackground: true,
+    })
+    expect(toastManager.getRunningTasks().length).toBe(1)
+
+    // #when - showCompletionToast is called
+    toastManager.showCompletionToast({
+      id: "task_5",
+      description: "task to remove",
+      agent: "explore",
+      duration: "5s",
+    })
+
+    // #then - task should be removed from tracking
+    expect(toastManager.getRunningTasks().length).toBe(0)
   })
 })
