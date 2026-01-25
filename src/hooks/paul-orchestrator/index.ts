@@ -119,7 +119,7 @@ const ORCHESTRATOR_DELEGATION_REQUIRED = `
 
 **STOP. YOU ARE VIOLATING ORCHESTRATOR PROTOCOL.**
 
-You (orchestrator-sisyphus) are attempting to directly modify a file outside \`.paul/\`.
+You (Paul) are attempting to directly modify a file outside \`.paul/\`.
 
 **Path attempted:** $FILE_PATH
 
@@ -381,12 +381,12 @@ function getMessageDir(sessionID: string): string | null {
 }
 
 function isCallerOrchestrator(sessionID?: string): boolean {
-  if (!sessionID) return false
-  const messageDir = getMessageDir(sessionID)
-  if (!messageDir) return false
-  const nearest = findNearestMessageWithFields(messageDir)
-  // Both orchestrator-sisyphus and Paul are orchestrators who delegate, not implement
-  return nearest?.agent === "orchestrator-sisyphus" || nearest?.agent === "Paul"
+   if (!sessionID) return false
+   const messageDir = getMessageDir(sessionID)
+   if (!messageDir) return false
+   const nearest = findNearestMessageWithFields(messageDir)
+   // Paul is the orchestrator who delegates, not implements
+   return nearest?.agent === "Paul"
 }
 
 interface SessionState {
@@ -482,15 +482,15 @@ export function createPaulOrchestratorHook(
           : undefined
       }
 
-      await ctx.client.session.prompt({
-        path: { id: sessionID },
-        body: {
-          agent: "orchestrator-sisyphus",
-          ...(model !== undefined ? { model } : {}),
-          parts: [{ type: "text", text: prompt }],
-        },
-        query: { directory: ctx.directory },
-      })
+       await ctx.client.session.prompt({
+         path: { id: sessionID },
+         body: {
+           agent: "Paul",
+           ...(model !== undefined ? { model } : {}),
+           parts: [{ type: "text", text: prompt }],
+         },
+         query: { directory: ctx.directory },
+       })
 
       log(`[${HOOK_NAME}] Boulder continuation injected`, { sessionID })
     } catch (err) {
@@ -557,10 +557,10 @@ export function createPaulOrchestratorHook(
           return
         }
 
-        if (!isCallerOrchestrator(sessionID)) {
-          log(`[${HOOK_NAME}] Skipped: last agent is not orchestrator-sisyphus`, { sessionID })
-          return
-        }
+         if (!isCallerOrchestrator(sessionID)) {
+           log(`[${HOOK_NAME}] Skipped: last agent is not Paul`, { sessionID })
+           return
+         }
 
         const progress = getPlanProgress(boulderState.active_plan)
         if (progress.isComplete) {

@@ -53,7 +53,7 @@ export function createPlanSummaryInjectorHook(ctx: PluginInput) {
       const filePath = output.title
       if (!filePath || !isPlanPath(filePath)) return
       const agent = getSessionAgent(input.sessionID)
-      if (agent !== "Paul" && agent !== "orchestrator-sisyphus") return
+      if (agent !== "Paul") return
       if (typeof output.output !== "string") return
       output.output = getSummaryFromCache(filePath, output.output)
     },

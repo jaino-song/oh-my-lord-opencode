@@ -153,7 +153,7 @@ export function createHierarchyEnforcerHook(
             )
           }
 
-          if (currentAgent === "Paul" || currentAgent === "orchestrator-sisyphus") {
+          if (currentAgent === "Paul") {
             const shortDesc = description.slice(0, 50) + (description.length > 50 ? "..." : "")
             await showToast(client, `⚡ Paul → ${targetAgent}`, shortDesc || "Delegating task...", "info", 2500)
             

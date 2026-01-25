@@ -7,7 +7,7 @@ import { getConfigLoadErrors, clearConfigLoadErrors } from "../../shared/config-
 import { runBunInstall } from "../../cli/config-manager"
 import type { AutoUpdateCheckerOptions } from "./types"
 
-const SISYPHUS_SPINNER = ["·", "•", "●", "○", "◌", "◦", " "]
+const PAUL_SPINNER = ["·", "•", "●", "○", "◌", "◦", " "]
 
 export function isPrereleaseVersion(version: string): boolean {
   return version.includes("-")
@@ -49,8 +49,8 @@ export function createAutoUpdateCheckerHook(ctx: PluginInput, options: AutoUpdat
   const getToastMessage = (isUpdate: boolean, latestVersion?: string): string => {
     if (isPaulEnabled) {
       return isUpdate
-        ? `Sisyphus on steroids is steering OpenCode.\nv${latestVersion} available. Restart to apply.`
-        : `Sisyphus on steroids is steering OpenCode.`
+        ? `Paul is steering OpenCode.\nv${latestVersion} available. Restart to apply.`
+        : `Paul is steering OpenCode.`
     }
     return isUpdate
       ? `OpenCode is now on Steroids. oMoMoMoMo...\nv${latestVersion} available. Restart OpenCode to apply.`
@@ -199,7 +199,7 @@ async function showSpinnerToast(ctx: PluginInput, version: string, message: stri
   const totalFrames = Math.floor(totalDuration / frameInterval)
 
   for (let i = 0; i < totalFrames; i++) {
-    const spinner = SISYPHUS_SPINNER[i % SISYPHUS_SPINNER.length]
+    const spinner = PAUL_SPINNER[i % PAUL_SPINNER.length]
     await ctx.client.tui
       .showToast({
         body: {

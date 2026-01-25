@@ -102,7 +102,7 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
             
             throw new Error(
               `[${HOOK_NAME}] DELEGATION BLOCKED: Planner agent '${agentName}' attempted to delegate implementation to '${targetAgent}'.\n\n` +
-              `Planners are STRICTLY FORBIDDEN from delegating to implementation agents (Sisyphus, Paul, etc.).\n` +
+              `Planners are STRICTLY FORBIDDEN from delegating to implementation agents (Paul, etc.).\n` +
               `Planners may ONLY delegate to: ${ALLOWED_DELEGATE_TARGETS.join(", ")}.\n\n` +
               `ACTION REQUIRED: If you need to implement something, STOP planning and ask the user to switch to Paul.`
             )
