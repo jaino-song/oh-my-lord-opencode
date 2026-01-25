@@ -13,13 +13,13 @@ import { log } from "../../shared/logger"
 import { createSystemDirective, SYSTEM_DIRECTIVE_PREFIX, SystemDirectiveTypes } from "../../shared/system-directive"
 import type { BackgroundManager } from "../../features/background-agent"
 
-export const HOOK_NAME = "sisyphus-orchestrator"
+export const HOOK_NAME = "paul-orchestrator"
 
 /**
  * Cross-platform check if a path is inside .sisyphus/ directory.
  * Handles both forward slashes (Unix) and backslashes (Windows).
  */
-function isSisyphusPath(filePath: string): boolean {
+function isPaulPath(filePath: string): boolean {
   return /\.sisyphus[/\\]/.test(filePath)
 }
 
@@ -396,7 +396,7 @@ interface SessionState {
 
 const CONTINUATION_COOLDOWN_MS = 5000
 
-export interface SisyphusOrchestratorHookOptions {
+export interface PaulOrchestratorHookOptions {
   directory: string
   backgroundManager?: BackgroundManager
 }
@@ -422,9 +422,9 @@ function isAbortError(error: unknown): boolean {
   return false
 }
 
-export function createSisyphusOrchestratorHook(
+export function createPaulOrchestratorHook(
   ctx: PluginInput,
-  options?: SisyphusOrchestratorHookOptions
+  options?: PaulOrchestratorHookOptions
 ) {
   const backgroundManager = options?.backgroundManager
   const sessions = new Map<string, SessionState>()
@@ -655,7 +655,7 @@ export function createSisyphusOrchestratorHook(
           )
         }
 
-        if (filePath && !isSisyphusPath(filePath)) {
+        if (filePath && !isPaulPath(filePath)) {
           // Store filePath for use in tool.execute.after
           if (input.callID) {
             pendingFilePaths.set(input.callID, filePath)
@@ -703,7 +703,7 @@ export function createSisyphusOrchestratorHook(
         if (!filePath) {
           filePath = output.metadata?.filePath as string | undefined
         }
-        if (filePath && !isSisyphusPath(filePath)) {
+        if (filePath && !isPaulPath(filePath)) {
           output.output = (output.output || "") + DIRECT_WORK_REMINDER
           log(`[${HOOK_NAME}] Direct work reminder appended`, {
             sessionID: input.sessionID,

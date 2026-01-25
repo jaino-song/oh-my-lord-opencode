@@ -30,7 +30,7 @@ export { createEditErrorRecoveryHook } from "./edit-error-recovery";
 export { createPlannerMdOnlyHook, createPrometheusMdOnlyHook } from "./planner-md-only";
 export { createTaskResumeInfoHook } from "./task-resume-info";
 export { createStartWorkHook } from "./start-work";
-export { createSisyphusOrchestratorHook } from "./sisyphus-orchestrator";
+export { createPaulOrchestratorHook } from "./paul-orchestrator";
 export { createDelegateTaskRetryHook } from "./delegate-task-retry";
 export { createTddEnforcementHook } from "./tdd-enforcement";
 export { createStrictWorkflowHook } from "./strict-workflow";

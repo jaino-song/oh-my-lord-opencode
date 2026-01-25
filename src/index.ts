@@ -30,7 +30,7 @@ import {
   createDelegateTaskRetryHook,
   createTaskResumeInfoHook,
   createStartWorkHook,
-  createSisyphusOrchestratorHook,
+  createPaulOrchestratorHook,
   createPrometheusMdOnlyHook,
   createTddEnforcementHook,
   createStrictWorkflowHook,
@@ -210,8 +210,8 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createStartWorkHook(ctx)
     : null;
 
-  const sisyphusOrchestrator = isHookEnabled("sisyphus-orchestrator")
-    ? createSisyphusOrchestratorHook(ctx)
+  const paulOrchestrator = isHookEnabled("paul-orchestrator")
+    ? createPaulOrchestratorHook(ctx)
     : null;
 
   const prometheusMdOnly = isHookEnabled("prometheus-md-only")
@@ -452,7 +452,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await agentUsageReminder?.event(input);
       await interactiveBashSession?.event(input);
       await ralphLoop?.event(input);
-      await sisyphusOrchestrator?.handler(input);
+      await paulOrchestrator?.handler(input);
       await tokenAnalyticsHook.event?.(input);
 
       const { event } = input;
@@ -534,7 +534,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await strictWorkflow?.["tool.execute.before"]?.(input, output);
       await hierarchyEnforcer?.["tool.execute.before"]?.(input, output);
       await parallelSafetyEnforcer?.["tool.execute.before"]?.(input, output);
-      await sisyphusOrchestrator?.["tool.execute.before"]?.(input, output);
+      await paulOrchestrator?.["tool.execute.before"]?.(input, output);
 
       if (input.tool === "task") {
         const args = output.args as Record<string, unknown>;
@@ -595,7 +595,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await interactiveBashSession?.["tool.execute.after"](input, output);
 await editErrorRecovery?.["tool.execute.after"](input, output);
         await delegateTaskRetry?.["tool.execute.after"](input, output);
-        await sisyphusOrchestrator?.["tool.execute.after"]?.(input, output);
+        await paulOrchestrator?.["tool.execute.after"]?.(input, output);
         await tddEnforcement?.["tool.execute.after"]?.(input, output);
         await strictWorkflow?.["tool.execute.after"]?.(input, output);
         await hierarchyEnforcer?.["tool.execute.after"]?.(input, output);
