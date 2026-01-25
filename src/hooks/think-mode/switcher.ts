@@ -87,6 +87,36 @@ function resolveProvider(providerID: string, modelID: string): string {
 // Only models with explicit high variants are mapped here.
 // Most providers use thinking parameters (THINKING_CONFIGS) instead of variant switching.
 const HIGH_VARIANT_MAP: Record<string, string> = {
+  // Claude models - all versions support high variants
+  "claude-sonnet-4": "claude-sonnet-4-high",
+  "claude-sonnet-4-5": "claude-sonnet-4-5-high",
+  "claude-opus-4": "claude-opus-4-high",
+  "claude-opus-4-5": "claude-opus-4-5-high",
+  "claude-3-5-sonnet": "claude-3-5-sonnet-high",
+  "claude-3-opus": "claude-3-opus-high",
+  "claude-3-sonnet": "claude-3-sonnet-high",
+
+  // GPT models - support high variants
+  "gpt-4": "gpt-4-high",
+  "gpt-4-turbo": "gpt-4-turbo-high",
+  "gpt-5": "gpt-5-high",
+  "gpt-5-1": "gpt-5-1-high",
+  "gpt-5-2": "gpt-5-2-high",
+  "gpt-5-1-codex": "gpt-5-1-codex-high",
+
+  // o1 and o3 models (OpenAI reasoning models)
+  "o1-preview": "o1-preview-high",
+  "o1-mini": "o1-mini-high",
+  "o3-mini": "o3-mini-high",
+
+  // Gemini models - support high variants
+  "gemini-pro": "gemini-pro-high",
+  "gemini-flash": "gemini-flash-high",
+  "gemini-3-pro": "gemini-3-pro-high",
+  "gemini-3-flash": "gemini-3-flash-high",
+  "gemini-3-pro-preview": "gemini-3-pro-preview-high",
+  "gemini-3-flash-preview": "gemini-3-flash-preview-high",
+
   // Google Antigravity is the only provider with explicit high variant model
   "google/antigravity-gemini-3-pro-low": "google/antigravity-gemini-3-pro-high",
 }
@@ -176,33 +206,38 @@ function isThinkingProvider(provider: string): provider is ThinkingProvider {
   return provider in THINKING_CONFIGS
 }
 
- export function getThinkingConfig(
-   providerID: string,
-   modelID: string
- ): Record<string, unknown> | null {
-   const normalized = normalizeModelID(modelID)
-   const { base } = extractModelPrefix(normalized)
+  export function getThinkingConfig(
+    providerID: string,
+    modelID: string
+  ): Record<string, unknown> | null {
+    const normalized = normalizeModelID(modelID)
+    const { base } = extractModelPrefix(normalized)
 
-   // Check if provider supports thinking
-   const resolvedProvider = resolveProvider(providerID, modelID)
-   if (!isThinkingProvider(resolvedProvider)) {
-     return null
-   }
+    // Check if already high variant - don't inject config again
+    if (isAlreadyHighVariant(modelID)) {
+      return null
+    }
 
-   // For Antigravity provider, use high variant switching instead
-   // Don't inject thinking config directly
-   if (resolvedProvider === "google" && modelID.startsWith("google/antigravity-gemini")) {
-     return null
-   }
+    // Check if provider supports thinking
+    const resolvedProvider = resolveProvider(providerID, modelID)
+    if (!isThinkingProvider(resolvedProvider)) {
+      return null
+    }
 
-   const config = THINKING_CONFIGS[resolvedProvider]
-   const capablePatterns = THINKING_CAPABLE_MODELS[resolvedProvider]
+    // For Antigravity provider, use high variant switching instead
+    // Don't inject thinking config directly
+    if (resolvedProvider === "google" && modelID.startsWith("google/antigravity-gemini")) {
+      return null
+    }
 
-   // Check capability using base model name (without prefix)
-   const baseLower = base.toLowerCase()
-   const isCapable = capablePatterns.some((pattern) =>
-     baseLower.includes(pattern.toLowerCase())
-   )
+    const config = THINKING_CONFIGS[resolvedProvider]
+    const capablePatterns = THINKING_CAPABLE_MODELS[resolvedProvider]
 
-   return isCapable ? config : null
- }
+    // Check capability using base model name (without prefix)
+    const baseLower = base.toLowerCase()
+    const isCapable = capablePatterns.some((pattern) =>
+      baseLower.includes(pattern.toLowerCase())
+    )
+
+    return isCapable ? config : null
+  }
