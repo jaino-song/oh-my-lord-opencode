@@ -10,7 +10,7 @@ import { createDocumentWriterAgent, DOCUMENT_WRITER_PROMPT_METADATA } from "./do
 import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "./multimodal-looker"
 // @deprecated Use specialized agents (Solomon, Timothy) instead
 import { createMetisAgent } from "./metis"
-import { createPaulAgent, paulAgent, createOrchestratorSisyphusAgent } from "./paul"
+import { createPaulAgent, paulAgent } from "./paul"
 import { createMomusAgent } from "./momus"
 import { createEzraAgent, EZRA_PROMPT_METADATA } from "./ezra"
 import { createNathanAgent, NATHAN_PROMPT_METADATA } from "./nathan"
@@ -230,13 +230,13 @@ export function createBuiltinAgents(
     }
    }
 
-   if (!disabledAgents.includes("Paul")) {
-    const paulOverride = agentOverrides["Paul"]
-    const paulModel = paulOverride?.model ?? systemDefaultModel
-    let paulConfig = createOrchestratorSisyphusAgent({
-      model: paulModel,
-      availableAgents,
-    })
+    if (!disabledAgents.includes("Paul")) {
+     const paulOverride = agentOverrides["Paul"]
+     const paulModel = paulOverride?.model ?? systemDefaultModel
+     let paulConfig = createPaulAgent({
+       model: paulModel,
+       availableAgents,
+     })
 
     if (paulOverride) {
       paulConfig = mergeAgentConfig(paulConfig, paulOverride)

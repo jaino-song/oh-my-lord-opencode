@@ -171,8 +171,8 @@ export class BackgroundManager {
       promptLength: input.prompt.length,
     })
 
-    // Use prompt() instead of promptAsync() to properly initialize agent loop (fire-and-forget)
-    // Include model if caller provided one (e.g., from Sisyphus category configs)
+     // Use prompt() instead of promptAsync() to properly initialize agent loop (fire-and-forget)
+     // Include model if caller provided one (e.g., from Paul category configs)
     this.client.session.prompt({
       path: { id: sessionID },
       body: {

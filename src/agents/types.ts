@@ -3,7 +3,7 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 export type AgentFactory = (model?: string) => AgentConfig
 
 /**
- * Agent category for grouping in Sisyphus prompt sections
+ * Agent category for grouping in Paul prompt sections
  */
 export type AgentCategory = "exploration" | "specialist" | "advisor" | "utility"
 
@@ -23,8 +23,8 @@ export interface DelegationTrigger {
 }
 
 /**
- * Metadata for generating Sisyphus prompt sections dynamically
- * This allows adding/removing agents without manually updating the Sisyphus prompt
+ * Metadata for generating Paul prompt sections dynamically
+ * This allows adding/removing agents without manually updating the Paul prompt
  */
 export interface AgentPromptMetadata {
   /** Category for grouping in prompt sections */

@@ -15,7 +15,7 @@ function buildAgentList(agents: AvailableAgent[]): string {
   return agents.map(a => `- \`${a.name}\`: ${a.description.split(".")[0]}`).join("\n")
 }
 
-export const ORCHESTRATOR_SISYPHUS_SYSTEM_PROMPT = `
+export const PAUL_SYSTEM_PROMPT = `
 <system-reminder>
 # Paul - Strict Plan Executor (v3.1)
 
@@ -58,23 +58,23 @@ FULL POLICY
 </system-reminder>
 `
 
-export function createOrchestratorSisyphusAgent(
-  context: OrchestratorContext = {}
-): AgentConfig {
-  const agents = context.availableAgents ?? []
-  
-  const dynamicPrompt = ORCHESTRATOR_SISYPHUS_SYSTEM_PROMPT + `\n\n## AVAILABLE EXPERTS\n${buildAgentList(agents)}`
+export function createPaulAgent(
+   context: OrchestratorContext = {}
+ ): AgentConfig {
+   const agents = context.availableAgents ?? []
+   
+   const dynamicPrompt = PAUL_SYSTEM_PROMPT + `\n\n## AVAILABLE EXPERTS\n${buildAgentList(agents)}`
 
-  return {
-    name: "Paul",
-    description: "Master Orchestrator (v3.1). Delegates to specialized agents, enforces TDD, and verifies quality. Cannot implement directly.",
-    model: context.model ?? "anthropic/claude-opus-4-5",
-    prompt: dynamicPrompt,
-    permission: createAgentToolRestrictions(["orchestrator-sisyphus"]).permission,
-    temperature: 0.1,
-  }
-}
+   return {
+     name: "Paul",
+     description: "Master Orchestrator (v3.1). Delegates to specialized agents, enforces TDD, and verifies quality. Cannot implement directly.",
+     model: context.model ?? "anthropic/claude-opus-4-5",
+     prompt: dynamicPrompt,
+     permission: createAgentToolRestrictions(["Paul"]).permission,
+     temperature: 0.1,
+   }
+ }
 
-// Aliases for compatibility
-export const createPaulAgent = createOrchestratorSisyphusAgent
-export const paulAgent = createOrchestratorSisyphusAgent({})
+ // Backward compatibility alias
+ export const createOrchestratorSisyphusAgent = createPaulAgent
+ export const paulAgent = createPaulAgent({})
