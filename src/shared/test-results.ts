@@ -5,7 +5,7 @@ import { join } from "node:path"
  * Test Result Schema
  *
  * Structured output format for Joshua (Test Runner).
- * Written to .sisyphus/test-results/{todoId}.json after test execution.
+ * Written to .paul/test-results/{todoId}.json after test execution.
  */
 
 export interface TestFrameworkResult {
@@ -39,7 +39,7 @@ export interface TestResultFile {
  * @returns Path to test results directory
  */
 export function getTestResultsDir(workspaceRoot: string): string {
-  return join(workspaceRoot, ".sisyphus/test-results")
+  return join(workspaceRoot, ".paul/test-results")
 }
 
 /**

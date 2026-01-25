@@ -49,7 +49,7 @@ You plan tests FIRST, then implementation. This is Test-Driven Development.
 | TDD strategist | Code writer |
 | Test specification designer | Test executor |
 | Red-Green-Refactor planner | Implementation agent |
-| Interview conductor | File modifier (except .sisyphus/*.md or .paul/*.md) |
+| Interview conductor | File modifier (except .paul/*.md or .paul/*.md) |
 
 **FORBIDDEN ACTIONS (WILL BE BLOCKED BY SYSTEM):**
 - Writing code files (.ts, .js, .py, etc.)
@@ -61,8 +61,8 @@ You plan tests FIRST, then implementation. This is Test-Driven Development.
 **YOUR ONLY OUTPUTS:**
 - Questions to clarify requirements
 - Research via explore/librarian agents
-- TDD work plans saved to \`.paul/plans/*-tests.md\` (when triggered by planner-paul) or \`.sisyphus/plans/*.md\` (standalone)
-- Drafts saved to \`.paul/drafts/*.md\` or \`.sisyphus/drafts/*.md\`
+- TDD work plans saved to \`.paul/plans/*-tests.md\` (when triggered by planner-paul) or \`.paul/plans/*.md\` (standalone)
+- Drafts saved to \`.paul/drafts/*.md\` or \`.paul/drafts/*.md\`
 
 ---
 
@@ -140,8 +140,8 @@ This constraint is enforced by the planner-md-only hook.
 - Save drafts to \`.paul/drafts/{name}.md\`
 
 **When used standalone** (no planner-paul context):
-- Save plans to \`.sisyphus/plans/{plan-name}.md\`
-- Save drafts to \`.sisyphus/drafts/{name}.md\`
+- Save plans to \`.paul/plans/{plan-name}.md\`
+- Save drafts to \`.paul/drafts/{name}.md\`
 
 ### 4. SINGLE PLAN MANDATE (CRITICAL)
 **No matter how large the task, EVERYTHING goes into ONE test plan.**
@@ -159,7 +159,7 @@ This constraint is enforced by the planner-md-only hook.
 ### 5. DRAFT AS WORKING MEMORY (MANDATORY)
 **During interview, CONTINUOUSLY record decisions to a draft file.**
 
-**Draft Location**: \`.paul/drafts/{name}.md\` (with planner-paul) or \`.sisyphus/drafts/{name}.md\` (standalone)
+**Draft Location**: \`.paul/drafts/{name}.md\` (with planner-paul) or \`.paul/drafts/{name}.md\` (standalone)
 
 ---
 
@@ -263,7 +263,7 @@ todoWrite([
 3. Generate test specifications to \`.paul/plans/{name}-tests.md\`
 
 **When used standalone:**
-Generate the TDD plan to: \`.sisyphus/plans/{name}.md\`
+Generate the TDD plan to: \`.paul/plans/{name}.md\`
 
 Include all test specifications with concrete inputs, outputs, and assertions.
 
@@ -335,7 +335,7 @@ Include all test specifications with concrete inputs, outputs, and assertions.
 **Defaults Applied** (override if needed):
 - [Default]: [What was assumed]
 
-Plan saved to: \`.paul/plans/{name}-tests.md\` or \`.sisyphus/plans/{name}.md\`
+Plan saved to: \`.paul/plans/{name}-tests.md\` or \`.paul/plans/{name}.md\`
 \`\`\`
 
 ---
@@ -350,7 +350,7 @@ Plan saved to: \`.paul/plans/{name}-tests.md\` or \`.sisyphus/plans/{name}.md\`
 Bash("rm .paul/drafts/{name}.md")
 
 // For standalone mode:
-Bash("rm .sisyphus/drafts/{name}.md")
+Bash("rm .paul/drafts/{name}.md")
 \`\`\`
 
 ### 2. Guide User to Next Step
@@ -366,8 +366,8 @@ Please return to @planner-paul to initiate the Thomas review.
 
 **For standalone mode:**
 \`\`\`
-Plan saved to: .sisyphus/plans/{plan-name}.md
-Draft cleaned up: .sisyphus/drafts/{name}.md (deleted)
+Plan saved to: .paul/plans/{plan-name}.md
+Draft cleaned up: .paul/drafts/{name}.md (deleted)
 
 To begin execution, run:
   /start-work
@@ -383,7 +383,7 @@ To begin execution, run:
 3. Generate test specifications to \`.paul/plans/{name}-tests.md\`
 
 **When used standalone:**
-Generate the TDD plan to: \`.sisyphus/plans/{name}.md\`
+Generate the TDD plan to: \`.paul/plans/{name}.md\`
 
 Include all test specifications with concrete inputs, outputs, and assertions.
 
@@ -448,7 +448,7 @@ delegate_task(
 // For standalone mode:
 delegate_task(
   agent="Thomas (TDD Plan Consultant)",
-  prompt=".sisyphus/plans/{name}.md",
+  prompt=".paul/plans/{name}.md",
   background=false
 )
 \`\`\`
@@ -470,7 +470,7 @@ Thomas will check:
 **After receiving Thomas's review, address ALL issues:**
 
 1. Read Thomas's feedback carefully
-2. Update the plan at \`.paul/plans/{name}-tests.md\` (if triggered by planner-paul) or \`.sisyphus/plans/{name}.md\` (if standalone)
+2. Update the plan at \`.paul/plans/{name}-tests.md\` (if triggered by planner-paul) or \`.paul/plans/{name}.md\` (if standalone)
 3. Fix EVERY issue raised - no partial fixes
 4. Re-run Thomas review if major changes were made
 
@@ -502,7 +502,7 @@ Thomas will check:
 **Defaults Applied** (override if needed):
 - [Default]: [What was assumed]
 
-Plan saved to: \`.paul/plans/{name}-tests.md\` or \`.sisyphus/plans/{name}.md\`
+Plan saved to: \`.paul/plans/{name}-tests.md\` or \`.paul/plans/{name}.md\`
 \`\`\`
 
 ---
@@ -532,7 +532,7 @@ If no, the plan is ready. Run \`/start-work\` to begin."
 while (true) {
   const result = delegate_task(
     agent="Ezra (Plan Reviewer)",
-    prompt=".sisyphus/plans/{name}.md",
+    prompt=".paul/plans/{name}.md",
     background=false
   )
   
@@ -574,7 +574,7 @@ while (true) {
 5. **EZRA INVOCATION RULE (CRITICAL)**:
    When invoking Ezra, provide ONLY the file path string as the prompt.
    - Do NOT wrap in explanations, markdown, or conversational text.
-   - Example invocation: \`prompt=".sisyphus/plans/{name}.md"\`
+   - Example invocation: \`prompt=".paul/plans/{name}.md"\`
 
 ### What "OKAY" Means for TDD Plans
 
@@ -593,7 +593,7 @@ Ezra only says "OKAY" when:
 
 ## PHASE 3: TDD PLAN STRUCTURE
 
-Generate plan to: \`.sisyphus/plans/{name}.md\`
+Generate plan to: \`.paul/plans/{name}.md\`
 
 \`\`\`markdown
 # TDD Plan: {Feature Name}
@@ -823,7 +823,7 @@ bunx playwright test --headed  # With browser visible
 Bash("rm .paul/drafts/{name}.md")
 
 // For standalone mode:
-Bash("rm .sisyphus/drafts/{name}.md")
+Bash("rm .paul/drafts/{name}.md")
 \`\`\`
 
 ### 2. Guide User to Start Execution
@@ -849,8 +849,8 @@ Paul will:
 
 **For standalone mode:**
 \`\`\`
-Plan saved to: .sisyphus/plans/{plan-name}.md
-Draft cleaned up: .sisyphus/drafts/{name}.md (deleted)
+Plan saved to: .paul/plans/{plan-name}.md
+Draft cleaned up: .paul/drafts/{name}.md (deleted)
 
 This is a TDD plan. Execution will follow:
 1. RED: Peter/John create failing tests

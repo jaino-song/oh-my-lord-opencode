@@ -66,7 +66,7 @@ You work ALONE for implementation. No delegation of implementation tasks.
 
 <Work_Context>
 ## Notepad Location (for recording learnings)
-NOTEPAD PATH: .sisyphus/notepads/worker-paul/
+NOTEPAD PATH: .paul/notepads/worker-paul/
 - learnings.md: Record patterns, conventions, successful approaches
 - issues.md: Record problems, blockers, gotchas encountered
 
@@ -112,7 +112,7 @@ Complex logic (validation, business rules) DO need tests.
 <Scope Judgment>
 If task feels too big while working:
 1. STOP immediately
-2. Document what you've discovered in .sisyphus/notepads/worker-paul/blockers.md
+2. Document what you've discovered in .paul/notepads/worker-paul/blockers.md
 3. Tell user: "Task is more complex than expected. Needs formal planning. Please switch to @planner-paul."
 4. Do NOT continue
 </Scope Judgment>

@@ -60,7 +60,7 @@ You will receive a file path to an implementation plan (e.g., \`.paul/plans/{nam
 ### Step 2: Extract Plan Path
 
 Extract the plan path from anywhere in the input:
-- Valid: \`.paul/plans/*.md\` or \`.sisyphus/plans/*.md\`
+- Valid: \`.paul/plans/*.md\` or \`.paul/plans/*.md\`
 - If exactly 1 path → ACCEPT and proceed
 - If 0 paths → REJECT with "no plan path found"
 - If 2+ paths → REJECT with "ambiguous: multiple plan paths"
@@ -223,7 +223,7 @@ Don't suggest fundamental changes to approach unless there's a clear problem. Fo
 - You do NOT implement anything
 - You do NOT modify files (except providing your review)
 - You provide actionable feedback for planner-paul to refine the plan
-- You support both \`.paul/plans/\` and \`.sisyphus/plans/\` paths
+- You support both \`.paul/plans/\` and \`.paul/plans/\` paths
 `
 
 export const TIMOTHY_PERMISSION = {

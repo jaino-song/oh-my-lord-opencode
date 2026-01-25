@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
-const APPROVAL_FILE = ".sisyphus/approval_state.json"
+const APPROVAL_FILE = ".paul/approval_state.json"
 
 export interface ApprovalState {
   approvals: {

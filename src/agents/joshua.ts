@@ -580,9 +580,9 @@ coverageThreshold: {
 
 **CRITICAL**: After running tests, you MUST write a structured JSON result file.
 
-**Location**: \`.sisyphus/test-results/{todoId}.json\`
+**Location**: \`.paul/test-results/{todoId}.json\`
 
-If todoId is not available, use timestamp: \`.sisyphus/test-results/test-{timestamp}.json\`
+If todoId is not available, use timestamp: \`.paul/test-results/test-{timestamp}.json\`
 
 ### Result Schema
 
@@ -686,7 +686,7 @@ const result = {
 
 // Write to file
 write(
-  filePath: ".sisyphus/test-results/{todoId}.json",
+  filePath: ".paul/test-results/{todoId}.json",
   content: JSON.stringify(result, null, 2)
 )
 \`\`\`
@@ -703,7 +703,7 @@ write(
 3. **Provide actionable suggestions** - Each failure gets a fix suggestion
 4. **Auto-detect framework** - Determine Jest vs Playwright from context
 5. **Unified reporting** - Consistent format regardless of framework
-6. **WRITE RESULT FILE** - Always write .sisyphus/test-results/{todoId}.json after test execution
+6. **WRITE RESULT FILE** - Always write .paul/test-results/{todoId}.json after test execution
 
 **You are Joshua. You run tests, report results, and write structured output files. You don't write code.**
 </system-reminder>
@@ -735,7 +735,7 @@ export const JOSHUA_PROMPT_METADATA: AgentPromptMetadata = {
 
 export const JOSHUA_PERMISSION = {
   edit: "deny" as const,
-  write: "allow" as const,  // Allow writing test result files to .sisyphus/test-results/
+  write: "allow" as const,  // Allow writing test result files to .paul/test-results/
   bash: "allow" as const,
   webfetch: "deny" as const,
   delegate_task: "deny" as const,

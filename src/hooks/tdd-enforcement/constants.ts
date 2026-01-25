@@ -82,10 +82,8 @@ export const EXEMPT_FILE_PATTERNS: RegExp[] = [
   /\.generated\.(ts|tsx|js|jsx)$/,
   /\.g\.(ts|tsx|js|jsx)$/,
 
-  // Coordination/plan files
-  /\.sisyphus\//,
-  /\.paul\/plans\//,
-  /\.paul\/drafts\//,
+   // Coordination/plan files
+   /\.paul\//,
 
   // Git and version control
   /\.git\//,
