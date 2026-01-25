@@ -69,7 +69,13 @@ export function injectGitMasterConfig(template: string, config?: GitMasterConfig
 
 	const sections: string[] = []
 
+	if (commitFooter) {
+		sections.push("Ultraworked with [Paul]")
+	}
 
+	if (includeCoAuthoredBy) {
+		sections.push("Co-authored-by: Paul <paul@oh-my-claude.dev>")
+	}
 
 	const injection = sections.join("\n")
 
