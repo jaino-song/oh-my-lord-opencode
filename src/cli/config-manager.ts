@@ -367,9 +367,9 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
   // Categories: override model for Antigravity auth or GitHub Copilot fallback
   if (installConfig.hasGemini) {
     config.categories = {
-      "visual-engineering": { model: "google/gemini-3-pro-high" },
-      artistry: { model: "google/gemini-3-pro-high" },
-      writing: { model: "google/gemini-3-flash-high" },
+      "visual-engineering": { model: "google/antigravity-gemini-3-pro-high" },
+      artistry: { model: "google/antigravity-gemini-3-pro-high" },
+      writing: { model: "google/antigravity-gemini-3-flash" },
     }
   } else if (installConfig.hasCopilot) {
     config.categories = {

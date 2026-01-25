@@ -185,7 +185,7 @@ The more explicit your prompt, the better the results.
 
 export const DEFAULT_CATEGORIES: Record<string, CategoryConfig> = {
   "visual-engineering": {
-    model: "google/gemini-3-pro-preview",
+    model: "google/antigravity-gemini-3-pro-high",
     temperature: 0.7,
   },
   ultrabrain: {
@@ -193,7 +193,7 @@ export const DEFAULT_CATEGORIES: Record<string, CategoryConfig> = {
     temperature: 0.1,
   },
   artistry: {
-    model: "google/gemini-3-pro-preview",
+    model: "google/antigravity-gemini-3-pro-high",
     temperature: 0.9,
   },
   quick: {

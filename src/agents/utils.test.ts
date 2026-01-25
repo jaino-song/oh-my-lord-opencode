@@ -51,7 +51,7 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"])
 
     // #then
-    expect(agent.model).toBe("google/gemini-3-pro-preview")
+    expect(agent.model).toBe("google/antigravity-gemini-3-pro-high")
     expect(agent.temperature).toBe(0.7)
   })
 

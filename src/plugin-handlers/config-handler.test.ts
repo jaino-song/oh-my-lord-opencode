@@ -25,7 +25,7 @@ describe("Prometheus category config resolution", () => {
 
     // #then
     expect(config).toBeDefined()
-    expect(config?.model).toBe("google/gemini-3-pro-preview")
+    expect(config?.model).toBe("google/antigravity-gemini-3-pro-high")
     expect(config?.temperature).toBe(0.7)
   })
 

@@ -44,7 +44,7 @@ describe("paul-task", () => {
 
       // #when / #then
       expect(category).toBeDefined()
-      expect(category.model).toBe("google/gemini-3-pro-preview")
+      expect(category.model).toBe("google/antigravity-gemini-3-pro-high")
       expect(category.temperature).toBe(0.7)
     })
 
@@ -140,10 +140,10 @@ describe("paul-task", () => {
       // #when
       const result = resolveCategoryConfig(categoryName, {})
 
-      // #then
-      expect(result).not.toBeNull()
-      expect(result!.config.model).toBe("google/gemini-3-pro-preview")
-      expect(result!.promptAppend).toContain("VISUAL/UI")
+       // #then
+       expect(result).not.toBeNull()
+       expect(result!.config.model).toBe("google/antigravity-gemini-3-pro-high")
+       expect(result!.promptAppend).toContain("VISUAL/UI")
     })
 
     test("user config overrides default model", () => {
@@ -164,12 +164,12 @@ describe("paul-task", () => {
     test("user prompt_append is appended to default", () => {
       // #given
       const categoryName = "visual-engineering"
-      const userCategories = {
-        "visual-engineering": {
-          model: "google/gemini-3-pro-preview",
-          prompt_append: "Custom instructions here",
-        },
-      }
+       const userCategories = {
+         "visual-engineering": {
+           model: "google/antigravity-gemini-3-pro-high",
+           prompt_append: "Custom instructions here",
+         },
+       }
 
       // #when
       const result = resolveCategoryConfig(categoryName, { userCategories })
@@ -204,12 +204,12 @@ describe("paul-task", () => {
     test("user category overrides temperature", () => {
       // #given
       const categoryName = "visual-engineering"
-      const userCategories = {
-        "visual-engineering": {
-          model: "google/gemini-3-pro-preview",
-          temperature: 0.3,
-        },
-      }
+       const userCategories = {
+         "visual-engineering": {
+           model: "google/antigravity-gemini-3-pro-high",
+           temperature: 0.3,
+         },
+       }
 
       // #when
       const result = resolveCategoryConfig(categoryName, { userCategories })
@@ -227,9 +227,9 @@ describe("paul-task", () => {
       // #when
       const result = resolveCategoryConfig(categoryName, { parentModelString })
 
-      // #then - category default model wins, parent model is ignored for builtin categories
-      expect(result).not.toBeNull()
-      expect(result!.config.model).toBe("google/gemini-3-pro-preview")
+       // #then - category default model wins, parent model is ignored for builtin categories
+       expect(result).not.toBeNull()
+       expect(result!.config.model).toBe("google/antigravity-gemini-3-pro-high")
     })
 
     test("parentModelString is used as fallback when category has no default model", () => {
@@ -269,13 +269,13 @@ describe("paul-task", () => {
       // #when
       const result = resolveCategoryConfig(categoryName, {})
 
-      // #then
-      expect(result).not.toBeNull()
-      expect(result!.config.model).toBe("google/gemini-3-pro-preview")
-    })
-  })
+       // #then
+       expect(result).not.toBeNull()
+       expect(result!.config.model).toBe("google/antigravity-gemini-3-pro-high")
+     })
+   })
 
-  describe("category variant", () => {
+   describe("category variant", () => {
     test("passes variant to background model payload", async () => {
       // #given
       const { createDelegateTask } = require("./tools")
