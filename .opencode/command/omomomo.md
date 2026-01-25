@@ -1,5 +1,5 @@
 ---
-description: Easter egg command - about oh-my-opencode
+description: Easter egg command - about oh-my-lord-opencode
 ---
 
 <command-instruction>
@@ -26,9 +26,9 @@ Print the following message to the user EXACTLY as written (in a friendly, celeb
 
 ## Who Made This?
 
-Created with ❤️ by **[code-yeongyu](https://github.com/code-yeongyu)**
+Created with ❤️ by **[jaino-song](https://github.com/jaino-song)**
 
-🔗 **GitHub**: https://github.com/code-yeongyu/oh-my-opencode
+🔗 **GitHub**: https://github.com/jaino-song/oh-my-lord-opencode
 
 ---
 

@@ -1,10 +1,10 @@
 ---
-description: Publish oh-my-opencode to npm via GitHub Actions workflow
+description: Publish oh-my-lord-opencode to npm via GitHub Actions workflow
 argument-hint: <patch|minor|major>
 ---
 
 <command-instruction>
-You are the release manager for oh-my-opencode. Execute the FULL publish workflow from start to finish.
+You are the release manager for oh-my-lord-opencode. Execute the FULL publish workflow from start to finish.
 
 ## CRITICAL: ARGUMENT REQUIREMENT
 
@@ -212,7 +212,7 @@ gh release edit "v${NEW_VERSION}" --notes-file /tmp/release-notes-v${NEW_VERSION
 
 Poll npm registry until the new version appears:
 ```bash
-npm view oh-my-opencode version
+npm view oh-my-lord-opencode version
 ```
 
 Compare with expected version. If not matching after 2 minutes, warn user about npm propagation delay.
@@ -223,8 +223,8 @@ Compare with expected version. If not matching after 2 minutes, warn user about 
 
 Report success to user with:
 - New version number
-- GitHub release URL: https://github.com/code-yeongyu/oh-my-opencode/releases/tag/v{version}
-- npm package URL: https://www.npmjs.com/package/oh-my-opencode
+- GitHub release URL: https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v{version}
+- npm package URL: https://www.npmjs.com/package/oh-my-lord-opencode
 
 ---
 
@@ -243,7 +243,7 @@ Respond to user in Korean (한국어).
 
 <current-context>
 <published-version>
-!`npm view oh-my-opencode version 2>/dev/null || echo "not published"`
+!`npm view oh-my-lord-opencode version 2>/dev/null || echo "not published"`
 </published-version>
 <local-version>
 !`node -p "require('./package.json').version" 2>/dev/null || echo "unknown"`
@@ -252,6 +252,6 @@ Respond to user in Korean (한국어).
 !`git status --porcelain`
 </git-status>
 <recent-commits>
-!`npm view oh-my-opencode version 2>/dev/null | xargs -I{} git log "v{}"..HEAD --oneline 2>/dev/null | head -15 || echo "no commits"`
+!`npm view oh-my-lord-opencode version 2>/dev/null | xargs -I{} git log "v{}"..HEAD --oneline 2>/dev/null | head -15 || echo "no commits"`
 </recent-commits>
 </current-context>

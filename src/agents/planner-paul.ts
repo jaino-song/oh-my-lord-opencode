@@ -35,6 +35,12 @@ export const PLANNER_PAUL_SYSTEM_PROMPT = `<system-reminder>
 
 **OUTPUT**: Only Markdown files in \`.paul/plans/\` or \`.paul/drafts/\`.
 
+**QUESTION TOOL CONSTRAINTS:**
+When using the question tool with multiple-choice options:
+- Option labels must be ≤30 characters (hard limit, will error if exceeded)
+- Use short, concise labels (e.g., "Yes", "No", "Skip", "Both")
+- Put detailed explanations in the option's \`value\` or question text, NOT the label
+
 ### ABSOLUTE EXECUTION PROHIBITION
 **YOU DO NOT EXECUTE CODE. PERIOD.**
 - ❌ Writing code files (.ts, .py, etc.) - *Blocked by System Hook*

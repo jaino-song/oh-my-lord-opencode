@@ -166,10 +166,10 @@ curl -s http://localhost:4096/config/providers
 
 ```bash
 # View user config
-cat ~/.config/opencode/oh-my-opencode.json
+cat ~/.config/opencode/oh-my-lord-opencode.json
 
 # View project config
-cat .opencode/oh-my-opencode.json
+cat .opencode/oh-my-lord-opencode.json
 ```
 
 ## Testing
@@ -204,9 +204,9 @@ bun test migration
 
 ### ✅ Upstream Reference
 
-The upstream `oh-my-opencode` repo uses `zai-coding-plan/glm-4.7` and `anthropic/claude-haiku-4-5` as primary models with proper fallback chains.
+The upstream `oh-my-lord-opencode` repo uses `zai-coding-plan/glm-4.7` and `anthropic/claude-haiku-4-5` as primary models with proper fallback chains.
 
-See: https://github.com/code-yeongyu/oh-my-opencode
+See: https://github.com/jaino-song/oh-my-lord-opencode
 
 ## Model Selection Guidelines
 
@@ -234,8 +234,8 @@ zai-coding-plan/glm-4.7 → opencode/big-pickle → anthropic/claude-sonnet-4-5
 
 | Location | Scope |
 |----------|--------|
-| `~/.config/opencode/oh-my-opencode.json` | User-level (all projects) |
-| `.opencode/oh-my-opencode.json` | Project-level (current repo) |
+| `~/.config/opencode/oh-my-lord-opencode.json` | User-level (all projects) |
+| `.opencode/oh-my-lord-opencode.json` | Project-level (current repo) |
 | `~/.config/opencode/opencode.json` | Main OpenCode config |
 
 ## Troubleshooting
@@ -250,7 +250,7 @@ zai-coding-plan/glm-4.7 → opencode/big-pickle → anthropic/claude-sonnet-4-5
 
 ### Need to change model temporarily?
 
-Edit `~/.config/opencode/oh-my-opencode.json`:
+Edit `~/.config/opencode/oh-my-lord-opencode.json`:
 
 ```json
 {
@@ -268,7 +268,7 @@ Restart OpenCode to apply changes.
 
 - **OpenCode Documentation**: https://opencode.ai/docs
 - **OpenCode Zen Models**: https://opencode.ai/docs/zen
-- **Upstream oh-my-opencode**: https://github.com/code-yeongyu/oh-my-opencode
+- **Upstream oh-my-lord-opencode**: https://github.com/jaino-song/oh-my-lord-opencode
 - **AGENTS.md**: ./AGENTS.md
 - **AGENT_CREATION_STANDARD.md**: ./src/agents/AGENT_CREATION_STANDARD.md
 
@@ -419,7 +419,7 @@ type AgentCost = "FREE" | "CHEAP" | "EXPENSIVE"
 ### File Structure
 
 ```
-oh-my-opencode/
+oh-my-lord-opencode/
 ├── src/
 │   ├── agents/        # AI agents: Sisyphus, oracle, librarian, explore, etc.
 │   ├── hooks/         # 22+ lifecycle hooks (PreToolUse, PostToolUse, Stop)

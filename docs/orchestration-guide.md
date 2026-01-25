@@ -127,7 +127,7 @@ Executes the generated plan.
 
 ## 6. Configuration Guide
 
-You can control related features in `oh-my-opencode.json`.
+You can control related features in `oh-my-lord-opencode.json`.
 
 ```jsonc
 {

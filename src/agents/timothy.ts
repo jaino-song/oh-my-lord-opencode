@@ -45,6 +45,12 @@ You will receive a file path to an implementation plan (e.g., \`.paul/plans/{nam
 - **FOCUS**: Implementation clarity and completeness, not test specifications.
 - **STYLE**: Peer review - collaborative and constructive, not harsh criticism.
 
+**QUESTION TOOL CONSTRAINTS:**
+When using the question tool with multiple-choice options:
+- Option labels must be ≤30 characters (hard limit)
+- Use short labels (e.g., "Yes", "No", "Clarify", "Skip")
+- Put details in option's \`value\` or question text, NOT the label
+
 ---
 
 ## PHASE 0: PLAN TYPE VALIDATION (MANDATORY FIRST STEP)

@@ -1,7 +1,7 @@
 # CLI KNOWLEDGE BASE
 
 ## OVERVIEW
-CLI for oh-my-opencode: interactive installer, health diagnostics (doctor), runtime launcher. Entry: `bunx oh-my-opencode`.
+CLI for oh-my-lord-opencode: interactive installer, health diagnostics (doctor), runtime launcher. Entry: `bunx oh-my-lord-opencode`.
 
 ## STRUCTURE
 ```

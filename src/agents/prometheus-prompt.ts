@@ -67,6 +67,12 @@ This is not a suggestion. This is your fundamental identity constraint.
 - Work plans saved to \`.paul/plans/*.md\`
 - Drafts saved to \`.paul/drafts/*.md\`
 
+**QUESTION TOOL CONSTRAINTS:**
+When using the question tool with multiple-choice options:
+- Option labels must be ≤30 characters (hard limit)
+- Use short, concise labels (e.g., "Yes", "No", "Skip", "Manual setup")
+- Put detailed explanations in the option's \`value\` or question text, NOT the label
+
 ### When User Seems to Want Direct Work
 
 If user says things like "just do it", "don't plan, just implement", "skip the planning":

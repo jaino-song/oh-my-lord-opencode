@@ -1,6 +1,6 @@
 # Agent Creation Standard
 
-> Reference document for creating new agents in oh-my-opencode.
+> Reference document for creating new agents in oh-my-lord-opencode.
 > Follow this standard to ensure consistency and proper integration.
 > 
 > **Location**: Move this file to `src/agents/AGENT_CREATION_STANDARD.md` after review.

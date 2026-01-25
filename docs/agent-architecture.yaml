@@ -9,7 +9,7 @@ description: Multi-agent orchestration system with TDD-first planning and planne
 # =============================================================================
 context_features:
   description: |
-    oh-my-opencode's proprietary context sharing and compaction logic applies to ALL agents,
+    oh-my-lord-opencode's proprietary context sharing and compaction logic applies to ALL agents,
     including Paul, planner-paul, Solomon, and any custom agents.
   
   automatic_features:
@@ -78,15 +78,15 @@ hierarchy:
           triggers:
             - "User switches to Paul after planning"
             - "Paul detects .paul/plans/ files"
-            - "/start-work command"
-        context_features:
-          - All oh-my-opencode hooks apply automatically
-          - Context injection (AGENTS.md, rules, etc.)
-          - Compaction preservation
-          - Background task state preserved
-          - Preemptive compaction at 85%
+             - "/start-work command"
+         context_features:
+           - All oh-my-lord-opencode hooks apply automatically
+           - Context injection (AGENTS.md, rules, etc.)
+           - Compaction preservation
+           - Background task state preserved
+           - Preemptive compaction at 85%
 
-      - name: planner-paul
+       - name: planner-paul
         role: Implementation Planner for Paul (general planning)
         invocation: "@planner-paul"
         writes_code: false
@@ -119,11 +119,11 @@ hierarchy:
         does_NOT_specify:
           - Which agents to use (Paul decides at execution time)
           - Agent assignments per task
-        context_features:
-          - All oh-my-opencode hooks apply automatically
-          - Same context/compaction features as Paul
+         context_features:
+           - All oh-my-lord-opencode hooks apply automatically
+           - Same context/compaction features as Paul
 
-      - name: Sisyphus
+       - name: Sisyphus
         role: Combined planner + implementer
         invocation: "@Sisyphus"
         writes_code: true
@@ -158,11 +158,11 @@ hierarchy:
         gap_handling:
           CRITICAL: "Requires user decision → ASK"
           MINOR: "Can self-resolve → FIX silently, note in summary"
-          AMBIGUOUS: "Has reasonable default → Apply default, DISCLOSE"
-        context_features:
-          - All oh-my-opencode hooks apply automatically
+           AMBIGUOUS: "Has reasonable default → Apply default, DISCLOSE"
+         context_features:
+           - All oh-my-lord-opencode hooks apply automatically
 
-  planners:
+   planners:
     description: Agents that create plans but don't write code
     agents:
       - name: planner-paul
@@ -451,7 +451,7 @@ tdd_workflow:
     - Solomon focuses on WHAT to test (test specs, edge cases, assertions)
     - Thomas reviews BOTH plans (implementation AND test specifications)
     - Paul decides WHO implements each task (agents are NOT specified in plans)
-    - All planners benefit from oh-my-opencode's context sharing/compaction features
+    - All planners benefit from oh-my-lord-opencode's context sharing/compaction features
 
   implementation_planning_phase:
     description: planner-paul creates implementation plan with Thomas review
@@ -922,7 +922,7 @@ paul_orchestration:
     library_docs: "agent='librarian'"
 
   context_features:
-    description: Paul benefits from all oh-my-opencode context features
+    description: Paul benefits from all oh-my-lord-opencode context features
     automatic:
       - Context injection (AGENTS.md, rules, etc.)
       - Compaction preservation (user requests, work done, remaining tasks)
@@ -965,7 +965,7 @@ planner_paul_workflow:
       - User stays in same planning session (seamless)
 
 config:
-  file: "~/.config/opencode/oh-my-opencode.json"
+  file: "~/.config/opencode/oh-my-lord-opencode.json"
 
   key_settings:
     sisyphus_agent:

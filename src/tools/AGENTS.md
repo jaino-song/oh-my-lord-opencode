@@ -45,7 +45,7 @@ tools/
 
 ## LSP SPECIFICS
 - **Lifecycle**: Lazy initialization on first call; auto-shutdown on idle.
-- **Config**: Merges `opencode.json` and `oh-my-opencode.json`.
+- **Config**: Merges `opencode.json` and `oh-my-lord-opencode.json`.
 - **Capability**: Supports full LSP spec including `rename` and `prepareRename`.
 
 ## AST-GREP SPECIFICS

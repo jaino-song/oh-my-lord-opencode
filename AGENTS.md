@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
 **Generated:** 2026-01-17
-**Package:** oh-my-opencode (OpenCode plugin)
+**Package:** oh-my-lord-opencode (OpenCode plugin)
 
 ## QUICK REFERENCE
 
@@ -25,8 +25,8 @@ bun test --watch         # Watch mode
 
 ```bash
 # Clone and install
-git clone https://github.com/code-yeongyu/oh-my-opencode.git
-cd oh-my-opencode
+git clone https://github.com/jaino-song/oh-my-lord-opencode.git
+cd oh-my-lord-opencode
 bun install
 
 # Build the project
@@ -43,11 +43,11 @@ After making changes, test your local build in OpenCode:
    ```json
    {
      "plugin": [
-       "file:///absolute/path/to/oh-my-opencode/dist/index.js"
+       "file:///absolute/path/to/oh-my-lord-opencode/dist/index.js"
      ]
    }
    ```
-   > Remove `"oh-my-opencode"` from plugin array to avoid conflicts with npm version.
+   > Remove `"oh-my-lord-opencode"` from plugin array to avoid conflicts with npm version.
 
 3. Restart OpenCode to load changes
 
@@ -60,7 +60,7 @@ Multi-model agent orchestration plugin for OpenCode. Implements Claude Code/AmpC
 ## STRUCTURE
 
 ```
-oh-my-opencode/
+oh-my-lord-opencode/
 ├── src/
 │   ├── agents/        # AI agents: Sisyphus, oracle, librarian, explore, etc.
 │   ├── hooks/         # 22+ lifecycle hooks (PreToolUse, PostToolUse, Stop)
@@ -269,7 +269,7 @@ These violations **inject warnings** but allow proceeding:
 ## NOTES
 
 - **OpenCode**: Requires >= 1.0.150
-- **Config**: `~/.config/opencode/oh-my-opencode.json` or `.opencode/oh-my-opencode.json`
+- **Config**: `~/.config/opencode/oh-my-lord-opencode.json` or `.opencode/oh-my-lord-opencode.json`
 - **JSONC**: Config supports comments and trailing commas
 - **Trusted deps**: @ast-grep/cli, @ast-grep/napi, @code-yeongyu/comment-checker
 - **CI**: Parallel test/typecheck, auto-commit schema on master

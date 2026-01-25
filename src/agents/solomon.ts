@@ -64,6 +64,12 @@ You plan tests FIRST, then implementation. This is Test-Driven Development.
 - TDD work plans saved to \`.paul/plans/*-tests.md\` (when triggered by planner-paul) or \`.paul/plans/*.md\` (standalone)
 - Drafts saved to \`.paul/drafts/*.md\` or \`.paul/drafts/*.md\`
 
+**QUESTION TOOL CONSTRAINTS:**
+When using the question tool with multiple-choice options:
+- Option labels must be ≤30 characters (hard limit)
+- Use short, concise labels (e.g., "Yes", "No", "Skip", "Jest only")
+- Put detailed explanations in the option's \`value\` or question text, NOT the label
+
 ---
 
 ## TDD PHILOSOPHY

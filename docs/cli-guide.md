@@ -1,17 +1,17 @@
 # Oh-My-OpenCode CLI Guide
 
-This document provides a comprehensive guide to using the Oh-My-OpenCode CLI tools.
+This document provides a comprehensive guide to using the Oh-My-Lord-OpenCode CLI tools.
 
 ## 1. Overview
 
-Oh-My-OpenCode provides CLI tools accessible via the `bunx oh-my-opencode` command. The CLI supports various features including plugin installation, environment diagnostics, and session execution.
+Oh-My-Lord-OpenCode provides CLI tools accessible via the `bunx oh-my-lord-opencode` command. The CLI supports various features including plugin installation, environment diagnostics, and session execution.
 
 ```bash
 # Basic execution (displays help)
-bunx oh-my-opencode
+bunx oh-my-lord-opencode
 
 # Or run with npx
-npx oh-my-opencode
+npx oh-my-lord-opencode
 ```
 
 ---
@@ -35,15 +35,15 @@ An interactive installation tool for initial Oh-My-OpenCode setup. Provides a be
 ### Usage
 
 ```bash
-bunx oh-my-opencode install
+bunx oh-my-lord-opencode install
 ```
 
 ### Installation Process
 
 1. **Provider Selection**: Choose your AI provider from Claude, ChatGPT, or Gemini.
 2. **API Key Input**: Enter the API key for your selected provider.
-3. **Configuration File Creation**: Generates `opencode.json` or `oh-my-opencode.json` files.
-4. **Plugin Registration**: Automatically registers the oh-my-opencode plugin in OpenCode settings.
+3. **Configuration File Creation**: Generates `opencode.json` or `oh-my-lord-opencode.json` files.
+4. **Plugin Registration**: Automatically registers the oh-my-lord-opencode plugin in OpenCode settings.
 
 ### Options
 
@@ -61,7 +61,7 @@ Diagnoses your environment to ensure Oh-My-OpenCode is functioning correctly. Pe
 ### Usage
 
 ```bash
-bunx oh-my-opencode doctor
+bunx oh-my-lord-opencode doctor
 ```
 
 ### Diagnostic Categories
@@ -86,10 +86,10 @@ bunx oh-my-opencode doctor
 ### Example Output
 
 ```
-oh-my-opencode doctor
+oh-my-lord-opencode doctor
 
 ┌──────────────────────────────────────────────────┐
-│  Oh-My-OpenCode Doctor                           │
+│  Oh-My-Lord-OpenCode Doctor                      │
 └──────────────────────────────────────────────────┘
 
 Installation
@@ -97,7 +97,7 @@ Installation
   ✓ Plugin registered in opencode.json
 
 Configuration
-  ✓ oh-my-opencode.json is valid
+  ✓ oh-my-lord-opencode.json is valid
   ⚠ categories.visual-engineering: using default model
 
 Authentication
@@ -122,7 +122,7 @@ Executes OpenCode sessions and monitors task completion.
 ### Usage
 
 ```bash
-bunx oh-my-opencode run [prompt]
+bunx oh-my-lord-opencode run [prompt]
 ```
 
 ### Options
@@ -142,13 +142,13 @@ Manages Google Antigravity OAuth authentication. Required for using Gemini model
 
 ```bash
 # Login
-bunx oh-my-opencode auth login
+bunx oh-my-lord-opencode auth login
 
 # Logout
-bunx oh-my-opencode auth logout
+bunx oh-my-lord-opencode auth logout
 
 # Check current status
-bunx oh-my-opencode auth status
+bunx oh-my-lord-opencode auth status
 ```
 
 ---
@@ -157,8 +157,8 @@ bunx oh-my-opencode auth status
 
 The CLI searches for configuration files in the following locations (in priority order):
 
-1. **Project Level**: `.opencode/oh-my-opencode.json`
-2. **User Level**: `~/.config/opencode/oh-my-opencode.json`
+1. **Project Level**: `.opencode/oh-my-lord-opencode.json`
+2. **User Level**: `~/.config/opencode/oh-my-lord-opencode.json`
 
 ### JSONC Support
 
@@ -198,17 +198,17 @@ bun install -g opencode@latest
 
 ```bash
 # Reinstall plugin
-bunx oh-my-opencode install
+bunx oh-my-lord-opencode install
 ```
 
 ### Doctor Check Failures
 
 ```bash
 # Diagnose with detailed information
-bunx oh-my-opencode doctor --verbose
+bunx oh-my-lord-opencode doctor --verbose
 
 # Check specific category only
-bunx oh-my-opencode doctor --category authentication
+bunx oh-my-lord-opencode doctor --category authentication
 ```
 
 ---
@@ -219,10 +219,10 @@ Use the `--no-tui` option for CI/CD environments.
 
 ```bash
 # Run doctor in CI environment
-bunx oh-my-opencode doctor --no-tui --json
+bunx oh-my-lord-opencode doctor --no-tui --json
 
 # Save results to file
-bunx oh-my-opencode doctor --json > doctor-report.json
+bunx oh-my-lord-opencode doctor --json > doctor-report.json
 ```
 
 ---
