@@ -1,6 +1,6 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import { isGptModel } from "./types"
-import type { AvailableAgent, AvailableTool, AvailableSkill } from "./sisyphus-prompt-builder"
+import type { AvailableAgent, AvailableTool, AvailableSkill } from "./paul-prompt-builder"
 import {
   buildKeyTriggersSection,
   buildToolSelectionTable,
@@ -12,7 +12,7 @@ import {
   buildHardBlocksSection,
   buildAntiPatternsSection,
   categorizeTools,
-} from "./sisyphus-prompt-builder"
+} from "./paul-prompt-builder"
 
 const DEFAULT_MODEL = "anthropic/claude-opus-4-5"
 

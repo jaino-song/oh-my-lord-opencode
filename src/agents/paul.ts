@@ -1,5 +1,5 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
-import type { AvailableAgent, AvailableSkill } from "./sisyphus-prompt-builder"
+import type { AvailableAgent, AvailableSkill } from "./paul-prompt-builder"
 import type { CategoryConfig } from "../config/schema"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
