@@ -248,6 +248,13 @@ export function createHierarchyEnforcerHook(
                   continue
                 }
                 
+                // Paul (orchestrator) can complete EXEC tasks - Paul verifies work via delegation results
+                if (callingAgent === "Paul" || callingAgent.toLowerCase() === "paul") {
+                  const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
+                  await showToast(client, "✅ Task completed (Paul)", shortTask, "success", 2000)
+                  continue
+                }
+                
                 if (!hasRecentApproval(ctx.directory, requiredApproverPattern)) {
                   log(`[${HOOK_NAME}] BLOCKED: Task completion without approval`, { 
                     sessionID: input.sessionID, 
