@@ -401,18 +401,18 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(ultraworkEntry!.content).toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
   })
 
-  test("should use normal ultrawork message when agent is Sisyphus", async () => {
-    // #given - collector and Sisyphus agent
-    const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
-    const sessionID = "sisyphus-session"
-    const output = {
-      message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement this feature" }],
-    }
+   test("should use normal ultrawork message when agent is Paul", async () => {
+     // #given - collector and Paul agent
+     const collector = new ContextCollector()
+     const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+     const sessionID = "paul-session"
+     const output = {
+       message: {} as Record<string, unknown>,
+       parts: [{ type: "text", text: "ultrawork implement this feature" }],
+     }
 
-    // #when - ultrawork keyword detected with Sisyphus agent
-    await hook["chat.message"]({ sessionID, agent: "Sisyphus" }, output)
+     // #when - ultrawork keyword detected with Paul agent
+     await hook["chat.message"]({ sessionID, agent: "Paul" }, output)
 
     // #then - should use normal ultrawork message with agent utilization instructions
     const pending = collector.getPending(sessionID)
@@ -443,60 +443,60 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(ultraworkEntry!.content).not.toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
   })
 
-  test("should switch from planner to normal message when agent changes", async () => {
-    // #given - two sessions, one with prometheus, one with sisyphus
-    const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+   test("should switch from planner to normal message when agent changes", async () => {
+     // #given - two sessions, one with prometheus, one with paul
+     const collector = new ContextCollector()
+     const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
 
-    // First session with prometheus
-    const prometheusSessionID = "prometheus-first"
-    const prometheusOutput = {
-      message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork plan" }],
-    }
-    await hook["chat.message"]({ sessionID: prometheusSessionID, agent: "prometheus" }, prometheusOutput)
+     // First session with prometheus
+     const prometheusSessionID = "prometheus-first"
+     const prometheusOutput = {
+       message: {} as Record<string, unknown>,
+       parts: [{ type: "text", text: "ultrawork plan" }],
+     }
+     await hook["chat.message"]({ sessionID: prometheusSessionID, agent: "prometheus" }, prometheusOutput)
 
-    // Second session with sisyphus
-    const sisyphusSessionID = "sisyphus-second"
-    const sisyphusOutput = {
-      message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement" }],
-    }
-    await hook["chat.message"]({ sessionID: sisyphusSessionID, agent: "Sisyphus" }, sisyphusOutput)
+     // Second session with paul
+     const paulSessionID = "paul-second"
+     const paulOutput = {
+       message: {} as Record<string, unknown>,
+       parts: [{ type: "text", text: "ultrawork implement" }],
+     }
+     await hook["chat.message"]({ sessionID: paulSessionID, agent: "Paul" }, paulOutput)
 
-    // #then - each session should have the correct message type
-    const prometheusPending = collector.getPending(prometheusSessionID)
-    const prometheusEntry = prometheusPending.entries.find((e) => e.id === "keyword-ultrawork")
-    expect(prometheusEntry!.content).toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
+     // #then - each session should have the correct message type
+     const prometheusPending = collector.getPending(prometheusSessionID)
+     const prometheusEntry = prometheusPending.entries.find((e) => e.id === "keyword-ultrawork")
+     expect(prometheusEntry!.content).toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
 
-    const sisyphusPending = collector.getPending(sisyphusSessionID)
-    const sisyphusEntry = sisyphusPending.entries.find((e) => e.id === "keyword-ultrawork")
-    expect(sisyphusEntry!.content).toContain("YOU MUST LEVERAGE ALL AVAILABLE AGENTS")
+     const paulPending = collector.getPending(paulSessionID)
+     const paulEntry = paulPending.entries.find((e) => e.id === "keyword-ultrawork")
+     expect(paulEntry!.content).toContain("YOU MUST LEVERAGE ALL AVAILABLE AGENTS")
   })
 
-  test("should use session state agent over stale input.agent (bug fix)", async () => {
-    // #given - same session, agent switched from prometheus to sisyphus in session state
-    const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
-    const sessionID = "same-session-agent-switch"
+   test("should use session state agent over stale input.agent (bug fix)", async () => {
+     // #given - same session, agent switched from prometheus to paul in session state
+     const collector = new ContextCollector()
+     const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+     const sessionID = "same-session-agent-switch"
 
-    // Simulate: session state was updated to sisyphus (by index.ts updateSessionAgent)
-    updateSessionAgent(sessionID, "Sisyphus")
+     // Simulate: session state was updated to paul (by index.ts updateSessionAgent)
+     updateSessionAgent(sessionID, "Paul")
 
-    const output = {
-      message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement this" }],
-    }
+     const output = {
+       message: {} as Record<string, unknown>,
+       parts: [{ type: "text", text: "ultrawork implement this" }],
+     }
 
-    // #when - hook receives stale input.agent="prometheus" but session state says "Sisyphus"
-    await hook["chat.message"]({ sessionID, agent: "prometheus" }, output)
+     // #when - hook receives stale input.agent="prometheus" but session state says "Paul"
+     await hook["chat.message"]({ sessionID, agent: "prometheus" }, output)
 
-    // #then - should use Sisyphus from session state, NOT prometheus from stale input
-    const pending = collector.getPending(sessionID)
-    const ultraworkEntry = pending.entries.find((e) => e.id === "keyword-ultrawork")
-    expect(ultraworkEntry).toBeDefined()
-    expect(ultraworkEntry!.content).toContain("YOU MUST LEVERAGE ALL AVAILABLE AGENTS")
-    expect(ultraworkEntry!.content).not.toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
+     // #then - should use Paul from session state, NOT prometheus from stale input
+     const pending = collector.getPending(sessionID)
+     const ultraworkEntry = pending.entries.find((e) => e.id === "keyword-ultrawork")
+     expect(ultraworkEntry).toBeDefined()
+     expect(ultraworkEntry!.content).toContain("YOU MUST LEVERAGE ALL AVAILABLE AGENTS")
+     expect(ultraworkEntry!.content).not.toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
 
     // cleanup
     clearSessionAgent(sessionID)

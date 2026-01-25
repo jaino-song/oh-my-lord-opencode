@@ -18,12 +18,12 @@ describe("resolveAgentVariant", () => {
     // #given
     const config = {
       agents: {
-        Sisyphus: { variant: "low" },
+        Paul: { variant: "low" },
       },
     } as OhMyOpenCodeConfig
 
     // #when
-    const variant = resolveAgentVariant(config, "Sisyphus")
+    const variant = resolveAgentVariant(config, "Paul")
 
     // #then
     expect(variant).toBe("low")
@@ -33,7 +33,7 @@ describe("resolveAgentVariant", () => {
     // #given
     const config = {
       agents: {
-        Sisyphus: { category: "ultrabrain" },
+        Paul: { category: "ultrabrain" },
       },
       categories: {
         ultrabrain: { model: "openai/gpt-5.2", variant: "xhigh" },
@@ -41,7 +41,7 @@ describe("resolveAgentVariant", () => {
     } as OhMyOpenCodeConfig
 
     // #when
-    const variant = resolveAgentVariant(config, "Sisyphus")
+    const variant = resolveAgentVariant(config, "Paul")
 
     // #then
     expect(variant).toBe("xhigh")
@@ -53,13 +53,13 @@ describe("applyAgentVariant", () => {
     // #given
     const config = {
       agents: {
-        Sisyphus: { variant: "low" },
+        Paul: { variant: "low" },
       },
     } as OhMyOpenCodeConfig
     const message: { variant?: string } = {}
 
     // #when
-    applyAgentVariant(config, "Sisyphus", message)
+    applyAgentVariant(config, "Paul", message)
 
     // #then
     expect(message.variant).toBe("low")
@@ -69,13 +69,13 @@ describe("applyAgentVariant", () => {
     // #given
     const config = {
       agents: {
-        Sisyphus: { variant: "low" },
+        Paul: { variant: "low" },
       },
     } as OhMyOpenCodeConfig
     const message = { variant: "max" }
 
     // #when
-    applyAgentVariant(config, "Sisyphus", message)
+    applyAgentVariant(config, "Paul", message)
 
     // #then
     expect(message.variant).toBe("max")

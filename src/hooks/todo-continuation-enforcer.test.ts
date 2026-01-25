@@ -835,11 +835,11 @@ describe("todo-continuation-enforcer", () => {
     const sessionID = "main-assistant-model"
     setMainSession(sessionID)
 
-    // OpenCode returns assistant messages with flat modelID/providerID, not nested model object
-    const mockMessagesWithAssistant = [
-      { info: { id: "msg-1", role: "user", agent: "Sisyphus", model: { providerID: "openai", modelID: "gpt-5.2" } } },
-      { info: { id: "msg-2", role: "assistant", agent: "Sisyphus", modelID: "gpt-5.2", providerID: "openai" } },
-    ]
+     // OpenCode returns assistant messages with flat modelID/providerID, not nested model object
+     const mockMessagesWithAssistant = [
+       { info: { id: "msg-1", role: "user", agent: "Paul", model: { providerID: "openai", modelID: "gpt-5.2" } } },
+       { info: { id: "msg-2", role: "assistant", agent: "Paul", modelID: "gpt-5.2", providerID: "openai" } },
+     ]
 
     const mockInput = {
       client: {

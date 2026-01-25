@@ -18,12 +18,12 @@ describe("createContextInjectorMessagesTransformHook", () => {
   ) => ({
     info: {
       id: `msg_${Date.now()}_${Math.random()}`,
-      sessionID,
-      role,
-      time: { created: Date.now() },
-      agent: "Sisyphus",
-      model: { providerID: "test", modelID: "test" },
-      path: { cwd: "/", root: "/" },
+       sessionID,
+       role,
+       time: { created: Date.now() },
+       agent: "Paul",
+       model: { providerID: "test", modelID: "test" },
+       path: { cwd: "/", root: "/" },
     },
     parts: [
       {

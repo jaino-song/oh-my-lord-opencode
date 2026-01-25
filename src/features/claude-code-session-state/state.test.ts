@@ -33,15 +33,15 @@ describe("claude-code-session-state", () => {
     })
 
     test("should NOT overwrite existing agent (first-write wins)", () => {
-      // #given
-      const sessionID = "test-session-1"
-      setSessionAgent(sessionID, "Prometheus (Planner)")
+       // #given
+       const sessionID = "test-session-1"
+       setSessionAgent(sessionID, "Prometheus (Planner)")
 
-      // #when - try to overwrite
-      setSessionAgent(sessionID, "Sisyphus")
+       // #when - try to overwrite
+       setSessionAgent(sessionID, "Paul")
 
-      // #then - first agent preserved
-      expect(getSessionAgent(sessionID)).toBe("Prometheus (Planner)")
+       // #then - first agent preserved
+       expect(getSessionAgent(sessionID)).toBe("Prometheus (Planner)")
     })
 
     test("should return undefined for unknown session", () => {
@@ -53,16 +53,16 @@ describe("claude-code-session-state", () => {
   })
 
   describe("updateSessionAgent", () => {
-    test("should overwrite existing agent", () => {
-      // #given
-      const sessionID = "test-session-1"
-      setSessionAgent(sessionID, "Prometheus (Planner)")
+     test("should overwrite existing agent", () => {
+       // #given
+       const sessionID = "test-session-1"
+       setSessionAgent(sessionID, "Prometheus (Planner)")
 
-      // #when - force update
-      updateSessionAgent(sessionID, "Sisyphus")
+       // #when - force update
+       updateSessionAgent(sessionID, "Paul")
 
-      // #then
-      expect(getSessionAgent(sessionID)).toBe("Sisyphus")
+       // #then
+       expect(getSessionAgent(sessionID)).toBe("Paul")
     })
   })
 

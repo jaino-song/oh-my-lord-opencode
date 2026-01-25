@@ -36,7 +36,7 @@ function resolveCategoryConfig(
   return { config, promptAppend, model }
 }
 
-describe("sisyphus-task", () => {
+describe("paul-task", () => {
   describe("DEFAULT_CATEGORIES", () => {
     test("visual-engineering category has gemini model", () => {
       // #given
@@ -288,7 +288,7 @@ describe("sisyphus-task", () => {
             id: "task-variant",
             sessionID: "session-variant",
             description: "Variant task",
-            agent: "Sisyphus-Junior",
+            agent: "Paul-Junior",
             status: "running",
           }
         },
@@ -315,7 +315,7 @@ describe("sisyphus-task", () => {
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
-        agent: "Sisyphus",
+        agent: "Paul",
         abort: new AbortController().signal,
       }
 
@@ -341,60 +341,60 @@ describe("sisyphus-task", () => {
   })
 
   describe("category agent routing", () => {
-    test("routes visual-engineering to Sisyphus-Junior", async () => {
-      // #given
-      const { createDelegateTask } = require("./tools")
-      let launchInput: any
+    test("routes visual-engineering to Paul-Junior", async () => {
+       // #given
+       const { createDelegateTask } = require("./tools")
+       let launchInput: any
 
-      const mockManager = {
-        launch: async (input: any) => {
-          launchInput = input
-          return {
-            id: "task-visual",
-            sessionID: "session-visual",
-            description: "Visual task",
-            agent: input.agent,
-            status: "running",
-          }
-        },
-      }
+       const mockManager = {
+         launch: async (input: any) => {
+           launchInput = input
+           return {
+             id: "task-visual",
+             sessionID: "session-visual",
+             description: "Visual task",
+             agent: input.agent,
+             status: "running",
+           }
+         },
+       }
 
-      const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
-        config: { get: async () => ({}) },
-        session: {
-          create: async () => ({ data: { id: "test-session" } }),
-          prompt: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-        },
-      }
+       const mockClient = {
+         app: { agents: async () => ({ data: [] }) },
+         config: { get: async () => ({}) },
+         session: {
+           create: async () => ({ data: { id: "test-session" } }),
+           prompt: async () => ({ data: {} }),
+           messages: async () => ({ data: [] }),
+         },
+       }
 
-      const tool = createDelegateTask({
-        manager: mockManager,
-        client: mockClient,
-      })
+       const tool = createDelegateTask({
+         manager: mockManager,
+         client: mockClient,
+       })
 
-      const toolContext = {
-        sessionID: "parent-session",
-        messageID: "parent-message",
-        agent: "Sisyphus",
-        abort: new AbortController().signal,
-      }
+       const toolContext = {
+         sessionID: "parent-session",
+         messageID: "parent-message",
+         agent: "Paul",
+         abort: new AbortController().signal,
+       }
 
-      // #when
-      await tool.execute(
-        {
-          description: "Visual task",
-          prompt: "Update the layout",
-          category: "visual-engineering",
-          run_in_background: true,
-          skills: null,
-        },
-        toolContext
-      )
+       // #when
+       await tool.execute(
+         {
+           description: "Visual task",
+           prompt: "Update the layout",
+           category: "visual-engineering",
+           run_in_background: true,
+           skills: null,
+         },
+         toolContext
+       )
 
-      // #then
-      expect(launchInput.agent).toBe("Sisyphus-Junior")
+       // #then
+       expect(launchInput.agent).toBe("Paul-Junior")
     })
   })
 
@@ -427,23 +427,23 @@ describe("sisyphus-task", () => {
         client: mockClient,
       })
       
-      const toolContext = {
-        sessionID: "parent-session",
-        messageID: "parent-message",
-        agent: "Sisyphus",
-        abort: new AbortController().signal,
-      }
-      
-      // #when - skills not provided (undefined)
-      const result = await tool.execute(
-        {
-          description: "Test task",
-          prompt: "Do something",
-          category: "ultrabrain",
-          run_in_background: false,
-        },
-        toolContext
-      )
+       const toolContext = {
+         sessionID: "parent-session",
+         messageID: "parent-message",
+         agent: "Paul",
+         abort: new AbortController().signal,
+       }
+       
+       // #when - skills not provided (undefined)
+       const result = await tool.execute(
+         {
+           description: "Test task",
+           prompt: "Do something",
+           category: "ultrabrain",
+           run_in_background: false,
+         },
+         toolContext
+       )
       
       // #then - should return error about missing skills
       expect(result).toContain("skills")
@@ -470,24 +470,24 @@ describe("sisyphus-task", () => {
         client: mockClient,
       })
       
-      const toolContext = {
-        sessionID: "parent-session",
-        messageID: "parent-message",
-        agent: "Sisyphus",
-        abort: new AbortController().signal,
-      }
-      
-      // #when - empty array passed
-      const result = await tool.execute(
-        {
-          description: "Test task",
-          prompt: "Do something",
-          category: "ultrabrain",
-          run_in_background: false,
-          skills: [],
-        },
-        toolContext
-      )
+       const toolContext = {
+         sessionID: "parent-session",
+         messageID: "parent-message",
+         agent: "Paul",
+         abort: new AbortController().signal,
+       }
+       
+       // #when - empty array passed
+       const result = await tool.execute(
+         {
+           description: "Test task",
+           prompt: "Do something",
+           category: "ultrabrain",
+           run_in_background: false,
+           skills: [],
+         },
+         toolContext
+       )
       
       // #then - should return error about empty array with guidance
       expect(result).toContain("❌")
@@ -524,24 +524,24 @@ describe("sisyphus-task", () => {
         client: mockClient,
       })
       
-      const toolContext = {
-        sessionID: "parent-session",
-        messageID: "parent-message",
-        agent: "Sisyphus",
-        abort: new AbortController().signal,
-      }
-      
-      // #when - null skills passed
-      await tool.execute(
-        {
-          description: "Test task",
-          prompt: "Do something",
-          category: "ultrabrain",
-          run_in_background: false,
-          skills: null,
-        },
-        toolContext
-      )
+       const toolContext = {
+         sessionID: "parent-session",
+         messageID: "parent-message",
+         agent: "Paul",
+         abort: new AbortController().signal,
+       }
+       
+       // #when - null skills passed
+       await tool.execute(
+         {
+           description: "Test task",
+           prompt: "Do something",
+           category: "ultrabrain",
+           run_in_background: false,
+           skills: null,
+         },
+         toolContext
+       )
       
       // #then - should proceed without system content from skills
       expect(promptBody).toBeDefined()
@@ -591,24 +591,24 @@ describe("sisyphus-task", () => {
       client: mockClient,
     })
     
-    const toolContext = {
-      sessionID: "parent-session",
-      messageID: "parent-message",
-      agent: "Sisyphus",
-      abort: new AbortController().signal,
-    }
-    
-    // #when
-    const result = await tool.execute(
-      {
-        description: "Resume test",
-        prompt: "Continue the task",
-        resume: "ses_resume_test",
-        run_in_background: false,
-        skills: null,
-      },
-      toolContext
-    )
+     const toolContext = {
+       sessionID: "parent-session",
+       messageID: "parent-message",
+       agent: "Paul",
+       abort: new AbortController().signal,
+     }
+     
+     // #when
+     const result = await tool.execute(
+       {
+         description: "Resume test",
+         prompt: "Continue the task",
+         resume: "ses_resume_test",
+         run_in_background: false,
+         skills: null,
+       },
+       toolContext
+     )
     
     // #then - should contain actual result, not just "Background task resumed"
     expect(result).toContain("This is the resumed task result")
@@ -646,24 +646,24 @@ describe("sisyphus-task", () => {
       client: mockClient,
     })
     
-    const toolContext = {
-      sessionID: "parent-session",
-      messageID: "parent-message",
-      agent: "Sisyphus",
-      abort: new AbortController().signal,
-    }
-    
-    // #when
-    const result = await tool.execute(
-      {
-        description: "Resume bg test",
-        prompt: "Continue in background",
-        resume: "ses_bg_resume",
-        run_in_background: true,
-        skills: null,
-      },
-      toolContext
-    )
+     const toolContext = {
+       sessionID: "parent-session",
+       messageID: "parent-message",
+       agent: "Paul",
+       abort: new AbortController().signal,
+     }
+     
+     // #when
+     const result = await tool.execute(
+       {
+         description: "Resume bg test",
+         prompt: "Continue in background",
+         resume: "ses_bg_resume",
+         run_in_background: true,
+         skills: null,
+       },
+       toolContext
+     )
     
     // #then - should return background message
     expect(result).toContain("Background task resumed")
@@ -701,24 +701,24 @@ describe("sisyphus-task", () => {
         client: mockClient,
       })
       
-      const toolContext = {
-        sessionID: "parent-session",
-        messageID: "parent-message",
-        agent: "Sisyphus",
-        abort: new AbortController().signal,
-      }
-      
-      // #when
-      const result = await tool.execute(
-        {
-          description: "Sync error test",
-          prompt: "Do something",
-          category: "ultrabrain",
-          run_in_background: false,
-          skills: null,
-        },
-        toolContext
-      )
+       const toolContext = {
+         sessionID: "parent-session",
+         messageID: "parent-message",
+         agent: "Paul",
+         abort: new AbortController().signal,
+       }
+       
+       // #when
+       const result = await tool.execute(
+         {
+           description: "Sync error test",
+           prompt: "Do something",
+           category: "ultrabrain",
+           run_in_background: false,
+           skills: null,
+         },
+         toolContext
+       )
       
       // #then - should return detailed error message with args and stack trace
       expect(result).toContain("❌")
@@ -762,24 +762,24 @@ describe("sisyphus-task", () => {
         client: mockClient,
       })
       
-      const toolContext = {
-        sessionID: "parent-session",
-        messageID: "parent-message",
-        agent: "Sisyphus",
-        abort: new AbortController().signal,
-      }
-      
-      // #when
-      const result = await tool.execute(
-        {
-          description: "Sync success test",
-          prompt: "Do something",
-          category: "ultrabrain",
-          run_in_background: false,
-          skills: null,
-        },
-        toolContext
-      )
+       const toolContext = {
+         sessionID: "parent-session",
+         messageID: "parent-message",
+         agent: "Paul",
+         abort: new AbortController().signal,
+       }
+       
+       // #when
+       const result = await tool.execute(
+         {
+           description: "Sync success test",
+           prompt: "Do something",
+           category: "ultrabrain",
+           run_in_background: false,
+           skills: null,
+         },
+         toolContext
+       )
       
       // #then - should return the task result content
       expect(result).toContain("Sync task completed successfully")
@@ -815,24 +815,24 @@ describe("sisyphus-task", () => {
         client: mockClient,
       })
       
-      const toolContext = {
-        sessionID: "parent-session",
-        messageID: "parent-message",
-        agent: "Sisyphus",
-        abort: new AbortController().signal,
-      }
-      
-      // #when
-      const result = await tool.execute(
-        {
-          description: "Agent not found test",
-          prompt: "Do something",
-          category: "ultrabrain",
-          run_in_background: false,
-          skills: null,
-        },
-        toolContext
-      )
+       const toolContext = {
+         sessionID: "parent-session",
+         messageID: "parent-message",
+         agent: "Paul",
+         abort: new AbortController().signal,
+       }
+       
+       // #when
+       const result = await tool.execute(
+         {
+           description: "Agent not found test",
+           prompt: "Do something",
+           category: "ultrabrain",
+           run_in_background: false,
+           skills: null,
+         },
+         toolContext
+       )
       
       // #then - should return agent not found error
       expect(result).toContain("❌")
@@ -871,21 +871,21 @@ describe("sisyphus-task", () => {
         }
       })
 
-      const toolContext = {
-        sessionID: "parent",
-        messageID: "msg",
-        agent: "Sisyphus",
-        abort: new AbortController().signal
-      }
+       const toolContext = {
+         sessionID: "parent",
+         messageID: "msg",
+         agent: "Paul",
+         abort: new AbortController().signal
+       }
 
-      // #when
-      await tool.execute({
-        description: "Sync model test",
-        prompt: "test",
-        category: "custom-cat",
-        run_in_background: false,
-        skills: null
-      }, toolContext)
+       // #when
+       await tool.execute({
+         description: "Sync model test",
+         prompt: "test",
+         category: "custom-cat",
+         run_in_background: false,
+         skills: null
+       }, toolContext)
 
       // #then
       expect(promptBody.model).toEqual({

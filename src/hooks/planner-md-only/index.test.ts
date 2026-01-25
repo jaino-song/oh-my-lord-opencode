@@ -284,10 +284,10 @@ describe("prometheus-md-only", () => {
     })
   })
 
-  describe("with non-Prometheus agent in message storage", () => {
-    beforeEach(() => {
-      setupMessageStorage(TEST_SESSION_ID, "Sisyphus")
-    })
+   describe("with non-Prometheus agent in message storage", () => {
+     beforeEach(() => {
+       setupMessageStorage(TEST_SESSION_ID, "Paul")
+     })
 
     test("should not affect non-Prometheus agents", async () => {
       // #given

@@ -108,10 +108,10 @@ describe("hierarchy-enforcer", () => {
       const { createHierarchyEnforcerHook } = await import("./index")
       const hook = createHierarchyEnforcerHook(mockCtx as any)
 
-      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "test-call" }
-      const output = {
-        args: {
-          subagent_type: "Sisyphus-Junior",
+       const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "test-call" }
+       const output = {
+         args: {
+           subagent_type: "Paul-Junior",
           prompt: `[SYSTEM WARNING: TDD VIOLATION DETECTED]\n` +
             `You are starting implementation without a recent test run (Joshua).\n` +
             `Protocol requires a FAILING test (RED) before implementation (GREEN).\n` +

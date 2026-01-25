@@ -27,13 +27,13 @@ describe("TaskToastManager", () => {
   describe("skills in toast message", () => {
     test("should display skills when provided", () => {
       // #given - a task with skills
-      const task = {
-        id: "task_1",
-        description: "Test task",
-        agent: "Sisyphus-Junior",
-        isBackground: true,
-        skills: ["playwright", "git-master"],
-      }
+       const task = {
+         id: "task_1",
+         description: "Test task",
+         agent: "Paul-Junior",
+         isBackground: true,
+         skills: ["playwright", "git-master"],
+       }
 
       // #when - addTask is called
       toastManager.addTask(task)
@@ -123,14 +123,14 @@ describe("TaskToastManager", () => {
 
   describe("combined skills and concurrency display", () => {
     test("should display both skills and concurrency info together", () => {
-      // #given - a task with skills and concurrency manager
-      const task = {
-        id: "task_1",
-        description: "Full info task",
-        agent: "Sisyphus-Junior",
-        isBackground: true,
-        skills: ["frontend-ui-ux"],
-      }
+       // #given - a task with skills and concurrency manager
+       const task = {
+         id: "task_1",
+         description: "Full info task",
+         agent: "Paul-Junior",
+         isBackground: true,
+         skills: ["frontend-ui-ux"],
+       }
 
       // #when - addTask is called
       toastManager.addTask(task)
@@ -145,14 +145,14 @@ describe("TaskToastManager", () => {
 
   describe("model fallback info in toast message", () => {
     test("should NOT display warning when model is category-default (normal behavior)", () => {
-      // #given - category-default is the intended behavior, not a fallback
-      const task = {
-        id: "task_1",
-        description: "Task with category default model",
-        agent: "Sisyphus-Junior",
-        isBackground: false,
-        modelInfo: { model: "google/gemini-3-pro-preview", type: "category-default" as const },
-      }
+       // #given - category-default is the intended behavior, not a fallback
+       const task = {
+         id: "task_1",
+         description: "Task with category default model",
+         agent: "Paul-Junior",
+         isBackground: false,
+         modelInfo: { model: "google/gemini-3-pro-preview", type: "category-default" as const },
+       }
 
       // #when - addTask is called
       toastManager.addTask(task)
@@ -165,14 +165,14 @@ describe("TaskToastManager", () => {
     })
 
     test("should display warning when model falls back to system-default", () => {
-      // #given - system-default is a fallback (no category default, no user config)
-      const task = {
-        id: "task_1b",
-        description: "Task with system default model",
-        agent: "Sisyphus-Junior",
-        isBackground: false,
-        modelInfo: { model: "anthropic/claude-sonnet-4-5", type: "system-default" as const },
-      }
+       // #given - system-default is a fallback (no category default, no user config)
+       const task = {
+         id: "task_1b",
+         description: "Task with system default model",
+         agent: "Paul-Junior",
+         isBackground: false,
+         modelInfo: { model: "anthropic/claude-sonnet-4-5", type: "system-default" as const },
+       }
 
       // #when - addTask is called
       toastManager.addTask(task)
@@ -186,13 +186,13 @@ describe("TaskToastManager", () => {
     })
 
     test("should display warning when model is inherited from parent", () => {
-      // #given - inherited is a fallback (custom category without model definition)
-      const task = {
-        id: "task_2",
-        description: "Task with inherited model",
-        agent: "Sisyphus-Junior",
-        isBackground: false,
-        modelInfo: { model: "cliproxy/claude-opus-4-5", type: "inherited" as const },
+       // #given - inherited is a fallback (custom category without model definition)
+       const task = {
+         id: "task_2",
+         description: "Task with inherited model",
+         agent: "Paul-Junior",
+         isBackground: false,
+         modelInfo: { model: "cliproxy/claude-opus-4-5", type: "inherited" as const },
       }
 
       // #when - addTask is called
@@ -207,14 +207,14 @@ describe("TaskToastManager", () => {
     })
 
     test("should not display model info when user-defined", () => {
-      // #given - a task with user-defined model
-      const task = {
-        id: "task_3",
-        description: "Task with user model",
-        agent: "Sisyphus-Junior",
-        isBackground: false,
-        modelInfo: { model: "my-provider/my-model", type: "user-defined" as const },
-      }
+       // #given - a task with user-defined model
+       const task = {
+         id: "task_3",
+         description: "Task with user model",
+         agent: "Paul-Junior",
+         isBackground: false,
+         modelInfo: { model: "my-provider/my-model", type: "user-defined" as const },
+       }
 
       // #when - addTask is called
       toastManager.addTask(task)
@@ -271,23 +271,23 @@ describe("showCompletionToast", () => {
   })
 
   test("should display completion toast with tokens", () => {
-    // #given - a task that was added
-    toastManager.addTask({
-      id: "task_1",
-      description: "test task",
-      agent: "Sisyphus-Junior",
-      isBackground: false,
-    })
-    mockClient.tui.showToast.mockClear()
+     // #given - a task that was added
+     toastManager.addTask({
+       id: "task_1",
+       description: "test task",
+       agent: "Paul-Junior",
+       isBackground: false,
+     })
+     mockClient.tui.showToast.mockClear()
 
-    // #when - showCompletionToast is called with tokens
-    toastManager.showCompletionToast({
-      id: "task_1",
-      description: "test task",
-      agent: "Sisyphus-Junior",
-      duration: "1m 30s",
-      tokens: { input: 1500, output: 500 },
-    })
+     // #when - showCompletionToast is called with tokens
+     toastManager.showCompletionToast({
+       id: "task_1",
+       description: "test task",
+       agent: "Paul-Junior",
+       duration: "1m 30s",
+       tokens: { input: 1500, output: 500 },
+     })
 
     // #then - toast should show token info
     expect(mockClient.tui.showToast).toHaveBeenCalled()
