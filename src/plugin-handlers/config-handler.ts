@@ -1,5 +1,5 @@
 import { createBuiltinAgents } from "../agents";
-import { createSisyphusJuniorAgentWithOverrides } from "../agents/sisyphus-junior";
+import { createPaulJuniorAgentWithOverrides } from "../agents/paul-junior";
 import {
   loadUserCommands,
   loadProjectCommands,
@@ -161,8 +161,8 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
         Sisyphus: builtinAgents.Sisyphus,
       };
 
-      agentConfig["Sisyphus-Junior"] = createSisyphusJuniorAgentWithOverrides(
-        pluginConfig.agents?.["Sisyphus-Junior"],
+      agentConfig["Paul-Junior"] = createPaulJuniorAgentWithOverrides(
+        pluginConfig.agents?.["Paul-Junior"],
         config.model as string | undefined
       );
 

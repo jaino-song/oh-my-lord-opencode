@@ -140,7 +140,7 @@ export function createHierarchyEnforcerHook(
           
           const isAllowed = allowedTargets.some(allowed => 
             normalizeAgentName(allowed) === normalizedTarget || 
-            normalizedTarget?.includes(normalizeAgentName(allowed)!)
+            normalizeAgentName(allowed)?.includes(normalizedTarget!)
           )
 
           if (!isAllowed) {
@@ -157,7 +157,7 @@ export function createHierarchyEnforcerHook(
             const shortDesc = description.slice(0, 50) + (description.length > 50 ? "..." : "")
             await showToast(client, `⚡ Paul → ${targetAgent}`, shortDesc || "Delegating task...", "info", 2500)
             
-            if (normalizedTarget === "sisyphus-junior" || normalizedTarget === "ultrabrain" || normalizedTarget === "frontend-ui-ux-engineer") {
+            if (normalizedTarget === "paul-junior" || normalizedTarget === "ultrabrain" || normalizedTarget === "frontend-ui-ux-engineer") {
               const hasRecentTestRun = hasRecentApproval(ctx.directory, "joshua", 600000)
               if (!hasRecentTestRun) {
                 log(`[${HOOK_NAME}] TDD Warning Injected`, { sessionID: input.sessionID })
@@ -169,7 +169,7 @@ export function createHierarchyEnforcerHook(
             for (const rule of COMPETENCY_RULES) {
               const hasKeyword = rule.keywords.some(k => prompt.includes(k))
               
-              if (rule.category === "Visual/UI" && (normalizedTarget === "sisyphus-junior" || normalizedTarget === "git-master")) continue
+              if (rule.category === "Visual/UI" && (normalizedTarget === "paul-junior" || normalizedTarget === "git-master")) continue
 
               if (hasKeyword && normalizedTarget !== normalizeAgentName(rule.requiredAgent) && !normalizedTarget?.includes("auditor")) {
                 
@@ -339,7 +339,7 @@ export function createHierarchyEnforcerHook(
               }
             }
           
-           else if (normalizedAgent.includes("sisyphus-junior") || normalizedAgent.includes("frontend-ui-ux") || normalizedAgent.includes("ultrabrain")) {
+            else if (normalizedAgent.includes("paul-junior") || normalizedAgent.includes("frontend-ui-ux") || normalizedAgent.includes("ultrabrain")) {
               const cleanResult = stripSystemReminders(result)
               const cleanLower = cleanResult.toLowerCase()
               const hasSuccess = cleanLower.includes("✅") || cleanLower.startsWith("done") || cleanLower.includes("complete") || cleanLower.includes("success")

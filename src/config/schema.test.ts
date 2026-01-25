@@ -370,12 +370,12 @@ describe("BuiltinCategoryNameSchema", () => {
   })
 })
 
-describe("Sisyphus-Junior agent override", () => {
-  test("schema accepts agents['Sisyphus-Junior'] and retains the key after parsing", () => {
+describe("Paul-Junior agent override", () => {
+  test("schema accepts agents['Paul-Junior'] and retains the key after parsing", () => {
     // #given
     const config = {
       agents: {
-        "Sisyphus-Junior": {
+        "Paul-Junior": {
           model: "openai/gpt-5.2",
           temperature: 0.2,
         },
@@ -388,18 +388,18 @@ describe("Sisyphus-Junior agent override", () => {
     // #then
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.agents?.["Sisyphus-Junior"]).toBeDefined()
-      expect(result.data.agents?.["Sisyphus-Junior"]?.model).toBe("openai/gpt-5.2")
-      expect(result.data.agents?.["Sisyphus-Junior"]?.temperature).toBe(0.2)
+      expect(result.data.agents?.["Paul-Junior"]).toBeDefined()
+      expect(result.data.agents?.["Paul-Junior"]?.model).toBe("openai/gpt-5.2")
+      expect(result.data.agents?.["Paul-Junior"]?.temperature).toBe(0.2)
     }
   })
 
-  test("schema accepts Sisyphus-Junior with prompt_append", () => {
+  test("schema accepts Paul-Junior with prompt_append", () => {
     // #given
     const config = {
       agents: {
-        "Sisyphus-Junior": {
-          prompt_append: "Additional instructions for Sisyphus-Junior",
+        "Paul-Junior": {
+          prompt_append: "Additional instructions for Paul-Junior",
         },
       },
     }
@@ -410,17 +410,17 @@ describe("Sisyphus-Junior agent override", () => {
     // #then
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.agents?.["Sisyphus-Junior"]?.prompt_append).toBe(
-        "Additional instructions for Sisyphus-Junior"
+      expect(result.data.agents?.["Paul-Junior"]?.prompt_append).toBe(
+        "Additional instructions for Paul-Junior"
       )
     }
   })
 
-  test("schema accepts Sisyphus-Junior with tools override", () => {
+  test("schema accepts Paul-Junior with tools override", () => {
     // #given
     const config = {
       agents: {
-        "Sisyphus-Junior": {
+        "Paul-Junior": {
           tools: {
             read: true,
             write: false,
@@ -435,7 +435,7 @@ describe("Sisyphus-Junior agent override", () => {
     // #then
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.agents?.["Sisyphus-Junior"]?.tools).toEqual({
+      expect(result.data.agents?.["Paul-Junior"]?.tools).toEqual({
         read: true,
         write: false,
       })

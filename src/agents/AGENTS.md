@@ -8,7 +8,7 @@ AI agent definitions for multi-model orchestration, delegating tasks to speciali
 agents/
 ├── orchestrator-sisyphus.ts # Orchestrator agent (1485 lines) - 7-section delegation, wisdom
 ├── sisyphus.ts              # Main Sisyphus prompt (643 lines)
-├── sisyphus-junior.ts       # Junior variant for delegated tasks
+├── paul-junior.ts           # Junior variant for delegated tasks
 ├── elijah.ts                # Deep Reasoning Advisor (replaces Oracle)
 ├── nathan.ts                # Request Analyst (replaces Metis)
 ├── oracle.ts                # DEPRECATED - use elijah.ts

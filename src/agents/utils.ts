@@ -23,7 +23,7 @@ import { createThomasAgent, THOMAS_PROMPT_METADATA } from "./thomas"
 import { createPlannerPaulAgent } from "./planner-paul"
 import { createTimothyAgent, timothyPromptMetadata } from "./timothy"
 import { createWorkerPaulAgentWithOverrides, workerPaulAgent } from "./worker-paul"
-import { createSisyphusJuniorAgentWithOverrides } from "./sisyphus-junior"
+import { createPaulJuniorAgentWithOverrides } from "./paul-junior"
 import { createSaulAgentWithOverrides, saulAgent } from "./saul"
 import { createGitMasterAgent, GIT_MASTER_PROMPT_METADATA } from "./git-master"
 import { createUltrabrainAgent, ULTRABRAIN_PROMPT_METADATA } from "./ultrabrain"
@@ -70,7 +70,7 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   "planner-paul": createPlannerPaulAgent,
   "Timothy (Implementation Plan Reviewer)": createTimothyAgent,
   "worker-paul": workerPaulAgent,
-  "Sisyphus-Junior": (model?: string) => createSisyphusJuniorAgentWithOverrides(undefined, model),
+   "Paul-Junior": (model?: string) => createPaulJuniorAgentWithOverrides(undefined, model),
   "git-master": createGitMasterAgent,
   "ultrabrain": createUltrabrainAgent,
 }
@@ -272,17 +272,17 @@ export function createBuiltinAgents(
       result["worker-paul"] = workerConfig
   }
 
-  if (!disabledAgents.includes("Sisyphus-Junior")) {
-      const juniorOverride = agentOverrides["Sisyphus-Junior"]
+   if (!disabledAgents.includes("Paul-Junior")) {
+       const juniorOverride = agentOverrides["Paul-Junior"]
 
-      let juniorConfig = createSisyphusJuniorAgentWithOverrides(juniorOverride, systemDefaultModel)
+       let juniorConfig = createPaulJuniorAgentWithOverrides(juniorOverride, systemDefaultModel)
 
-      if (juniorOverride) {
-          juniorConfig = mergeAgentConfig(juniorConfig, juniorOverride)
-      }
+       if (juniorOverride) {
+           juniorConfig = mergeAgentConfig(juniorConfig, juniorOverride)
+       }
 
-      result["Sisyphus-Junior"] = juniorConfig
-  }
+       result["Paul-Junior"] = juniorConfig
+   }
 
   if (!disabledAgents.includes("Saul")) {
       const saulOverride = agentOverrides["Saul"]

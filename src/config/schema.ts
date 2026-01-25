@@ -42,10 +42,10 @@ export const BuiltinSkillNameSchema = z.enum([
 ])
 
 export const OverridableAgentNameSchema = z.enum([
-  "build",
-  "plan",
-  "Sisyphus-Junior",
-  "OpenCode-Builder",
+   "build",
+   "plan",
+   "Paul-Junior",
+   "OpenCode-Builder",
   "Prometheus (Planner)",
   "Metis (Plan Consultant)",
   "Momus (Plan Reviewer)",
@@ -141,9 +141,9 @@ export const AgentOverrideConfigSchema = z.object({
 export const AgentOverridesSchema = z.object({
   build: AgentOverrideConfigSchema.optional(),
   plan: AgentOverrideConfigSchema.optional(),
-  Sisyphus: AgentOverrideConfigSchema.optional(),
-  "Sisyphus-Junior": AgentOverrideConfigSchema.optional(),
-  "OpenCode-Builder": AgentOverrideConfigSchema.optional(),
+   Sisyphus: AgentOverrideConfigSchema.optional(),
+   "Paul-Junior": AgentOverrideConfigSchema.optional(),
+   "OpenCode-Builder": AgentOverrideConfigSchema.optional(),
   "Prometheus (Planner)": AgentOverrideConfigSchema.optional(),
   "Metis (Plan Consultant)": AgentOverrideConfigSchema.optional(),
   "Momus (Plan Reviewer)": AgentOverrideConfigSchema.optional(),

@@ -6,8 +6,8 @@ import {
   type PermissionValue,
 } from "../shared/permission-compat"
 
-const SISYPHUS_JUNIOR_PROMPT = `<Role>
-Sisyphus-Junior - Focused executor from OhMyOpenCode.
+const PAUL_JUNIOR_PROMPT = `<Role>
+Paul-Junior - Focused executor from OhMyOpenCode.
 Execute tasks directly. NEVER delegate or spawn other agents.
 </Role>
 
@@ -67,20 +67,20 @@ Task NOT complete without:
 - Dense > verbose.
 </Style>`
 
-function buildSisyphusJuniorPrompt(promptAppend?: string): string {
-  if (!promptAppend) return SISYPHUS_JUNIOR_PROMPT
-  return SISYPHUS_JUNIOR_PROMPT + "\n\n" + promptAppend
+function buildPaulJuniorPrompt(promptAppend?: string): string {
+  if (!promptAppend) return PAUL_JUNIOR_PROMPT
+  return PAUL_JUNIOR_PROMPT + "\n\n" + promptAppend
 }
 
 // Core tools that Sisyphus-Junior must NEVER have access to
 const BLOCKED_TOOLS = ["task", "call_omo_agent"]
 
-export const SISYPHUS_JUNIOR_DEFAULTS = {
+export const PAUL_JUNIOR_DEFAULTS = {
   model: "anthropic/claude-sonnet-4-5",
   temperature: 0.1,
 } as const
 
-export function createSisyphusJuniorAgentWithOverrides(
+export function createPaulJuniorAgentWithOverrides(
   override: AgentOverrideConfig | undefined,
   systemDefaultModel?: string
 ): AgentConfig {
@@ -88,11 +88,11 @@ export function createSisyphusJuniorAgentWithOverrides(
     override = undefined
   }
 
-  const model = override?.model ?? systemDefaultModel ?? SISYPHUS_JUNIOR_DEFAULTS.model
-  const temperature = override?.temperature ?? SISYPHUS_JUNIOR_DEFAULTS.temperature
+  const model = override?.model ?? systemDefaultModel ?? PAUL_JUNIOR_DEFAULTS.model
+  const temperature = override?.temperature ?? PAUL_JUNIOR_DEFAULTS.temperature
 
   const promptAppend = override?.prompt_append
-  const prompt = buildSisyphusJuniorPrompt(promptAppend)
+  const prompt = buildPaulJuniorPrompt(promptAppend)
 
   const baseRestrictions = createAgentToolRestrictions(BLOCKED_TOOLS)
 
@@ -108,7 +108,7 @@ export function createSisyphusJuniorAgentWithOverrides(
 
   const base: AgentConfig = {
     description: override?.description ??
-      "Sisyphus-Junior - Focused task executor. Same discipline, no delegation.",
+      "Paul-Junior - Focused task executor. Same discipline, no delegation.",
     mode: "subagent" as const,
     model,
     temperature,
@@ -132,11 +132,11 @@ export function createSisyphusJuniorAgentWithOverrides(
   } as AgentConfig
 }
 
-export function createSisyphusJuniorAgent(
+export function createPaulJuniorAgent(
   categoryConfig: CategoryConfig,
   promptAppend?: string
 ): AgentConfig {
-  const prompt = buildSisyphusJuniorPrompt(promptAppend)
+  const prompt = buildPaulJuniorPrompt(promptAppend)
   const model = categoryConfig.model
   const baseRestrictions = createAgentToolRestrictions(BLOCKED_TOOLS)
   const categoryPermission = categoryConfig.tools
@@ -155,7 +155,7 @@ export function createSisyphusJuniorAgent(
 
   const base: AgentConfig = {
     description:
-      "Sisyphus-Junior - Focused task executor. Same discipline, no delegation.",
+      "Paul-Junior - Focused task executor. Same discipline, no delegation.",
     mode: "subagent" as const,
     model,
     maxTokens: categoryConfig.maxTokens ?? 64000,
