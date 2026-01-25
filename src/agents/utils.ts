@@ -10,7 +10,7 @@ import { createDocumentWriterAgent, DOCUMENT_WRITER_PROMPT_METADATA } from "./do
 import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "./multimodal-looker"
 // @deprecated Use specialized agents (Solomon, Timothy) instead
 import { createMetisAgent } from "./metis"
-import { createPaulAgent, paulAgent, createOrchestratorSisyphusAgent, orchestratorSisyphusAgent } from "./paul"
+import { createPaulAgent, paulAgent, createOrchestratorSisyphusAgent } from "./paul"
 import { createMomusAgent } from "./momus"
 import { createEzraAgent, EZRA_PROMPT_METADATA } from "./ezra"
 import { createNathanAgent, NATHAN_PROMPT_METADATA } from "./nathan"
@@ -60,9 +60,8 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   "Ezra (Plan Reviewer)": createEzraAgent,
   "Nathan (Request Analyst)": createNathanAgent,
   "Elijah (Deep Reasoning Advisor)": createElijahAgent,
-  "Paul": paulAgent,
-  "orchestrator-sisyphus": orchestratorSisyphusAgent,
-  "Solomon (TDD Planner)": createSolomonAgent,
+   "Paul": paulAgent,
+   "Solomon (TDD Planner)": createSolomonAgent,
   "Joshua (Test Runner)": createJoshuaAgent,
   "Peter (Test Writer)": createPeterAgent,
   "John (E2E Test Writer)": createJohnAgent,
@@ -196,11 +195,10 @@ export function createBuiltinAgents(
     ? { ...DEFAULT_CATEGORIES, ...categories }
     : DEFAULT_CATEGORIES
 
-   for (const [name, source] of Object.entries(agentSources)) {
-     const agentName = name as BuiltinAgentName
+    for (const [name, source] of Object.entries(agentSources)) {
+      const agentName = name as BuiltinAgentName
 
-     if (agentName === "orchestrator-sisyphus") continue
-    if (disabledAgents.includes(agentName)) continue
+     if (disabledAgents.includes(agentName)) continue
 
     const override = agentOverrides[agentName]
     const model = override?.model
@@ -296,21 +294,5 @@ export function createBuiltinAgents(
       result["Saul"] = saulConfig
   }
 
-  if (!disabledAgents.includes("orchestrator-sisyphus")) {
-    const orchestratorOverride = agentOverrides["orchestrator-sisyphus"]
-    const orchestratorModel = orchestratorOverride?.model ?? systemDefaultModel
-    let orchestratorConfig = createOrchestratorSisyphusAgent({
-      model: orchestratorModel,
-      availableAgents,
-    })
-
-    if (orchestratorOverride) {
-      orchestratorConfig = mergeAgentConfig(orchestratorConfig, orchestratorOverride)
-    }
-
-    orchestratorConfig = { ...orchestratorConfig, hidden: true }
-    result["orchestrator-sisyphus"] = orchestratorConfig
-  }
-
-  return result
+   return result
 }

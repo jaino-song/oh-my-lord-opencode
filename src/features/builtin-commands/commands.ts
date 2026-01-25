@@ -42,9 +42,9 @@ ${REFACTOR_TEMPLATE}
 </command-instruction>`,
     argumentHint: "<refactoring-target> [--scope=<file|module|project>] [--strategy=<safe|aggressive>]",
   },
-  "start-work": {
-    description: "(builtin) Start Sisyphus work session from Prometheus plan",
-    agent: "orchestrator-sisyphus",
+   "start-work": {
+     description: "(builtin) Start Paul work session from Prometheus plan",
+     agent: "Paul",
     template: `<command-instruction>
 ${START_WORK_TEMPLATE}
 </command-instruction>

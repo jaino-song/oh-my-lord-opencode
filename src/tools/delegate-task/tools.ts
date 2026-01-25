@@ -17,7 +17,7 @@ import { truncateToTokenLimit } from "../../shared/dynamic-truncator"
 
 type OpencodeClient = PluginInput["client"]
 
-const SISYPHUS_JUNIOR_AGENT = "Sisyphus-Junior"
+const PAUL_JUNIOR_AGENT = "Paul-Junior"
 const CATEGORY_EXAMPLES = Object.keys(DEFAULT_CATEGORIES).map(k => `'${k}'`).join(", ")
 const DEFAULT_OUTPUT_SUMMARY_TOKENS = 300
 const SKILL_SUMMARY_TOKENS = 300
@@ -517,7 +517,7 @@ ${formattedOutput}`
             break
         }
 
-        agentToUse = SISYPHUS_JUNIOR_AGENT
+        agentToUse = PAUL_JUNIOR_AGENT
         const parsedModel = parseModelString(actualModel)
         categoryModel = parsedModel
           ? (resolved.config.variant

@@ -78,4 +78,3 @@ export function createOrchestratorSisyphusAgent(
 // Aliases for compatibility
 export const createPaulAgent = createOrchestratorSisyphusAgent
 export const paulAgent = createOrchestratorSisyphusAgent({})
-export const orchestratorSisyphusAgent = createOrchestratorSisyphusAgent({})

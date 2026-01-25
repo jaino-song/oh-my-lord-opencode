@@ -314,7 +314,7 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
   const agents: Record<string, Record<string, unknown>> = {}
 
   if (!installConfig.hasClaude) {
-    agents["Sisyphus"] = {
+    agents["Paul"] = {
       model: installConfig.hasCopilot ? "github-copilot/claude-opus-4.5" : "opencode/big-pickle",
     }
   }
@@ -703,7 +703,7 @@ export function detectCurrentConfig(): DetectedConfig {
 
     const agents = omoConfig.agents ?? {}
 
-    if (agents["Sisyphus"]?.model === "opencode/big-pickle") {
+    if (agents["Paul"]?.model === "opencode/big-pickle") {
       result.hasClaude = false
       result.isMax20 = false
     } else if (agents["librarian"]?.model === "zai-coding-plan/glm-4.7") {

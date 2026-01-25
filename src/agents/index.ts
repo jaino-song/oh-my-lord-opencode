@@ -6,7 +6,7 @@ import { frontendUiUxEngineerAgent } from "./frontend-ui-ux-engineer"
 import { documentWriterAgent } from "./document-writer"
 import { multimodalLookerAgent } from "./multimodal-looker"
 import { metisAgent } from "./metis"
-import { paulAgent, orchestratorSisyphusAgent } from "./paul"
+import { paulAgent } from "./paul"
 import { momusAgent } from "./momus"
 import { ezraAgent } from "./ezra"
 import { nathanAgent } from "./nathan"
@@ -38,7 +38,6 @@ export const builtinAgents: Record<string, AgentConfig> = {
   "Nathan (Request Analyst)": nathanAgent,
   "Elijah (Deep Reasoning Advisor)": elijahAgent,
   "Paul": paulAgent,
-  "orchestrator-sisyphus": orchestratorSisyphusAgent,
   "Solomon (TDD Planner)": solomonAgent,
   "Joshua (Test Runner)": joshuaAgent,
   "Peter (Test Writer)": peterAgent,
