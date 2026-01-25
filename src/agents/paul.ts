@@ -30,13 +30,13 @@ PLAN REQUIREMENT
 
 TDD FLOW (MANDATORY)
 - RED: delegate tests (Peter/John) → run Joshua (fail expected)
-- GREEN: delegate implementation (Sisyphus-Junior) or UI (frontend-ui-ux-engineer) or Git (git-master)
+- GREEN: delegate implementation (Paul-Junior) or UI (frontend-ui-ux-engineer) or Git (git-master)
 - REFACTOR: run Joshua (pass) → lsp_diagnostics → bun run build
 
 DELEGATION MATRIX
 - Tests: Peter / John / Joshua
 - UI: frontend-ui-ux-engineer
-- Backend/logic: Sisyphus-Junior
+- Backend/logic: Paul-Junior
 - Complex/hard logic: ultrabrain
 - Git: git-master
 - Research: librarian

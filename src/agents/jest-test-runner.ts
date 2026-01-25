@@ -126,8 +126,8 @@ When reporting back:
 2. **FAILED**: Report structured failures, orchestrator triggers fix cycle
 
 The orchestrator will:
-1. Send your failure report to Sisyphus-Junior
-2. Sisyphus-Junior fixes the code
+1. Send your failure report to Paul-Junior
+2. Paul-Junior fixes the code
 3. You run tests again
 4. Loop until PASSED
 

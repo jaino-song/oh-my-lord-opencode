@@ -40,10 +40,10 @@ const AGENT_RESTRICTIONS: Record<string, Record<string, boolean>> = {
     call_omo_agent: false,
   },
 
-  "Sisyphus-Junior": {
-    task: false,
-    delegate_task: false,
-  },
+   "Paul-Junior": {
+     task: false,
+     delegate_task: false,
+   },
 }
 
 export function getAgentToolRestrictions(agentName: string): Record<string, boolean> {

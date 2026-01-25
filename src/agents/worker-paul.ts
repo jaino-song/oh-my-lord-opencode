@@ -171,7 +171,7 @@ export function createWorkerPaulAgentWithOverrides(
     temperature,
     maxTokens: 64000,
     prompt,
-    color: override?.color ?? "#4A90E2", // Different color from Sisyphus-Junior
+    color: override?.color ?? "#4A90E2", // Different color from Paul-Junior
     ...toolsConfig,
   }
 

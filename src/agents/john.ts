@@ -774,7 +774,7 @@ export const JOHN_PROMPT_METADATA: AgentPromptMetadata = {
     "RED phase of TDD - creating failing E2E tests",
   ],
   avoidWhen: [
-    "Writing implementation code (use Sisyphus-Junior)",
+     "Writing implementation code (use Paul-Junior)",
     "Running E2E tests (use playwright-runner)",
     "Writing unit tests (use Peter)",
   ],

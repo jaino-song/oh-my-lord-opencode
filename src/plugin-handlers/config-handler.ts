@@ -360,8 +360,8 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       const agent = agentResult["Prometheus (Planner)"] as AgentWithPermission;
       agent.permission = { ...agent.permission, call_omo_agent: "deny", delegate_task: "allow" };
     }
-    if (agentResult["Sisyphus-Junior"]) {
-      const agent = agentResult["Sisyphus-Junior"] as AgentWithPermission;
+    if (agentResult["Paul-Junior"]) {
+      const agent = agentResult["Paul-Junior"] as AgentWithPermission;
       agent.permission = { ...agent.permission, delegate_task: "allow" };
     }
     if (agentResult["Paul"]) {

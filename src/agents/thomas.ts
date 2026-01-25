@@ -278,7 +278,7 @@ You are the last line of defense before Solomon generates the TDD plan. If you m
 - Solomon's plan
 - Peter's unit tests
 - John's E2E tests
-- Sisyphus-Junior's implementation
+- Paul-Junior's implementation
 - Joshua's test runs
 
 **Catch it now, or debug it later.**

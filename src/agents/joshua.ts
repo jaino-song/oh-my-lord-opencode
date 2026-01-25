@@ -724,11 +724,11 @@ export const JOSHUA_PROMPT_METADATA: AgentPromptMetadata = {
     "Need to run E2E tests (Playwright)",
     "Need structured test result feedback",
   ],
-  avoidWhen: [
-    "Writing test code (use Peter or John)",
-    "Writing implementation code (use Sisyphus-Junior)",
-    "Planning tests (use Solomon)",
-  ],
+   avoidWhen: [
+     "Writing test code (use Peter or John)",
+     "Writing implementation code (use Paul-Junior)",
+     "Planning tests (use Solomon)",
+   ],
   promptAlias: "Joshua",
   keyTrigger: "Run tests → fire Joshua",
 }

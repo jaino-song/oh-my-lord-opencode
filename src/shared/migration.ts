@@ -22,9 +22,8 @@ export const AGENT_NAME_MAP: Record<string, string> = {
   explore: "explore",
   "frontend-ui-ux-engineer": "frontend-ui-ux-engineer",
   "document-writer": "document-writer",
-  "multimodal-looker": "multimodal-looker",
-  "orchestrator-sisyphus": "orchestrator-sisyphus",
-}
+   "multimodal-looker": "multimodal-looker",
+ }
 
 export const BUILTIN_AGENT_NAMES = new Set([
   "Paul",
@@ -37,9 +36,8 @@ export const BUILTIN_AGENT_NAMES = new Set([
   "multimodal-looker",
   "Metis (Plan Consultant)",
   "Momus (Plan Reviewer)",
-  "Prometheus (Planner)",
-  "orchestrator-sisyphus",
-  "build",
+   "Prometheus (Planner)",
+   "build",
 ])
 
 // Migration map: old hook names → new hook names (for backward compatibility)

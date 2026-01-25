@@ -314,10 +314,10 @@ export const NotificationConfigSchema = z.object({
 })
 
 export const GitMasterConfigSchema = z.object({
-  /** Add "Ultraworked with Sisyphus" footer to commit messages (default: true) */
-  commit_footer: z.boolean().default(true),
-  /** Add "Co-authored-by: Sisyphus" trailer to commit messages (default: true) */
-  include_co_authored_by: z.boolean().default(true),
+   /** Add "Ultraworked with Paul" footer to commit messages (default: true) */
+   commit_footer: z.boolean().default(true),
+   /** Add "Co-authored-by: Paul" trailer to commit messages (default: true) */
+   include_co_authored_by: z.boolean().default(true),
 })
 
 export const OhMyOpenCodeConfigSchema = z.object({

@@ -43,7 +43,7 @@ export const ULTRABRAIN_PROMPT_METADATA: AgentPromptMetadata = {
     { domain: "Complex Logic", trigger: "Algorithm design, race conditions, security" }
   ],
   useWhen: [
-    "Sisyphus-Junior fails to solve a bug",
+     "Paul-Junior fails to solve a bug",
     "Designing complex data structures",
     "Security/Crypto implementation"
   ],

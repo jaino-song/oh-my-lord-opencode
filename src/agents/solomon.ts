@@ -843,7 +843,7 @@ To begin execution, switch to Paul:
 Paul will:
 1. Auto-detect .paul/plans/
 2. Execute TDD workflow (tests first via Peter/John)
-3. Implement via Sisyphus-Junior
+3. Implement via Paul-Junior
 4. Verify via Joshua
 \`\`\`
 
@@ -854,7 +854,7 @@ Draft cleaned up: .paul/drafts/{name}.md (deleted)
 
 This is a TDD plan. Execution will follow:
 1. RED: Peter/John create failing tests
-2. GREEN: Sisyphus-Junior implements code
+2. GREEN: Paul-Junior implements code
 3. REFACTOR: Code cleanup while keeping tests green
 
 To begin execution, run:

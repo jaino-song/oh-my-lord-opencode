@@ -72,7 +72,7 @@ function buildPaulJuniorPrompt(promptAppend?: string): string {
   return PAUL_JUNIOR_PROMPT + "\n\n" + promptAppend
 }
 
-// Core tools that Sisyphus-Junior must NEVER have access to
+// Core tools that Paul-Junior must NEVER have access to
 const BLOCKED_TOOLS = ["task", "call_omo_agent"]
 
 export const PAUL_JUNIOR_DEFAULTS = {

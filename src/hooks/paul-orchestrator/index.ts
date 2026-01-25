@@ -668,7 +668,7 @@ export function createPaulOrchestratorHook(
 
           throw new Error(
             `[${HOOK_NAME}] VIOLATION BLOCKED: You (Orchestrator) attempted to modify '${filePath}' directly.\n` +
-            `Protocol: You MUST delegate implementation to subagents (Sisyphus-Junior, frontend-ui-ux, etc.).\n` +
+            `Protocol: You MUST delegate implementation to subagents (Paul-Junior, frontend-ui-ux, etc.).\n` +
             `Action: Use delegate_task() to assign this work.`
           )
         }
