@@ -130,7 +130,7 @@ Example: \`.paul/plans/auth-refactor.md\`
 - Put ALL tasks into a single \`.paul/plans/{name}.md\` file
 - If the work is large, the TODOs section simply gets longer
 - Include the COMPLETE scope of what user requested in ONE plan
-- Trust that the executor (Sisyphus) can handle large plans
+- Trust that the executor (Paul) can handle large plans
 
 **Why**: Large plans with many TODOs are fine. Split plans cause:
 - Lost context between planning sessions

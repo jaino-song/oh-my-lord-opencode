@@ -143,8 +143,7 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       explore?: { tools?: Record<string, unknown> };
       librarian?: { tools?: Record<string, unknown> };
       "multimodal-looker"?: { tools?: Record<string, unknown> };
-      "orchestrator-sisyphus"?: { tools?: Record<string, unknown> };
-      Sisyphus?: { tools?: Record<string, unknown> };
+      "Paul"?: { tools?: Record<string, unknown> };
     };
     const configAgent = config.agent as AgentConfig | undefined;
 
@@ -158,7 +157,7 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       }
 
       const agentConfig: Record<string, unknown> = {
-        Sisyphus: builtinAgents.Sisyphus,
+        Paul: builtinAgents.Paul,
       };
 
       agentConfig["Paul-Junior"] = createPaulJuniorAgentWithOverrides(
@@ -265,23 +264,23 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
         ? { mode: "subagent" as const }
         : undefined;
 
-      config.agent = {
-        ...agentConfig,
-        ...Object.fromEntries(
-          Object.entries(builtinAgents).filter(([k]) => k !== "Sisyphus")
-        ),
-        ...userAgents,
-        ...projectAgents,
-        ...pluginAgents,
-        ...filteredConfigAgents,
-        build: { ...migratedBuild, mode: "subagent", hidden: true },
-        ...(planDemoteConfig ? { plan: planDemoteConfig } : {}),
-      };
+       config.agent = {
+         ...agentConfig,
+         ...Object.fromEntries(
+           Object.entries(builtinAgents).filter(([k]) => k !== "Paul")
+         ),
+         ...userAgents,
+         ...projectAgents,
+         ...pluginAgents,
+         ...filteredConfigAgents,
+         build: { ...migratedBuild, mode: "subagent", hidden: true },
+         ...(planDemoteConfig ? { plan: planDemoteConfig } : {}),
+       };
     } else {
-      // Sisyphus disabled - use orchestrator-sisyphus as default
-      if (builtinAgents["orchestrator-sisyphus"]) {
-        (config as { default_agent?: string }).default_agent = "orchestrator-sisyphus";
-      }
+       // Paul disabled - use fallback agents
+       if (builtinAgents["planner-paul"]) {
+         (config as { default_agent?: string }).default_agent = "planner-paul";
+       }
       
       const migratedBuild = configAgent?.build
         ? migrateAgentConfig(configAgent.build as Record<string, unknown>)
@@ -348,14 +347,10 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       const agent = agentResult["multimodal-looker"] as AgentWithPermission;
       agent.permission = { ...agent.permission, task: "deny", look_at: "deny" };
     }
-    if (agentResult["orchestrator-sisyphus"]) {
-      const agent = agentResult["orchestrator-sisyphus"] as AgentWithPermission;
-      agent.permission = { ...agent.permission, task: "deny", call_omo_agent: "deny", delegate_task: "allow" };
-    }
-    if (agentResult.Sisyphus) {
-      const agent = agentResult.Sisyphus as AgentWithPermission;
-      agent.permission = { ...agent.permission, call_omo_agent: "deny", delegate_task: "allow" };
-    }
+     if (agentResult["Paul"]) {
+       const agent = agentResult["Paul"] as AgentWithPermission;
+       agent.permission = { ...agent.permission, task: "deny", call_omo_agent: "deny", delegate_task: "allow" };
+     }
     if (agentResult["Prometheus (Planner)"]) {
       const agent = agentResult["Prometheus (Planner)"] as AgentWithPermission;
       agent.permission = { ...agent.permission, call_omo_agent: "deny", delegate_task: "allow" };
@@ -364,11 +359,7 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       const agent = agentResult["Paul-Junior"] as AgentWithPermission;
       agent.permission = { ...agent.permission, delegate_task: "allow" };
     }
-    if (agentResult["Paul"]) {
-      const agent = agentResult["Paul"] as AgentWithPermission;
-      agent.permission = { ...agent.permission, task: "deny", call_omo_agent: "deny", delegate_task: "allow" };
-    }
-    if (agentResult["planner-paul"]) {
+     if (agentResult["planner-paul"]) {
       const agent = agentResult["planner-paul"] as AgentWithPermission;
       agent.permission = { ...agent.permission, call_omo_agent: "deny", delegate_task: "allow" };
     }

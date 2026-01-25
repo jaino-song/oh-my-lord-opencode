@@ -13,7 +13,7 @@ export type AgentCategory = "exploration" | "specialist" | "advisor" | "utility"
 export type AgentCost = "FREE" | "CHEAP" | "EXPENSIVE"
 
 /**
- * Delegation trigger for Sisyphus prompt's Delegation Table
+ * Delegation trigger for Paul prompt's Delegation Table
  */
 export interface DelegationTrigger {
   /** Domain of work (e.g., "Frontend UI/UX") */
