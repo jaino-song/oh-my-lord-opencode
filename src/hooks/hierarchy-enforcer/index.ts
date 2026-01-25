@@ -69,13 +69,13 @@ function stripSystemReminders(text: string): string {
   return text
 }
 
-function formatTokenUsage(manager: TokenAnalyticsManager | undefined, sessionID: string): string {
-  if (!manager) return ""
+function logTokenUsage(manager: TokenAnalyticsManager | undefined, sessionID: string, agentName: string): void {
+  if (!manager) return
   const analytics = manager.getAnalytics(sessionID)
-  if (!analytics) return ""
+  if (!analytics) return
   const { input, output } = analytics.totalUsage
-  if (input === 0 && output === 0) return ""
-  return ` (${input} in / ${output} out)`
+  if (input === 0 && output === 0) return
+  console.log(`\n📊 [Token Usage] ${agentName}: ${input} in / ${output} out\n`)
 }
 
 const COMPETENCY_RULES = [
@@ -324,84 +324,84 @@ export function createHierarchyEnforcerHook(
              const failCountMatch = result.match(/(\d+)\s*(?:tests?|specs?)\s*(?:failed|failing)/i)
              
               const sessionMatch = result.match(/session id:\s*(ses_[a-zA-Z0-9]+)/i)
-             const delegateSessionID = sessionMatch?.[1]
-             const tokenInfo = delegateSessionID ? formatTokenUsage(options?.tokenAnalytics, delegateSessionID) : ""
-             
-             if (failedMatch || (failCountMatch && parseInt(failCountMatch[1]) > 0)) {
-               const failCount = failCountMatch ? failCountMatch[1] : "some"
-               await showToast(client, "❌ Joshua: Tests Failed", `${failCount} test(s) failing${tokenInfo}`, "error", 4000)
-             } else if (passedMatch) {
-               const passCount = testCountMatch ? testCountMatch[1] : "all"
-               await showToast(client, "✅ Joshua: Tests Passed", `${passCount} test(s) passing${tokenInfo}`, "success", 3000)
-               recordApproval(ctx.directory, input.callID, "Joshua", "approved")
-             } else {
-               await showToast(client, "🧪 Joshua Complete", `Test run finished${tokenInfo}`, "info", 2500)
-             }
-           }
+              const delegateSessionID = sessionMatch?.[1]
+              if (delegateSessionID) logTokenUsage(options?.tokenAnalytics, delegateSessionID, "Joshua")
+              
+              if (failedMatch || (failCountMatch && parseInt(failCountMatch[1]) > 0)) {
+                const failCount = failCountMatch ? failCountMatch[1] : "some"
+                await showToast(client, "❌ Joshua: Tests Failed", `${failCount} test(s) failing`, "error", 4000)
+              } else if (passedMatch) {
+                const passCount = testCountMatch ? testCountMatch[1] : "all"
+                await showToast(client, "✅ Joshua: Tests Passed", `${passCount} test(s) passing`, "success", 3000)
+                recordApproval(ctx.directory, input.callID, "Joshua", "approved")
+              } else {
+                await showToast(client, "🧪 Joshua Complete", "Test run finished", "info", 2500)
+              }
+            }
           
            else if (normalizedAgent.includes("sisyphus-junior") || normalizedAgent.includes("frontend-ui-ux") || normalizedAgent.includes("ultrabrain")) {
-             const cleanResult = stripSystemReminders(result)
-             const cleanLower = cleanResult.toLowerCase()
-             const hasSuccess = cleanLower.includes("✅") || cleanLower.startsWith("done") || cleanLower.includes("complete") || cleanLower.includes("success")
-             const hasRealError = cleanLower.includes("❌") || /\b(error|failed|exception):/i.test(cleanLower) || cleanLower.includes("threw")
-             
+              const cleanResult = stripSystemReminders(result)
+              const cleanLower = cleanResult.toLowerCase()
+              const hasSuccess = cleanLower.includes("✅") || cleanLower.startsWith("done") || cleanLower.includes("complete") || cleanLower.includes("success")
+              const hasRealError = cleanLower.includes("❌") || /\b(error|failed|exception):/i.test(cleanLower) || cleanLower.includes("threw")
+              
               const sessionMatch = result.match(/session id:\s*(ses_[a-zA-Z0-9]+)/i)
-             const delegateSessionID = sessionMatch?.[1]
-             const tokenInfo = delegateSessionID ? formatTokenUsage(options?.tokenAnalytics, delegateSessionID) : ""
-             
-             if (hasRealError && !hasSuccess) {
-               await showToast(client, `❌ ${targetAgent} failed`, `implementation error${tokenInfo}`, "error", 4000)
-             } else {
-               await showToast(client, `✅ ${targetAgent}${tokenInfo}`, "implementation complete", "success", 2500)
-             }
-           }
+              const delegateSessionID = sessionMatch?.[1]
+              if (delegateSessionID) logTokenUsage(options?.tokenAnalytics, delegateSessionID, targetAgent || "Agent")
+              
+              if (hasRealError && !hasSuccess) {
+                await showToast(client, `❌ ${targetAgent} failed`, "implementation error", "error", 4000)
+              } else {
+                await showToast(client, `✅ ${targetAgent}`, "implementation complete", "success", 2500)
+              }
+            }
           
            else if (normalizedAgent.includes("git-master")) {
-             const commitMatch = result.match(/commit[:\s]*([a-f0-9]{7,8})/i)
-             const commit = commitMatch ? commitMatch[1] : null
-             
+              const commitMatch = result.match(/commit[:\s]*([a-f0-9]{7,8})/i)
+              const commit = commitMatch ? commitMatch[1] : null
+              
               const sessionMatch = result.match(/session id:\s*(ses_[a-zA-Z0-9]+)/i)
-             const delegateSessionID = sessionMatch?.[1]
-             const tokenInfo = delegateSessionID ? formatTokenUsage(options?.tokenAnalytics, delegateSessionID) : ""
-             
-             if (commit) {
-               await showToast(client, "📦 Git Commit", `Committed: ${commit}${tokenInfo}`, "success", 3000)
-             } else if (lowerResult.includes("push")) {
-               await showToast(client, "🚀 Git Push", `Changes pushed${tokenInfo}`, "success", 2500)
-             } else {
-               await showToast(client, "🔧 Git Operation", `Complete${tokenInfo}`, "info", 2000)
-             }
-           }
+              const delegateSessionID = sessionMatch?.[1]
+              if (delegateSessionID) logTokenUsage(options?.tokenAnalytics, delegateSessionID, "git-master")
+              
+              if (commit) {
+                await showToast(client, "📦 Git Commit", `Committed: ${commit}`, "success", 3000)
+              } else if (lowerResult.includes("push")) {
+                await showToast(client, "🚀 Git Push", "Changes pushed", "success", 2500)
+              } else {
+                await showToast(client, "🔧 Git Operation", "Complete", "info", 2000)
+              }
+            }
           
            else if (normalizedAgent.includes("explore") || normalizedAgent.includes("librarian")) {
-             const filesMatch = result.match(/(\d+)\s*files?/i)
-             const files = filesMatch ? filesMatch[1] : null
-             
+              const filesMatch = result.match(/(\d+)\s*files?/i)
+              const files = filesMatch ? filesMatch[1] : null
+              
               const sessionMatch = result.match(/session id:\s*(ses_[a-zA-Z0-9]+)/i)
-             const delegateSessionID = sessionMatch?.[1]
-             const tokenInfo = delegateSessionID ? formatTokenUsage(options?.tokenAnalytics, delegateSessionID) : ""
-             
-             if (files) {
-               await showToast(client, `🔎 ${targetAgent}${tokenInfo}`, `Found ${files} file(s)`, "info", 2500)
-             }
-           }
+              const delegateSessionID = sessionMatch?.[1]
+              if (delegateSessionID) logTokenUsage(options?.tokenAnalytics, delegateSessionID, targetAgent || "explore")
+              
+              if (files) {
+                await showToast(client, `🔎 ${targetAgent}`, `Found ${files} file(s)`, "info", 2500)
+              }
+            }
           
            else {
-             const cleanResult = stripSystemReminders(result)
-             const cleanLower = cleanResult.toLowerCase()
-             const hasSuccess = cleanLower.includes("✅") || cleanLower.includes("approved") || cleanLower.includes("passed") || cleanLower.includes("success") || cleanLower.includes("complete")
-             const hasRealError = cleanLower.includes("❌") || /\b(error|failed|exception):/i.test(cleanLower)
-             
+              const cleanResult = stripSystemReminders(result)
+              const cleanLower = cleanResult.toLowerCase()
+              const hasSuccess = cleanLower.includes("✅") || cleanLower.includes("approved") || cleanLower.includes("passed") || cleanLower.includes("success") || cleanLower.includes("complete")
+              const hasRealError = cleanLower.includes("❌") || /\b(error|failed|exception):/i.test(cleanLower)
+              
               const sessionMatch = result.match(/session id:\s*(ses_[a-zA-Z0-9]+)/i)
-             const delegateSessionID = sessionMatch?.[1]
-             const tokenInfo = delegateSessionID ? formatTokenUsage(options?.tokenAnalytics, delegateSessionID) : ""
-             
-             if (hasRealError && !hasSuccess) {
-               await showToast(client, `❌ ${targetAgent || "task"} failed`, `check output for details${tokenInfo}`, "error", 4000)
-             } else if (hasSuccess) {
-               await showToast(client, `✅ ${targetAgent || "task"} complete${tokenInfo}`, "delegation successful", "success", 2500)
-             }
-           }
+              const delegateSessionID = sessionMatch?.[1]
+              if (delegateSessionID) logTokenUsage(options?.tokenAnalytics, delegateSessionID, targetAgent || "task")
+              
+              if (hasRealError && !hasSuccess) {
+                await showToast(client, `❌ ${targetAgent || "task"} failed`, "check output for details", "error", 4000)
+              } else if (hasSuccess) {
+                await showToast(client, `✅ ${targetAgent || "task"} complete`, "delegation successful", "success", 2500)
+              }
+            }
 
           if (lowerResult.includes("approved") || lowerResult.includes("passed") || lowerResult.includes("verified")) {
             if (result.includes("Agent:") && (lowerResult.includes("passed") || lowerResult.includes("approved"))) {
