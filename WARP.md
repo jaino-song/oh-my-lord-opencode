@@ -51,7 +51,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
   - `bun run build`
 - Point OpenCode at the built plugin (update `~/.config/opencode/opencode.json`):
   - Set `plugin` to `"file:///absolute/path/to/oh-my-lord-opencode/dist/index.js"`
-  - Ensure any npm-installed `oh-my-opencode` plugin is removed from the `plugin` array to avoid conflicts
+  - Ensure any npm-installed `oh-my-lord-opencode` plugin is removed from the `plugin` array to avoid conflicts
 - Restart OpenCode to load the new build.
 
 ## High-level architecture

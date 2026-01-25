@@ -18,7 +18,7 @@ async function main() {
 
   const finalSchema = {
     $schema: "http://json-schema.org/draft-07/schema#",
-    $id: "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+    $id: "https://raw.githubusercontent.com/jaino-song/oh-my-lord-opencode/master/assets/oh-my-lord-opencode.schema.json",
     title: "Oh My OpenCode Configuration",
     description: "Configuration schema for oh-my-lord-opencode plugin",
     ...jsonSchema,

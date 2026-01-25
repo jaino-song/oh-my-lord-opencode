@@ -1,8 +1,8 @@
 # Oh My Lord OpenCode
 
-> A strict TDD enforcement fork of [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) with **Hub-and-Spoke Architecture**, **Token Optimization**, and biblical agent naming.
+> A strict TDD enforcement fork of [oh-my-opencode](https://github.com/jaino-song/oh-my-lord-opencode) with **Hub-and-Spoke Architecture**, **Token Optimization**, and biblical agent naming.
 
-[![Based on oh-my-opencode](https://img.shields.io/badge/based%20on-oh--my--opencode-blue?style=flat-square)](https://github.com/code-yeongyu/oh-my-opencode)
+[![Based on oh-my-opencode](https://img.shields.io/badge/based%20on-oh--my--opencode-blue?style=flat-square)](https://github.com/jaino-song/oh-my-lord-opencode)
 [![Latest Release](https://img.shields.io/github/v/release/jaino-song/oh-my-lord-opencode?style=flat-square)](https://github.com/jaino-song/oh-my-lord-opencode/releases)
 
 ## Releases

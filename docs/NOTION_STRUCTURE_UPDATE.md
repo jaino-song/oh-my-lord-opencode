@@ -4,11 +4,11 @@
 
 ## 📋 Project Overview
 
-**Oh My Lord OpenCode** is a TDD-first fork of [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) with mandatory Test-Driven Development workflow and biblical agent naming.
+**Oh My Lord OpenCode** is a TDD-first fork of [oh-my-opencode](https://github.com/jaino-song/oh-my-lord-opencode) with mandatory Test-Driven Development workflow and biblical agent naming.
 
 - **Version**: 3.0.0-beta.8
 - **License**: SUL-1.0
-- **Repository**: https://github.com/code-yeongyu/oh-my-opencode
+- **Repository**: https://github.com/jaino-song/oh-my-lord-opencode
 - **Package Manager**: Bun (only - npm/yarn/pnpm blocked)
 - **TypeScript**: 5.7.3+ (strict mode)
 
@@ -470,9 +470,9 @@ See `CONTRIBUTING.md` for:
 
 ## 🔗 Links
 
-- **Repository**: https://github.com/code-yeongyu/oh-my-opencode
-- **Issues**: https://github.com/code-yeongyu/oh-my-opencode/issues
-- **Original Fork**: https://github.com/code-yeongyu/oh-my-opencode
+- **Repository**: https://github.com/jaino-song/oh-my-lord-opencode
+- **Issues**: https://github.com/jaino-song/oh-my-lord-opencode/issues
+- **Original Fork**: https://github.com/jaino-song/oh-my-lord-opencode
 
 ---
 

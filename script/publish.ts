@@ -4,7 +4,7 @@ import { $ } from "bun"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 
-const PACKAGE_NAME = "oh-my-opencode"
+const PACKAGE_NAME = "oh-my-lord-opencode"
 const bump = process.env.BUMP as "major" | "minor" | "patch" | undefined
 const versionOverride = process.env.VERSION
 
@@ -18,7 +18,7 @@ const PLATFORM_PACKAGES = [
   "windows-x64",
 ]
 
-console.log("=== Publishing oh-my-opencode (multi-package) ===\n")
+console.log("=== Publishing oh-my-lord-opencode (multi-package) ===\n")
 
 async function fetchPreviousVersion(): Promise<string> {
   try {
@@ -62,9 +62,9 @@ async function updateAllPackageVersions(newVersion: string): Promise<void> {
   await updatePackageVersion(mainPkgPath, newVersion)
   
   // Update optionalDependencies versions in main package.json
-  let mainPkg = await Bun.file(mainPkgPath).text()
-  for (const platform of PLATFORM_PACKAGES) {
-    const pkgName = `oh-my-opencode-${platform}`
+   let mainPkg = await Bun.file(mainPkgPath).text()
+   for (const platform of PLATFORM_PACKAGES) {
+     const pkgName = `oh-my-lord-opencode-${platform}`
     mainPkg = mainPkg.replace(
       new RegExp(`"${pkgName}": "[^"]+"`),
       `"${pkgName}": "${newVersion}"`
@@ -112,9 +112,9 @@ async function getContributors(previous: string): Promise<string[]> {
 
   const team = ["actions-user", "github-actions[bot]", "code-yeongyu"]
 
-  try {
-    const compare =
-      await $`gh api "/repos/code-yeongyu/oh-my-opencode/compare/v${previous}...HEAD" --jq '.commits[] | {login: .author.login, message: .commit.message}'`.text()
+   try {
+     const compare =
+       await $`gh api "/repos/jaino-song/oh-my-lord-opencode/compare/v${previous}...HEAD" --jq '.commits[] | {login: .author.login, message: .commit.message}'`.text()
     const contributors = new Map<string, string[]>()
 
     for (const line of compare.split("\n").filter(Boolean)) {
@@ -194,10 +194,10 @@ async function publishAllPackages(version: string): Promise<void> {
   } else {
     console.log("\n📦 Publishing platform packages...")
     
-    // Publish platform packages first
-    for (const platform of PLATFORM_PACKAGES) {
-      const pkgDir = join(process.cwd(), "packages", platform)
-      const pkgName = `oh-my-opencode-${platform}`
+     // Publish platform packages first
+     for (const platform of PLATFORM_PACKAGES) {
+       const pkgDir = join(process.cwd(), "packages", platform)
+       const pkgName = `oh-my-lord-opencode-${platform}`
       
       console.log(`\n  Publishing ${pkgName}...`)
       const result = await publishPackage(pkgDir, distTag)
