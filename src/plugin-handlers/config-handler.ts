@@ -127,7 +127,7 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       ])
     );
 
-    const isSisyphusEnabled = pluginConfig.paul_agent?.disabled !== true;
+    const isPaulEnabled = pluginConfig.paul_agent?.disabled !== true;
     const builderEnabled =
       pluginConfig.paul_agent?.default_builder_enabled ?? false;
     const plannerEnabled =
@@ -150,11 +150,11 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
 
     const preferOrchestrator = pluginConfig.paul_agent?.prefer_orchestrator ?? false;
     
-    if (isSisyphusEnabled && builtinAgents.Sisyphus) {
-      if (preferOrchestrator && builtinAgents["orchestrator-sisyphus"]) {
-        (config as { default_agent?: string }).default_agent = "orchestrator-sisyphus";
+    if (isPaulEnabled && builtinAgents.Paul) {
+      if (preferOrchestrator && builtinAgents["Paul"]) {
+        (config as { default_agent?: string }).default_agent = "Paul";
       } else {
-        (config as { default_agent?: string }).default_agent = "Sisyphus";
+        (config as { default_agent?: string }).default_agent = "Paul";
       }
 
       const agentConfig: Record<string, unknown> = {

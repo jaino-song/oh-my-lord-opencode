@@ -1,7 +1,7 @@
 export const HOOK_NAME = "hierarchy-enforcer"
 
 export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
-  "User": ["Paul", "planner-paul", "Sisyphus"], 
+  "User": ["Paul", "planner-paul"], 
 
    "planner-paul": [
     "Nathan (Request Analyst)",
@@ -25,7 +25,7 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
 
   "Paul": [
     "Joshua (Test Runner)",
-    "Sisyphus-Junior",
+    "Paul-Junior",
     "frontend-ui-ux-engineer",
     "ultrabrain",
     "git-master",
@@ -43,9 +43,9 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
   ],
 
    "Joshua (Test Runner)": [],
-   "Sisyphus-Junior": ["explore", "librarian"],
-   "frontend-ui-ux-engineer": [],
-   "worker-paul": ["explore", "librarian", "git-master", "document-writer"],
+    "Paul-Junior": ["explore", "librarian"],
+    "frontend-ui-ux-engineer": [],
+    "worker-paul": ["explore", "librarian", "git-master", "document-writer"],
 }
 
 export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {
@@ -59,15 +59,15 @@ export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {
   "spec review": ["Thomas (TDD Plan Consultant)"]
 }
 
-export const BYPASS_AGENTS = ["Sisyphus"]
+export const BYPASS_AGENTS: string[] = []
 
-// All categories spawn Sisyphus-Junior (per delegate-task/constants.ts line 243)
+// All categories spawn Paul-Junior (per delegate-task/constants.ts line 243)
 export const CATEGORY_TO_AGENT: Record<string, string> = {
-  "quick": "Sisyphus-Junior",
-  "visual-engineering": "Sisyphus-Junior",
-  "ultrabrain": "Sisyphus-Junior",
-  "artistry": "Sisyphus-Junior",
-  "most-capable": "Sisyphus-Junior",
-  "writing": "Sisyphus-Junior",
-  "general": "Sisyphus-Junior",
+  "quick": "Paul-Junior",
+  "visual-engineering": "Paul-Junior",
+  "ultrabrain": "Paul-Junior",
+  "artistry": "Paul-Junior",
+  "most-capable": "Paul-Junior",
+  "writing": "Paul-Junior",
+  "general": "Paul-Junior",
 }
