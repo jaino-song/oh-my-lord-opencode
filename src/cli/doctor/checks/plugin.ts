@@ -82,10 +82,10 @@ export async function checkPluginRegistration(): Promise<CheckResult> {
       name: CHECK_NAMES[CHECK_IDS.PLUGIN_REGISTRATION],
       status: "fail",
       message: "OpenCode config file not found",
-      details: [
-        "Run: bunx oh-my-opencode install",
-        `Expected: ${expectedPaths.configJson} or ${expectedPaths.configJsonc}`,
-      ],
+       details: [
+         "Run: bunx oh-my-lord-opencode install",
+         `Expected: ${expectedPaths.configJson} or ${expectedPaths.configJsonc}`,
+       ],
     }
   }
 
@@ -94,10 +94,10 @@ export async function checkPluginRegistration(): Promise<CheckResult> {
       name: CHECK_NAMES[CHECK_IDS.PLUGIN_REGISTRATION],
       status: "fail",
       message: "Plugin not registered in config",
-      details: [
-        "Run: bunx oh-my-opencode install",
-        `Config: ${info.configPath}`,
-      ],
+       details: [
+         "Run: bunx oh-my-lord-opencode install",
+         `Config: ${info.configPath}`,
+       ],
     }
   }
 

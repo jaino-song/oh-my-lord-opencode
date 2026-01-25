@@ -2,7 +2,7 @@ import type { ALLOWED_AGENTS } from "./constants"
 
 export type AllowedAgentType = (typeof ALLOWED_AGENTS)[number]
 
-export interface CallOmoAgentArgs {
+export interface CallPaulAgentArgs {
   description: string
   prompt: string
   subagent_type: string
@@ -10,7 +10,7 @@ export interface CallOmoAgentArgs {
   session_id?: string
 }
 
-export interface CallOmoAgentSyncResult {
+export interface CallPaulAgentSyncResult {
   title: string
   metadata: {
     summary?: Array<{

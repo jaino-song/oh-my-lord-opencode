@@ -4,7 +4,7 @@ import {
   saveInteractiveBashSessionState,
   clearInteractiveBashSessionState,
 } from "./storage";
-import { OMO_SESSION_PREFIX, buildSessionReminderMessage } from "./constants";
+import { PAUL_SESSION_PREFIX, buildSessionReminderMessage } from "./constants";
 import type { InteractiveBashSessionState } from "./types";
 
 interface ToolExecuteInput {
@@ -74,7 +74,7 @@ function tokenizeCommand(cmd: string): string[] {
 
 /**
  * Normalize session name by stripping :window and .pane suffixes
- * e.g., "omo-x:1" -> "omo-x", "omo-x:1.2" -> "omo-x"
+ * e.g., "paul-x:1" -> "paul-x", "paul-x:1.2" -> "paul-x"
  */
 function normalizeSessionName(name: string): string {
   return name.split(":")[0].split(".")[0]
@@ -108,7 +108,7 @@ function extractSessionNameFromTokens(tokens: string[], subCommand: string): str
 /**
  * Find the tmux subcommand from tokens, skipping global options.
  * tmux allows global options before the subcommand:
- * e.g., `tmux -L socket-name new-session -s omo-x`
+ * e.g., `tmux -L socket-name new-session -s paul-x`
  * Global options with args: -L, -S, -f, -c, -T
  * Standalone flags: -C, -v, -V, etc.
  * Special: -- (end of options marker)
@@ -162,8 +162,8 @@ export function createInteractiveBashSessionHook(_ctx: PluginInput) {
     return sessionStates.get(sessionID)!;
   }
 
-  function isOmoSession(sessionName: string | null): boolean {
-    return sessionName !== null && sessionName.startsWith(OMO_SESSION_PREFIX);
+  function isPaulSession(sessionName: string | null): boolean {
+    return sessionName !== null && sessionName.startsWith(PAUL_SESSION_PREFIX);
   }
 
   async function killAllTrackedSessions(
@@ -212,10 +212,10 @@ export function createInteractiveBashSessionHook(_ctx: PluginInput) {
 
     const sessionName = extractSessionNameFromTokens(tokens, subCommand);
 
-    if (isNewSession && isOmoSession(sessionName)) {
+    if (isNewSession && isPaulSession(sessionName)) {
       state.tmuxSessions.add(sessionName!);
       stateChanged = true;
-    } else if (isKillSession && isOmoSession(sessionName)) {
+    } else if (isKillSession && isPaulSession(sessionName)) {
       state.tmuxSessions.delete(sessionName!);
       stateChanged = true;
     } else if (isKillServer) {

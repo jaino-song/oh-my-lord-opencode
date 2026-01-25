@@ -245,7 +245,7 @@ async function runNonTuiInstall(args: InstallArgs): Promise<number> {
       console.log(`  ${SYMBOLS.bullet} ${err}`)
     }
     console.log()
-    printInfo("Usage: bunx oh-my-opencode install --no-tui --claude=<no|yes|max20> --chatgpt=<no|yes> --gemini=<no|yes> --copilot=<no|yes>")
+    printInfo("Usage: bunx oh-my-lord-opencode install --no-tui --claude=<no|yes|max20> --chatgpt=<no|yes> --gemini=<no|yes> --copilot=<no|yes>")
     console.log()
     return 1
   }
@@ -276,7 +276,7 @@ async function runNonTuiInstall(args: InstallArgs): Promise<number> {
 
   const config = argsToConfig(args)
 
-  printStep(step++, totalSteps, "Adding oh-my-opencode plugin...")
+   printStep(step++, totalSteps, "Adding oh-my-lord-opencode plugin...")
   const pluginResult = await addPluginToOpenCodeConfig(VERSION)
   if (!pluginResult.success) {
     printError(`Failed: ${pluginResult.error}`)
@@ -304,7 +304,7 @@ async function runNonTuiInstall(args: InstallArgs): Promise<number> {
     step += 2
   }
 
-  printStep(step++, totalSteps, "Writing oh-my-opencode configuration...")
+   printStep(step++, totalSteps, "Writing oh-my-lord-opencode configuration...")
   const omoResult = writeOmoConfig(config)
   if (!omoResult.success) {
     printError(`Failed: ${omoResult.error}`)
@@ -330,7 +330,7 @@ async function runNonTuiInstall(args: InstallArgs): Promise<number> {
   )
 
   console.log(`${SYMBOLS.star} ${color.yellow("If you found this helpful, consider starring the repo!")}`)
-  console.log(`  ${color.dim("gh repo star code-yeongyu/oh-my-opencode")}`)
+   console.log(`  ${color.dim("gh repo star jaino-song/oh-my-lord-opencode")}`)
   console.log()
   console.log(color.dim("oMoMoMoMo... Enjoy!"))
   console.log()
@@ -382,7 +382,7 @@ export async function install(args: InstallArgs): Promise<number> {
   const config = await runTuiMode(detected)
   if (!config) return 1
 
-  s.start("Adding oh-my-opencode to OpenCode config")
+   s.start("Adding oh-my-lord-opencode to OpenCode config")
   const pluginResult = await addPluginToOpenCodeConfig(VERSION)
   if (!pluginResult.success) {
     s.stop(`Failed to add plugin: ${pluginResult.error}`)
@@ -411,7 +411,7 @@ export async function install(args: InstallArgs): Promise<number> {
     s.stop(`Provider config added to ${color.cyan(providerResult.configPath)}`)
   }
 
-  s.start("Writing oh-my-opencode configuration")
+   s.start("Writing oh-my-lord-opencode configuration")
   const omoResult = writeOmoConfig(config)
   if (!omoResult.success) {
     s.stop(`Failed to write config: ${omoResult.error}`)
@@ -437,7 +437,7 @@ export async function install(args: InstallArgs): Promise<number> {
   )
 
   p.log.message(`${color.yellow("★")} If you found this helpful, consider starring the repo!`)
-  p.log.message(`  ${color.dim("gh repo star code-yeongyu/oh-my-opencode")}`)
+   p.log.message(`  ${color.dim("gh repo star jaino-song/oh-my-lord-opencode")}`)
 
   p.outro(color.green("oMoMoMoMo... Enjoy!"))
 

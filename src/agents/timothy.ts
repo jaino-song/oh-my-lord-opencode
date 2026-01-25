@@ -16,7 +16,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Paul (the orchestrator) to execute.
  */
 
-const DEFAULT_MODEL = "google/gemini-3-pro-high"
+const DEFAULT_MODEL = "google/antigravity-gemini-3-pro-high"
 
 export const TIMOTHY_SYSTEM_PROMPT = `# Timothy - Implementation Plan Reviewer
 

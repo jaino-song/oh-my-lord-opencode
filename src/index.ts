@@ -63,7 +63,7 @@ import {
 } from "./features/claude-code-session-state";
 import {
   builtinTools,
-  createCallOmoAgent,
+  createCallPaulAgent,
   createBackgroundTools,
   createLookAt,
   createSkillTool,
@@ -264,7 +264,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     : null;
   const backgroundTools = createBackgroundTools(backgroundManager, ctx.client);
 
-  const callOmoAgent = createCallOmoAgent(ctx, backgroundManager);
+   const callPaulAgent = createCallPaulAgent(ctx, backgroundManager);
   const lookAt = createLookAt(ctx);
   const delegateTask = createDelegateTask({
     manager: backgroundManager,
@@ -333,7 +333,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     tool: {
       ...builtinTools,
       ...backgroundTools,
-      call_omo_agent: callOmoAgent,
+       call_paul_agent: callPaulAgent,
       look_at: lookAt,
       delegate_task: delegateTask,
       skill: skillTool,
@@ -546,7 +546,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
         args.tools = {
           ...(args.tools as Record<string, boolean> | undefined),
           delegate_task: false,
-          ...(isExploreOrLibrarian ? { call_omo_agent: false } : {}),
+          ...(isExploreOrLibrarian ? { call_paul_agent: false } : {}),
         };
       }
 

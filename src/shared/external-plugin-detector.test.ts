@@ -8,7 +8,7 @@ describe("external-plugin-detector", () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "omo-test-"))
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "paul-test-"))
   })
 
   afterEach(() => {
@@ -25,49 +25,32 @@ describe("external-plugin-detector", () => {
       expect(result.pluginName).toBeNull()
     })
 
-    test("should return detected=false when only oh-my-opencode is configured", () => {
-      // #given - opencode.json with only oh-my-opencode
-      const opencodeDir = path.join(tempDir, ".opencode")
-      fs.mkdirSync(opencodeDir, { recursive: true })
-      fs.writeFileSync(
-        path.join(opencodeDir, "opencode.json"),
-        JSON.stringify({ plugin: ["oh-my-opencode"] })
-      )
+     test("should return detected=false when only oh-my-lord-opencode is configured", () => {
+       // #given - opencode.json with only oh-my-lord-opencode
+       const opencodeDir = path.join(tempDir, ".opencode")
+       fs.mkdirSync(opencodeDir, { recursive: true })
+       fs.writeFileSync(
+         path.join(opencodeDir, "opencode.json"),
+         JSON.stringify({ plugin: ["oh-my-lord-opencode"] })
+       )
 
-      // #when
-      const result = detectExternalNotificationPlugin(tempDir)
+       // #when
+       const result = detectExternalNotificationPlugin(tempDir)
 
-      // #then
-      expect(result.detected).toBe(false)
-      expect(result.pluginName).toBeNull()
-      expect(result.allPlugins).toContain("oh-my-opencode")
-    })
+       // #then
+       expect(result.detected).toBe(false)
+       expect(result.pluginName).toBeNull()
+       expect(result.allPlugins).toContain("oh-my-lord-opencode")
+     })
 
-    test("should detect opencode-notifier plugin", () => {
-      // #given - opencode.json with opencode-notifier
-      const opencodeDir = path.join(tempDir, ".opencode")
-      fs.mkdirSync(opencodeDir, { recursive: true })
-      fs.writeFileSync(
-        path.join(opencodeDir, "opencode.json"),
-        JSON.stringify({ plugin: ["oh-my-opencode", "opencode-notifier"] })
-      )
-
-      // #when
-      const result = detectExternalNotificationPlugin(tempDir)
-
-      // #then
-      expect(result.detected).toBe(true)
-      expect(result.pluginName).toBe("opencode-notifier")
-    })
-
-    test("should detect opencode-notifier with version suffix", () => {
-      // #given - opencode.json with versioned opencode-notifier
-      const opencodeDir = path.join(tempDir, ".opencode")
-      fs.mkdirSync(opencodeDir, { recursive: true })
-      fs.writeFileSync(
-        path.join(opencodeDir, "opencode.json"),
-        JSON.stringify({ plugin: ["oh-my-opencode", "opencode-notifier@1.2.3"] })
-      )
+     test("should detect opencode-notifier plugin", () => {
+       // #given - opencode.json with opencode-notifier
+       const opencodeDir = path.join(tempDir, ".opencode")
+       fs.mkdirSync(opencodeDir, { recursive: true })
+       fs.writeFileSync(
+         path.join(opencodeDir, "opencode.json"),
+         JSON.stringify({ plugin: ["oh-my-lord-opencode", "opencode-notifier"] })
+       )
 
       // #when
       const result = detectExternalNotificationPlugin(tempDir)
@@ -77,14 +60,31 @@ describe("external-plugin-detector", () => {
       expect(result.pluginName).toBe("opencode-notifier")
     })
 
-    test("should detect @mohak34/opencode-notifier", () => {
-      // #given - opencode.json with scoped package name
-      const opencodeDir = path.join(tempDir, ".opencode")
-      fs.mkdirSync(opencodeDir, { recursive: true })
-      fs.writeFileSync(
-        path.join(opencodeDir, "opencode.json"),
-        JSON.stringify({ plugin: ["oh-my-opencode", "@mohak34/opencode-notifier"] })
-      )
+     test("should detect opencode-notifier with version suffix", () => {
+       // #given - opencode.json with versioned opencode-notifier
+       const opencodeDir = path.join(tempDir, ".opencode")
+       fs.mkdirSync(opencodeDir, { recursive: true })
+       fs.writeFileSync(
+         path.join(opencodeDir, "opencode.json"),
+         JSON.stringify({ plugin: ["oh-my-lord-opencode", "opencode-notifier@1.2.3"] })
+       )
+
+      // #when
+      const result = detectExternalNotificationPlugin(tempDir)
+
+      // #then
+      expect(result.detected).toBe(true)
+      expect(result.pluginName).toBe("opencode-notifier")
+    })
+
+     test("should detect @mohak34/opencode-notifier", () => {
+       // #given - opencode.json with scoped package name
+       const opencodeDir = path.join(tempDir, ".opencode")
+       fs.mkdirSync(opencodeDir, { recursive: true })
+       fs.writeFileSync(
+         path.join(opencodeDir, "opencode.json"),
+         JSON.stringify({ plugin: ["oh-my-lord-opencode", "@mohak34/opencode-notifier"] })
+       )
 
       // #when
       const result = detectExternalNotificationPlugin(tempDir)
@@ -102,10 +102,10 @@ describe("external-plugin-detector", () => {
         path.join(opencodeDir, "opencode.jsonc"),
         `{
           // This is a comment
-          "plugin": [
-            "oh-my-opencode",
-            "opencode-notifier" // Another comment
-          ]
+           "plugin": [
+             "oh-my-lord-opencode",
+             "opencode-notifier" // Another comment
+           ]
         }`
       )
 

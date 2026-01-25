@@ -199,12 +199,12 @@ export interface ClaudeSettings {
  * Plugin loader options
  */
 export interface PluginLoaderOptions {
-  /**
-   * Override enabled plugins from oh-my-opencode config.
-   * Key format: "pluginName@marketplace" (e.g., "shell-scripting@claude-code-workflows")
-   * Value: true = enabled, false = disabled
-   * 
-   * This takes precedence over ~/.claude/settings.json enabledPlugins
-   */
+   /**
+    * Override enabled plugins from oh-my-lord-opencode config.
+    * Key format: "pluginName@marketplace" (e.g., "shell-scripting@claude-code-workflows")
+    * Value: true = enabled, false = disabled
+    * 
+    * This takes precedence over ~/.claude/settings.json enabledPlugins
+    */
   enabledPluginsOverride?: Record<string, boolean>
 }

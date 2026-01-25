@@ -130,7 +130,7 @@ export async function fetchNpmDistTags(packageName: string): Promise<NpmDistTags
   }
 }
 
-const PACKAGE_NAME = "oh-my-opencode"
+const PACKAGE_NAME = "oh-my-lord-opencode"
 
 const PRIORITIZED_TAGS = ["latest", "beta", "next"] as const
 
@@ -308,7 +308,7 @@ function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial
 
 export function generateOmoConfig(installConfig: InstallConfig): Record<string, unknown> {
   const config: Record<string, unknown> = {
-    $schema: "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+    $schema: "https://raw.githubusercontent.com/jaino-song/oh-my-lord-opencode/master/assets/oh-my-lord-opencode.schema.json",
   }
 
   const agents: Record<string, Record<string, unknown>> = {}
@@ -425,7 +425,7 @@ export function writeOmoConfig(installConfig: InstallConfig): ConfigMergeResult 
 
     return { success: true, configPath: omoConfigPath }
   } catch (err) {
-    return { success: false, configPath: omoConfigPath, error: formatErrorWithSuggestion(err, "write oh-my-opencode config") }
+     return { success: false, configPath: omoConfigPath, error: formatErrorWithSuggestion(err, "write oh-my-lord-opencode config") }
   }
 }
 
@@ -672,7 +672,7 @@ export function detectCurrentConfig(): DetectedConfig {
 
   const openCodeConfig = parseResult.config
   const plugins = openCodeConfig.plugin ?? []
-  result.isInstalled = plugins.some((p) => p.startsWith("oh-my-opencode"))
+   result.isInstalled = plugins.some((p) => p.startsWith("oh-my-lord-opencode"))
 
   if (!result.isInstalled) {
     return result

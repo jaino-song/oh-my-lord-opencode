@@ -141,29 +141,29 @@ export function buildAgent(
 }
 
 /**
- * Creates OmO-specific environment context (time, timezone, locale).
+ * Creates Paul-specific environment context (time, timezone, locale).
  * Note: Working directory, platform, and date are already provided by OpenCode's system.ts,
  * so we only include fields that OpenCode doesn't provide to avoid duplication.
- * See: https://github.com/code-yeongyu/oh-my-opencode/issues/379
+   * See: https://github.com/jaino-song/oh-my-lord-opencode/issues/379
  */
 export function createEnvContext(): string {
-  const now = new Date()
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-  const locale = Intl.DateTimeFormat().resolvedOptions().locale
+   const now = new Date()
+   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+   const locale = Intl.DateTimeFormat().resolvedOptions().locale
 
-  const timeStr = now.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  })
+   const timeStr = now.toLocaleTimeString("en-US", {
+     hour: "2-digit",
+     minute: "2-digit",
+     second: "2-digit",
+     hour12: true,
+   })
 
-  return `
-<omo-env>
-  Current time: ${timeStr}
-  Timezone: ${timezone}
-  Locale: ${locale}
-</omo-env>`
+   return `
+<paul-env>
+   Current time: ${timeStr}
+   Timezone: ${timezone}
+   Locale: ${locale}
+</paul-env>`
 }
 
 function mergeAgentConfig(

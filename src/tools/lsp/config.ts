@@ -33,12 +33,12 @@ function loadJsonFile<T>(path: string): T | null {
 }
 
 function getConfigPaths(): { project: string; user: string; opencode: string } {
-  const cwd = process.cwd()
-  return {
-    project: join(cwd, ".opencode", "oh-my-opencode.json"),
-    user: join(homedir(), ".config", "opencode", "oh-my-opencode.json"),
-    opencode: join(homedir(), ".config", "opencode", "opencode.json"),
-  }
+   const cwd = process.cwd()
+   return {
+     project: join(cwd, ".opencode", "oh-my-lord-opencode.json"),
+     user: join(homedir(), ".config", "opencode", "oh-my-lord-opencode.json"),
+     opencode: join(homedir(), ".config", "opencode", "opencode.json"),
+   }
 }
 
 function loadAllConfigs(): Map<ConfigSource, ConfigJson> {
@@ -213,7 +213,7 @@ export function isServerInstalled(command: string[]): boolean {
     }
   }
 
-  // Runtime wrappers (bun/node) are always available in oh-my-opencode context
+   // Runtime wrappers (bun/node) are always available in oh-my-lord-opencode context
   if (cmd === "bun" || cmd === "node") {
     return true
   }

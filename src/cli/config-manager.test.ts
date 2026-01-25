@@ -22,8 +22,8 @@ describe("getPluginNameWithVersion", () => {
     // #when current version is 2.14.0
     const result = await getPluginNameWithVersion("2.14.0")
 
-    // #then should use @latest tag
-    expect(result).toBe("oh-my-opencode@latest")
+     // #then should use @latest tag
+     expect(result).toBe("oh-my-lord-opencode@latest")
   })
 
   test("returns @beta when current version matches beta tag", async () => {
@@ -38,8 +38,8 @@ describe("getPluginNameWithVersion", () => {
     // #when current version is 3.0.0-beta.3
     const result = await getPluginNameWithVersion("3.0.0-beta.3")
 
-    // #then should use @beta tag
-    expect(result).toBe("oh-my-opencode@beta")
+     // #then should use @beta tag
+     expect(result).toBe("oh-my-lord-opencode@beta")
   })
 
   test("returns @next when current version matches next tag", async () => {
@@ -54,8 +54,8 @@ describe("getPluginNameWithVersion", () => {
     // #when current version is 3.1.0-next.1
     const result = await getPluginNameWithVersion("3.1.0-next.1")
 
-    // #then should use @next tag
-    expect(result).toBe("oh-my-opencode@next")
+     // #then should use @next tag
+     expect(result).toBe("oh-my-lord-opencode@next")
   })
 
   test("returns pinned version when no tag matches", async () => {
@@ -70,8 +70,8 @@ describe("getPluginNameWithVersion", () => {
     // #when current version is old beta 3.0.0-beta.2
     const result = await getPluginNameWithVersion("3.0.0-beta.2")
 
-    // #then should pin to specific version
-    expect(result).toBe("oh-my-opencode@3.0.0-beta.2")
+     // #then should pin to specific version
+     expect(result).toBe("oh-my-lord-opencode@3.0.0-beta.2")
   })
 
   test("returns pinned version when fetch fails", async () => {
@@ -81,8 +81,8 @@ describe("getPluginNameWithVersion", () => {
     // #when current version is 3.0.0-beta.3
     const result = await getPluginNameWithVersion("3.0.0-beta.3")
 
-    // #then should fall back to pinned version
-    expect(result).toBe("oh-my-opencode@3.0.0-beta.3")
+     // #then should fall back to pinned version (current version)
+     expect(result).toBe("oh-my-lord-opencode@3.0.0-beta.3")
   })
 
   test("returns pinned version when npm returns non-ok response", async () => {
@@ -97,8 +97,8 @@ describe("getPluginNameWithVersion", () => {
     // #when current version is 2.14.0
     const result = await getPluginNameWithVersion("2.14.0")
 
-    // #then should fall back to pinned version
-    expect(result).toBe("oh-my-opencode@2.14.0")
+     // #then should fall back to pinned version
+     expect(result).toBe("oh-my-lord-opencode@2.14.0")
   })
 
   test("prioritizes latest over other tags when version matches multiple", async () => {
@@ -113,8 +113,8 @@ describe("getPluginNameWithVersion", () => {
     // #when current version matches both
     const result = await getPluginNameWithVersion("3.0.0")
 
-    // #then should prioritize @latest
-    expect(result).toBe("oh-my-opencode@latest")
+     // #then should prioritize @latest
+     expect(result).toBe("oh-my-lord-opencode@latest")
   })
 })
 
@@ -134,19 +134,19 @@ describe("fetchNpmDistTags", () => {
       } as Response)
     ) as unknown as typeof fetch
 
-    // #when fetching dist-tags
-    const result = await fetchNpmDistTags("oh-my-opencode")
+     // #when fetching dist-tags
+     const result = await fetchNpmDistTags("oh-my-lord-opencode")
 
-    // #then should return the tags
-    expect(result).toEqual({ latest: "2.14.0", beta: "3.0.0-beta.3" })
-  })
+     // #then should return the tags
+     expect(result).toEqual({ latest: "2.14.0", beta: "3.0.0-beta.3" })
+   })
 
-  test("returns null on network failure", async () => {
-    // #given network failure
-    globalThis.fetch = mock(() => Promise.reject(new Error("Network error"))) as unknown as typeof fetch
+   test("returns null on network failure", async () => {
+     // #given network failure
+     globalThis.fetch = mock(() => Promise.reject(new Error("Network error"))) as unknown as typeof fetch
 
-    // #when fetching dist-tags
-    const result = await fetchNpmDistTags("oh-my-opencode")
+     // #when fetching dist-tags
+     const result = await fetchNpmDistTags("oh-my-lord-opencode")
 
     // #then should return null
     expect(result).toBeNull()
@@ -161,11 +161,11 @@ describe("fetchNpmDistTags", () => {
       } as Response)
     ) as unknown as typeof fetch
 
-    // #when fetching dist-tags
-    const result = await fetchNpmDistTags("oh-my-opencode")
+     // #when fetching dist-tags
+     const result = await fetchNpmDistTags("oh-my-lord-opencode")
 
-    // #then should return null
-    expect(result).toBeNull()
+     // #then should return null
+     expect(result).toBeNull()
   })
 })
 

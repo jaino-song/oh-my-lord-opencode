@@ -1,8 +1,8 @@
 import { tool, type PluginInput, type ToolDefinition } from "@opencode-ai/plugin"
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
-import { ALLOWED_AGENTS, CALL_OMO_AGENT_DESCRIPTION } from "./constants"
-import type { CallOmoAgentArgs } from "./types"
+import { ALLOWED_AGENTS, CALL_PAUL_AGENT_DESCRIPTION } from "./constants"
+import type { CallPaulAgentArgs } from "./types"
 import type { BackgroundManager } from "../../features/background-agent"
 import { log, getAgentToolRestrictions } from "../../shared"
 import { consumeNewMessages } from "../../shared/session-cursor"
@@ -31,14 +31,14 @@ type ToolContextWithMetadata = {
   metadata?: (input: { title?: string; metadata?: Record<string, unknown> }) => void
 }
 
-export function createCallOmoAgent(
-  ctx: PluginInput,
-  backgroundManager: BackgroundManager
-): ToolDefinition {
-  const agentDescriptions = ALLOWED_AGENTS.map(
-    (name) => `- ${name}: Specialized agent for ${name} tasks`
-  ).join("\n")
-  const description = CALL_OMO_AGENT_DESCRIPTION.replace("{agents}", agentDescriptions)
+export function createCallPaulAgent(
+   ctx: PluginInput,
+   backgroundManager: BackgroundManager
+ ): ToolDefinition {
+   const agentDescriptions = ALLOWED_AGENTS.map(
+     (name) => `- ${name}: Specialized agent for ${name} tasks`
+   ).join("\n")
+   const description = CALL_PAUL_AGENT_DESCRIPTION.replace("{agents}", agentDescriptions)
 
   return tool({
     description,
@@ -53,9 +53,9 @@ export function createCallOmoAgent(
         .describe("REQUIRED. true: run asynchronously (use background_output to get results), false: run synchronously and wait for completion"),
       session_id: tool.schema.string().describe("Existing Task session to continue").optional(),
     },
-    async execute(args: CallOmoAgentArgs, toolContext) {
+    async execute(args: CallPaulAgentArgs, toolContext) {
       const toolCtx = toolContext as ToolContextWithMetadata
-      log(`[call_omo_agent] Starting with agent: ${args.subagent_type}, background: ${args.run_in_background}`)
+       log(`[call_paul_agent] Starting with agent: ${args.subagent_type}, background: ${args.run_in_background}`)
 
       if (!ALLOWED_AGENTS.includes(args.subagent_type as typeof ALLOWED_AGENTS[number])) {
         return `Error: Invalid agent type "${args.subagent_type}". Only ${ALLOWED_AGENTS.join(", ")} are allowed.`
@@ -73,11 +73,11 @@ export function createCallOmoAgent(
   })
 }
 
-async function executeBackground(
-  args: CallOmoAgentArgs,
-  toolContext: ToolContextWithMetadata,
-  manager: BackgroundManager
-): Promise<string> {
+ async function executeBackground(
+   args: CallPaulAgentArgs,
+   toolContext: ToolContextWithMetadata,
+   manager: BackgroundManager
+ ): Promise<string> {
   try {
     const messageDir = getMessageDir(toolContext.sessionID)
     const prevMessage = messageDir ? findNearestMessageWithFields(messageDir) : null
@@ -85,7 +85,7 @@ async function executeBackground(
     const sessionAgent = getSessionAgent(toolContext.sessionID)
     const parentAgent = toolContext.agent ?? sessionAgent ?? firstMessageAgent ?? prevMessage?.agent
     
-    log("[call_omo_agent] parentAgent resolution", {
+     log("[call_paul_agent] parentAgent resolution", {
       sessionID: toolContext.sessionID,
       messageDir,
       ctxAgent: toolContext.agent,
@@ -127,32 +127,32 @@ Use \`background_output\` tool with task_id="${task.id}" to check progress:
   }
 }
 
-async function executeSync(
-  args: CallOmoAgentArgs,
-  toolContext: ToolContextWithMetadata,
-  ctx: PluginInput
-): Promise<string> {
+ async function executeSync(
+   args: CallPaulAgentArgs,
+   toolContext: ToolContextWithMetadata,
+   ctx: PluginInput
+ ): Promise<string> {
   let sessionID: string
 
-  if (args.session_id) {
-    log(`[call_omo_agent] Using existing session: ${args.session_id}`)
-    const sessionResult = await ctx.client.session.get({
-      path: { id: args.session_id },
-    })
-    if (sessionResult.error) {
-      log(`[call_omo_agent] Session get error:`, sessionResult.error)
+   if (args.session_id) {
+     log(`[call_paul_agent] Using existing session: ${args.session_id}`)
+     const sessionResult = await ctx.client.session.get({
+       path: { id: args.session_id },
+     })
+     if (sessionResult.error) {
+       log(`[call_paul_agent] Session get error:`, sessionResult.error)
       return `Error: Failed to get existing session: ${sessionResult.error}`
     }
     sessionID = args.session_id
-  } else {
-    log(`[call_omo_agent] Creating new session with parent: ${toolContext.sessionID}`)
-    const parentSession = await ctx.client.session.get({
-      path: { id: toolContext.sessionID },
-    }).catch((err) => {
-      log(`[call_omo_agent] Failed to get parent session:`, err)
-      return null
-    })
-    log(`[call_omo_agent] Parent session dir: ${parentSession?.data?.directory}, fallback: ${ctx.directory}`)
+   } else {
+     log(`[call_paul_agent] Creating new session with parent: ${toolContext.sessionID}`)
+     const parentSession = await ctx.client.session.get({
+       path: { id: toolContext.sessionID },
+     }).catch((err) => {
+       log(`[call_paul_agent] Failed to get parent session:`, err)
+       return null
+     })
+     log(`[call_paul_agent] Parent session dir: ${parentSession?.data?.directory}, fallback: ${ctx.directory}`)
     const parentDirectory = parentSession?.data?.directory ?? ctx.directory
 
     const createResult = await ctx.client.session.create({
@@ -165,13 +165,13 @@ async function executeSync(
       },
     })
 
-    if (createResult.error) {
-      log(`[call_omo_agent] Session create error:`, createResult.error)
-      return `Error: Failed to create session: ${createResult.error}`
-    }
+     if (createResult.error) {
+       log(`[call_paul_agent] Session create error:`, createResult.error)
+       return `Error: Failed to create session: ${createResult.error}`
+     }
 
-    sessionID = createResult.data.id
-    log(`[call_omo_agent] Created session: ${sessionID}`)
+     sessionID = createResult.data.id
+     log(`[call_paul_agent] Created session: ${sessionID}`)
   }
 
   toolContext.metadata?.({
@@ -179,8 +179,8 @@ async function executeSync(
     metadata: { sessionId: sessionID },
   })
 
-  log(`[call_omo_agent] Sending prompt to session ${sessionID}`)
-  log(`[call_omo_agent] Prompt text:`, args.prompt.substring(0, 100))
+   log(`[call_paul_agent] Sending prompt to session ${sessionID}`)
+   log(`[call_paul_agent] Prompt text:`, args.prompt.substring(0, 100))
 
   try {
     await ctx.client.session.prompt({
@@ -195,16 +195,16 @@ async function executeSync(
         parts: [{ type: "text", text: args.prompt }],
       },
     })
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    log(`[call_omo_agent] Prompt error:`, errorMessage)
+   } catch (error) {
+     const errorMessage = error instanceof Error ? error.message : String(error)
+     log(`[call_paul_agent] Prompt error:`, errorMessage)
     if (errorMessage.includes("agent.name") || errorMessage.includes("undefined")) {
       return `Error: Agent "${args.subagent_type}" not found. Make sure the agent is registered in your opencode.json or provided by a plugin.\n\n<task_metadata>\nsession_id: ${sessionID}\n</task_metadata>`
     }
     return `Error: Failed to send prompt: ${errorMessage}\n\n<task_metadata>\nsession_id: ${sessionID}\n</task_metadata>`
   }
 
-  log(`[call_omo_agent] Prompt sent, polling for completion...`)
+   log(`[call_paul_agent] Prompt sent, polling for completion...`)
 
   // Poll for session completion
   const POLL_INTERVAL_MS = 500
@@ -215,9 +215,9 @@ async function executeSync(
   const STABILITY_REQUIRED = 3
 
   while (Date.now() - pollStart < MAX_POLL_TIME_MS) {
-    // Check if aborted
-    if (toolContext.abort?.aborted) {
-      log(`[call_omo_agent] Aborted by user`)
+     // Check if aborted
+     if (toolContext.abort?.aborted) {
+       log(`[call_paul_agent] Aborted by user`)
       return `Task aborted.\n\n<task_metadata>\nsession_id: ${sessionID}\n</task_metadata>`
     }
 
@@ -241,9 +241,9 @@ async function executeSync(
     const currentMsgCount = msgs.length
 
     if (currentMsgCount > 0 && currentMsgCount === lastMsgCount) {
-      stablePolls++
-      if (stablePolls >= STABILITY_REQUIRED) {
-        log(`[call_omo_agent] Session complete, ${currentMsgCount} messages`)
+       stablePolls++
+       if (stablePolls >= STABILITY_REQUIRED) {
+         log(`[call_paul_agent] Session complete, ${currentMsgCount} messages`)
         break
       }
     } else {
@@ -252,8 +252,8 @@ async function executeSync(
     }
   }
 
-  if (Date.now() - pollStart >= MAX_POLL_TIME_MS) {
-    log(`[call_omo_agent] Timeout reached`)
+   if (Date.now() - pollStart >= MAX_POLL_TIME_MS) {
+     log(`[call_paul_agent] Timeout reached`)
     return `Error: Agent task timed out after 5 minutes.\n\n<task_metadata>\nsession_id: ${sessionID}\n</task_metadata>`
   }
 
@@ -261,13 +261,13 @@ async function executeSync(
     path: { id: sessionID },
   })
 
-  if (messagesResult.error) {
-    log(`[call_omo_agent] Messages error:`, messagesResult.error)
+   if (messagesResult.error) {
+     log(`[call_paul_agent] Messages error:`, messagesResult.error)
     return `Error: Failed to get messages: ${messagesResult.error}`
   }
 
-  const messages = messagesResult.data
-  log(`[call_omo_agent] Got ${messages.length} messages`)
+   const messages = messagesResult.data
+   log(`[call_paul_agent] Got ${messages.length} messages`)
 
   // Include both assistant messages AND tool messages
   // Tool results (grep, glob, bash output) come from role "tool"
@@ -276,13 +276,13 @@ async function executeSync(
     (m: any) => m.info?.role === "assistant" || m.info?.role === "tool"
   )
 
-  if (relevantMessages.length === 0) {
-    log(`[call_omo_agent] No assistant or tool messages found`)
-    log(`[call_omo_agent] All messages:`, JSON.stringify(messages, null, 2))
+   if (relevantMessages.length === 0) {
+     log(`[call_paul_agent] No assistant or tool messages found`)
+     log(`[call_paul_agent] All messages:`, JSON.stringify(messages, null, 2))
     return `Error: No assistant or tool response found\n\n<task_metadata>\nsession_id: ${sessionID}\n</task_metadata>`
   }
 
-  log(`[call_omo_agent] Found ${relevantMessages.length} relevant messages`)
+   log(`[call_paul_agent] Found ${relevantMessages.length} relevant messages`)
 
   // Sort by time ascending (oldest first) to process messages in order
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -329,7 +329,7 @@ async function executeSync(
     .filter((text) => text.length > 0)
     .join("\n\n")
 
-  log(`[call_omo_agent] Got response, length: ${responseText.length}`)
+   log(`[call_paul_agent] Got response, length: ${responseText.length}`)
 
   const output =
     responseText + "\n\n" + ["<task_metadata>", `session_id: ${sessionID}`, "</task_metadata>"].join("\n")

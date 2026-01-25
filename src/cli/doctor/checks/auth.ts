@@ -57,10 +57,10 @@ export async function checkAuthProvider(providerId: AuthProviderId): Promise<Che
       name: checkName,
       status: "skip",
       message: "Auth plugin not installed",
-      details: [
-        `Plugin: ${AUTH_PLUGINS[providerId].plugin}`,
-        "Run: bunx oh-my-opencode install",
-      ],
+       details: [
+         `Plugin: ${AUTH_PLUGINS[providerId].plugin}`,
+         "Run: bunx oh-my-lord-opencode install",
+       ],
     }
   }
 
