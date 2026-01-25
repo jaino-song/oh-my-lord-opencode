@@ -3,6 +3,7 @@ import { isGptModel } from "./types"
 import type { AgentOverrideConfig, CategoryConfig } from "../config/schema"
 import {
   createAgentToolRestrictions,
+  migrateToolsToPermission,
   type PermissionValue,
 } from "../shared/permission-compat"
 
@@ -73,7 +74,7 @@ function buildPaulJuniorPrompt(promptAppend?: string): string {
 }
 
 // Core tools that Paul-Junior must NEVER have access to
-const BLOCKED_TOOLS = ["task", "call_omo_agent"]
+const BLOCKED_TOOLS = ["task", "delegate_task"]
 
 export const PAUL_JUNIOR_DEFAULTS = {
   model: "anthropic/claude-sonnet-4-5",
@@ -96,15 +97,24 @@ export function createPaulJuniorAgentWithOverrides(
 
   const baseRestrictions = createAgentToolRestrictions(BLOCKED_TOOLS)
 
-  const userPermission = (override?.permission ?? {}) as Record<string, PermissionValue>
-  const basePermission = baseRestrictions.permission
+  // Convert legacy tools format to permission format if provided
+  let userPermission: Record<string, PermissionValue> = {}
+  if (override?.tools && typeof override.tools === "object") {
+    userPermission = migrateToolsToPermission(override.tools as Record<string, boolean>)
+  }
+  if (override?.permission && typeof override.permission === "object") {
+    userPermission = { ...userPermission, ...(override.permission as Record<string, PermissionValue>) }
+  }
+
+  // Start with user permissions, then enforce blocked tools
   const merged: Record<string, PermissionValue> = { ...userPermission }
   for (const tool of BLOCKED_TOOLS) {
     merged[tool] = "deny"
   }
-  // delegate_task is allowed for research, controlled by hierarchy-enforcer
-  // merged.call_omo_agent is now denied by BLOCKED_TOOLS
-  const toolsConfig = { permission: { ...merged, ...basePermission } }
+  // call_omo_agent is allowed for spawning explore/librarian agents
+  merged.call_omo_agent = "allow"
+
+  const toolsConfig = { permission: merged }
 
   const base: AgentConfig = {
     description: override?.description ??
