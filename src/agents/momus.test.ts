@@ -16,24 +16,24 @@ describe("MOMUS_SYSTEM_PROMPT policy requirements", () => {
     expect(prompt.toLowerCase()).toMatch(/ignore|strip|system directive/)
   })
 
-  test("should extract paths containing .sisyphus/plans/ and ending in .md", () => {
-    // #given
-    const prompt = MOMUS_SYSTEM_PROMPT
+   test("should extract paths containing .paul/plans/ and ending in .md", () => {
+     // #given
+     const prompt = MOMUS_SYSTEM_PROMPT
 
-    // #when / #then
-    expect(prompt).toContain(".sisyphus/plans/")
-    expect(prompt).toContain(".md")
-    // New extraction policy should be mentioned
-    expect(prompt.toLowerCase()).toMatch(/extract|search|find path/)
-  })
+     // #when / #then
+     expect(prompt).toContain(".paul/plans/")
+     expect(prompt).toContain(".md")
+     // New extraction policy should be mentioned
+     expect(prompt.toLowerCase()).toMatch(/extract|search|find path/)
+   })
 
-  test("should NOT teach that 'Please review' is INVALID (conversational wrapper allowed)", () => {
-    // #given
-    const prompt = MOMUS_SYSTEM_PROMPT
+   test("should NOT teach that 'Please review' is INVALID (conversational wrapper allowed)", () => {
+     // #given
+     const prompt = MOMUS_SYSTEM_PROMPT
 
-    // #when / #then
-    // In RED phase, this will FAIL because current prompt explicitly lists this as INVALID
-    const invalidExample = "Please review .sisyphus/plans/plan.md"
+     // #when / #then
+     // In RED phase, this will FAIL because current prompt explicitly lists this as INVALID
+     const invalidExample = "Please review .paul/plans/plan.md"
     const rejectionTeaching = new RegExp(
       `reject.*${escapeRegExp(invalidExample)}`,
       "i",

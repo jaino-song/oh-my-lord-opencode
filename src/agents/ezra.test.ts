@@ -18,14 +18,13 @@ describe("EZRA_SYSTEM_PROMPT policy requirements", () => {
     expect(prompt.toLowerCase()).toMatch(/ignore|strip|system directive/)
   })
 
-  test("should extract paths containing .paul/plans/ or .sisyphus/plans/ and ending in .md", () => {
-    const prompt = EZRA_SYSTEM_PROMPT
+   test("should extract paths containing .paul/plans/ and ending in .md", () => {
+     const prompt = EZRA_SYSTEM_PROMPT
 
-    expect(prompt).toContain(".paul/plans/")
-    expect(prompt).toContain(".sisyphus/plans/")
-    expect(prompt).toContain(".md")
-    expect(prompt.toLowerCase()).toMatch(/extract|find/)
-  })
+     expect(prompt).toContain(".paul/plans/")
+     expect(prompt).toContain(".md")
+     expect(prompt.toLowerCase()).toMatch(/extract|find/)
+   })
 
   test("should NOT teach that conversational wrappers are INVALID", () => {
     const prompt = EZRA_SYSTEM_PROMPT

@@ -14,7 +14,7 @@ import { MESSAGE_STORAGE } from "../../features/hook-message-injector"
 
 describe("paul-orchestrator hook", () => {
   const TEST_DIR = join(tmpdir(), "paul-orchestrator-test-" + Date.now())
-  const SISYPHUS_DIR = join(TEST_DIR, ".sisyphus")
+  const PAUL_DIR = join(TEST_DIR, ".paul")
 
   function createMockPluginInput(overrides?: { promptMock?: ReturnType<typeof mock> }) {
     const promptMock = overrides?.promptMock ?? mock(() => Promise.resolve())
@@ -48,15 +48,15 @@ describe("paul-orchestrator hook", () => {
     }
   }
 
-  beforeEach(() => {
-    if (!existsSync(TEST_DIR)) {
-      mkdirSync(TEST_DIR, { recursive: true })
-    }
-    if (!existsSync(SISYPHUS_DIR)) {
-      mkdirSync(SISYPHUS_DIR, { recursive: true })
-    }
-    clearBoulderState(TEST_DIR)
-  })
+   beforeEach(() => {
+     if (!existsSync(TEST_DIR)) {
+       mkdirSync(TEST_DIR, { recursive: true })
+     }
+     if (!existsSync(PAUL_DIR)) {
+       mkdirSync(PAUL_DIR, { recursive: true })
+     }
+     clearBoulderState(TEST_DIR)
+   })
 
   afterEach(() => {
     clearBoulderState(TEST_DIR)
@@ -380,7 +380,7 @@ describe("paul-orchestrator hook", () => {
         cleanupMessageStorage(ORCHESTRATOR_SESSION)
       })
 
-      test("should append delegation reminder when orchestrator writes outside .sisyphus/", async () => {
+       test("should append delegation reminder when orchestrator writes outside .paul/", async () => {
         // #given
         const hook = createPaulOrchestratorHook(createMockPluginInput())
         const output = {
@@ -401,7 +401,7 @@ describe("paul-orchestrator hook", () => {
         expect(output.output).toContain("delegate_task")
       })
 
-      test("should append delegation reminder when orchestrator edits outside .sisyphus/", async () => {
+       test("should append delegation reminder when orchestrator edits outside .paul/", async () => {
         // #given
         const hook = createPaulOrchestratorHook(createMockPluginInput())
         const output = {
@@ -420,15 +420,15 @@ describe("paul-orchestrator hook", () => {
         expect(output.output).toContain("DELEGATION REQUIRED")
       })
 
-      test("should NOT append reminder when orchestrator writes inside .sisyphus/", async () => {
-        // #given
-        const hook = createPaulOrchestratorHook(createMockPluginInput())
-        const originalOutput = "File written successfully"
-        const output = {
-          title: "Write",
-          output: originalOutput,
-          metadata: { filePath: "/project/.sisyphus/plans/work-plan.md" },
-        }
+       test("should NOT append reminder when orchestrator writes inside .paul/", async () => {
+         // #given
+         const hook = createPaulOrchestratorHook(createMockPluginInput())
+         const originalOutput = "File written successfully"
+         const output = {
+           title: "Write",
+           output: originalOutput,
+           metadata: { filePath: "/project/.paul/plans/work-plan.md" },
+         }
 
         // #when
         await hook["tool.execute.after"](
@@ -441,7 +441,7 @@ describe("paul-orchestrator hook", () => {
         expect(output.output).not.toContain("DELEGATION REQUIRED")
       })
 
-       test("should NOT append reminder when non-orchestrator writes outside .sisyphus/", async () => {
+        test("should NOT append reminder when non-orchestrator writes outside .paul/", async () => {
          // #given
          const nonOrchestratorSession = "non-orchestrator-session"
          setupMessageStorage(nonOrchestratorSession, "Paul-Junior")
@@ -508,15 +508,15 @@ describe("paul-orchestrator hook", () => {
       })
 
       describe("cross-platform path validation (Windows support)", () => {
-        test("should NOT append reminder when orchestrator writes inside .sisyphus\\ (Windows backslash)", async () => {
-          // #given
-          const hook = createPaulOrchestratorHook(createMockPluginInput())
-          const originalOutput = "File written successfully"
-          const output = {
-            title: "Write",
-            output: originalOutput,
-            metadata: { filePath: ".sisyphus\\plans\\work-plan.md" },
-          }
+         test("should NOT append reminder when orchestrator writes inside .paul\\ (Windows backslash)", async () => {
+           // #given
+           const hook = createPaulOrchestratorHook(createMockPluginInput())
+           const originalOutput = "File written successfully"
+           const output = {
+             title: "Write",
+             output: originalOutput,
+             metadata: { filePath: ".paul\\plans\\work-plan.md" },
+           }
 
           // #when
           await hook["tool.execute.after"](
@@ -529,15 +529,15 @@ describe("paul-orchestrator hook", () => {
           expect(output.output).not.toContain("DELEGATION REQUIRED")
         })
 
-        test("should NOT append reminder when orchestrator writes inside .sisyphus with mixed separators", async () => {
-          // #given
-          const hook = createPaulOrchestratorHook(createMockPluginInput())
-          const originalOutput = "File written successfully"
-          const output = {
-            title: "Write",
-            output: originalOutput,
-            metadata: { filePath: ".sisyphus\\plans/work-plan.md" },
-          }
+         test("should NOT append reminder when orchestrator writes inside .paul with mixed separators", async () => {
+           // #given
+           const hook = createPaulOrchestratorHook(createMockPluginInput())
+           const originalOutput = "File written successfully"
+           const output = {
+             title: "Write",
+             output: originalOutput,
+             metadata: { filePath: ".paul\\plans/work-plan.md" },
+           }
 
           // #when
           await hook["tool.execute.after"](
@@ -550,15 +550,15 @@ describe("paul-orchestrator hook", () => {
           expect(output.output).not.toContain("DELEGATION REQUIRED")
         })
 
-        test("should NOT append reminder for absolute Windows path inside .sisyphus\\", async () => {
-          // #given
-          const hook = createPaulOrchestratorHook(createMockPluginInput())
-          const originalOutput = "File written successfully"
-          const output = {
-            title: "Write",
-            output: originalOutput,
-            metadata: { filePath: "C:\\Users\\test\\project\\.sisyphus\\plans\\x.md" },
-          }
+         test("should NOT append reminder for absolute Windows path inside .paul\\", async () => {
+           // #given
+           const hook = createPaulOrchestratorHook(createMockPluginInput())
+           const originalOutput = "File written successfully"
+           const output = {
+             title: "Write",
+             output: originalOutput,
+             metadata: { filePath: "C:\\Users\\test\\project\\.paul\\plans\\x.md" },
+           }
 
           // #when
           await hook["tool.execute.after"](
@@ -571,7 +571,7 @@ describe("paul-orchestrator hook", () => {
           expect(output.output).not.toContain("DELEGATION REQUIRED")
         })
 
-        test("should append reminder for Windows path outside .sisyphus\\", async () => {
+         test("should append reminder for Windows path outside .paul\\", async () => {
           // #given
           const hook = createPaulOrchestratorHook(createMockPluginInput())
           const output = {
