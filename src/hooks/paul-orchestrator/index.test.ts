@@ -123,7 +123,7 @@ describe("paul-orchestrator hook", () => {
      test("should append standalone verification when no boulder state but caller is orchestrator", async () => {
        // #given - no boulder state, but caller is orchestrator
        const sessionID = "session-no-boulder-test"
-       setupMessageStorage(sessionID, "orchestrator-paul")
+       setupMessageStorage(sessionID, "Paul")
       
       const hook = createPaulOrchestratorHook(createMockPluginInput())
       const output = {
@@ -149,7 +149,7 @@ describe("paul-orchestrator hook", () => {
      test("should transform output when caller is orchestrator-paul with boulder state", async () => {
        // #given - orchestrator-paul caller with boulder state
        const sessionID = "session-transform-test"
-       setupMessageStorage(sessionID, "orchestrator-paul")
+       setupMessageStorage(sessionID, "Paul")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [x] Task 2")
@@ -185,10 +185,10 @@ describe("paul-orchestrator hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-    test("should still transform when plan is complete (shows progress)", async () => {
-      // #given - boulder state with complete plan, orchestrator caller
-      const sessionID = "session-complete-plan-test"
-      setupMessageStorage(sessionID, "orchestrator-paul")
+     test("should still transform when plan is complete (shows progress)", async () => {
+       // #given - boulder state with complete plan, orchestrator caller
+       const sessionID = "session-complete-plan-test"
+       setupMessageStorage(sessionID, "Paul")
       
       const planPath = join(TEST_DIR, "complete-plan.md")
       writeFileSync(planPath, "# Plan\n- [x] Task 1\n- [x] Task 2")
@@ -222,10 +222,10 @@ describe("paul-orchestrator hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-    test("should append session ID to boulder state if not present", async () => {
-      // #given - boulder state without session-append-test, orchestrator caller
-      const sessionID = "session-append-test"
-      setupMessageStorage(sessionID, "orchestrator-paul")
+     test("should append session ID to boulder state if not present", async () => {
+       // #given - boulder state without session-append-test, orchestrator caller
+       const sessionID = "session-append-test"
+       setupMessageStorage(sessionID, "Paul")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -258,10 +258,10 @@ describe("paul-orchestrator hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-    test("should not duplicate existing session ID", async () => {
-      // #given - boulder state already has session-dup-test, orchestrator caller
-      const sessionID = "session-dup-test"
-      setupMessageStorage(sessionID, "orchestrator-paul")
+     test("should not duplicate existing session ID", async () => {
+       // #given - boulder state already has session-dup-test, orchestrator caller
+       const sessionID = "session-dup-test"
+       setupMessageStorage(sessionID, "Paul")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -295,10 +295,10 @@ describe("paul-orchestrator hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-    test("should include boulder.json path and notepad path in transformed output", async () => {
-      // #given - boulder state, orchestrator caller
-      const sessionID = "session-path-test"
-      setupMessageStorage(sessionID, "orchestrator-paul")
+     test("should include boulder.json path and notepad path in transformed output", async () => {
+       // #given - boulder state, orchestrator caller
+       const sessionID = "session-path-test"
+       setupMessageStorage(sessionID, "Paul")
       
       const planPath = join(TEST_DIR, "my-feature.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2\n- [x] Task 3")
@@ -332,10 +332,10 @@ describe("paul-orchestrator hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-    test("should include resume and checkbox instructions in reminder", async () => {
-      // #given - boulder state, orchestrator caller
-      const sessionID = "session-resume-test"
-      setupMessageStorage(sessionID, "orchestrator-paul")
+     test("should include resume and checkbox instructions in reminder", async () => {
+       // #given - boulder state, orchestrator caller
+       const sessionID = "session-resume-test"
+       setupMessageStorage(sessionID, "Paul")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -372,9 +372,9 @@ describe("paul-orchestrator hook", () => {
     describe("Write/Edit tool direct work reminder", () => {
       const ORCHESTRATOR_SESSION = "orchestrator-write-test"
 
-      beforeEach(() => {
-        setupMessageStorage(ORCHESTRATOR_SESSION, "orchestrator-paul")
-      })
+       beforeEach(() => {
+         setupMessageStorage(ORCHESTRATOR_SESSION, "Paul")
+       })
 
       afterEach(() => {
         cleanupMessageStorage(ORCHESTRATOR_SESSION)
@@ -596,13 +596,13 @@ describe("paul-orchestrator hook", () => {
   describe("session.idle handler (boulder continuation)", () => {
     const MAIN_SESSION_ID = "main-session-123"
 
-    beforeEach(() => {
-      mock.module("../../features/claude-code-session-state", () => ({
-        getMainSessionID: () => MAIN_SESSION_ID,
-        subagentSessions: new Set<string>(),
-      }))
-      setupMessageStorage(MAIN_SESSION_ID, "orchestrator-paul")
-    })
+     beforeEach(() => {
+       mock.module("../../features/claude-code-session-state", () => ({
+         getMainSessionID: () => MAIN_SESSION_ID,
+         subagentSessions: new Set<string>(),
+       }))
+       setupMessageStorage(MAIN_SESSION_ID, "Paul")
+     })
 
     afterEach(() => {
       cleanupMessageStorage(MAIN_SESSION_ID)
@@ -830,37 +830,37 @@ describe("paul-orchestrator hook", () => {
       expect(callArgs.body.parts[0].text).toContain("2 remaining")
     })
 
-    test("should not inject when last agent is not orchestrator-paul", async () => {
-      // #given - boulder state with incomplete plan, but last agent is NOT orchestrator-paul
-      const planPath = join(TEST_DIR, "test-plan.md")
-      writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2")
+     test("should not inject when last agent is not orchestrator-paul", async () => {
+       // #given - boulder state with incomplete plan, but last agent is NOT Paul
+       const planPath = join(TEST_DIR, "test-plan.md")
+       writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2")
 
-      const state: BoulderState = {
-        active_plan: planPath,
-        started_at: "2026-01-02T10:00:00Z",
-        session_ids: [MAIN_SESSION_ID],
-        plan_name: "test-plan",
-      }
-      writeBoulderState(TEST_DIR, state)
+       const state: BoulderState = {
+         active_plan: planPath,
+         started_at: "2026-01-02T10:00:00Z",
+         session_ids: [MAIN_SESSION_ID],
+         plan_name: "test-plan",
+       }
+       writeBoulderState(TEST_DIR, state)
 
-      // #given - last agent is NOT orchestrator-paul
-      cleanupMessageStorage(MAIN_SESSION_ID)
-      setupMessageStorage(MAIN_SESSION_ID, "Paul")
+       // #given - last agent is NOT Paul
+       cleanupMessageStorage(MAIN_SESSION_ID)
+       setupMessageStorage(MAIN_SESSION_ID, "Paul-Junior")
 
-      const mockInput = createMockPluginInput()
-      const hook = createPaulOrchestratorHook(mockInput)
+       const mockInput = createMockPluginInput()
+       const hook = createPaulOrchestratorHook(mockInput)
 
-      // #when
-      await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
-      })
+       // #when
+       await hook.handler({
+         event: {
+           type: "session.idle",
+           properties: { sessionID: MAIN_SESSION_ID },
+         },
+       })
 
-      // #then - should NOT call prompt because agent is not orchestrator-paul
-      expect(mockInput._promptMock).not.toHaveBeenCalled()
-    })
+       // #then - should NOT call prompt because agent is not Paul
+       expect(mockInput._promptMock).not.toHaveBeenCalled()
+     })
 
     test("should debounce rapid continuation injections (prevent infinite loop)", async () => {
       // #given - boulder state with incomplete plan
