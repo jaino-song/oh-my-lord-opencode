@@ -3,9 +3,12 @@ import { log } from "./logger"
 
 // Migration map: old keys → new keys (for backward compatibility)
 export const AGENT_NAME_MAP: Record<string, string> = {
-  omo: "Sisyphus",
-  "OmO": "Sisyphus",
-  sisyphus: "Sisyphus",
+  omo: "Paul",
+  "OmO": "Paul",
+  sisyphus: "Paul",
+  "Sisyphus": "Paul",
+  "Sisyphus-Junior": "Paul-Junior",
+  "sisyphus-junior": "Paul-Junior",
   "OmO-Plan": "Prometheus (Planner)",
   "omo-plan": "Prometheus (Planner)",
   "Planner-Sisyphus": "Prometheus (Planner)",
@@ -24,7 +27,8 @@ export const AGENT_NAME_MAP: Record<string, string> = {
 }
 
 export const BUILTIN_AGENT_NAMES = new Set([
-  "Sisyphus",
+  "Paul",
+  "Paul-Junior",
   "oracle",
   "librarian",
   "explore",
