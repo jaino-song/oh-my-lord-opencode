@@ -50,6 +50,17 @@ export function hasRecentApproval(root: string, approverPattern: string, duratio
   const state = loadApprovalState(root)
   const cutoff = Date.now() - durationMs
   
+  // debug logging
+  if (process.env.HIERARCHY_DEBUG === "1") {
+    console.error(`[hierarchy-enforcer] hasRecentApproval called:`)
+    console.error(`  root: ${root}`)
+    console.error(`  approverPattern: ${approverPattern}`)
+    console.error(`  cutoff: ${cutoff}`)
+    console.error(`  approvals count: ${state.approvals.length}`)
+    const recentApprovals = state.approvals.filter(a => a.timestamp > cutoff)
+    console.error(`  recent approvals: ${JSON.stringify(recentApprovals.map(a => ({ approver: a.approver, timestamp: a.timestamp })))}`)
+  }
+  
   return state.approvals.some(a => {
     const approverLower = a.approver.toLowerCase()
     const patternLower = approverPattern.toLowerCase()

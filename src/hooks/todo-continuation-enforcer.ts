@@ -222,16 +222,15 @@ export function createTodoContinuationEnforcer(
       tools = tools ?? prevMessage?.tools
     }
 
-    if (agentName && skipAgents.includes(agentName)) {
-      log(`[${HOOK_NAME}] Skipped: agent in skipAgents list`, { sessionID, agent: agentName })
-      return
-    }
-
     const actionableTodos = filterActionableTodos(todos, agentName)
     const actionableCount = actionableTodos.length
     
     if (actionableCount === 0) {
-      log(`[${HOOK_NAME}] Skipped injection: no actionable todos`, { sessionID, agent: agentName })
+      if (agentName && skipAgents.includes(agentName)) {
+        log(`[${HOOK_NAME}] Skipped: agent in skipAgents list and no actionable todos`, { sessionID, agent: agentName })
+      } else {
+        log(`[${HOOK_NAME}] Skipped injection: no actionable todos`, { sessionID, agent: agentName })
+      }
       return
     }
 
@@ -463,17 +462,15 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
         log(`[${HOOK_NAME}] Failed to fetch messages for agent check`, { sessionID, error: String(err) })
       }
 
-      log(`[${HOOK_NAME}] Agent check`, { sessionID, agentName: resolvedInfo?.agent, skipAgents })
-      if (resolvedInfo?.agent && skipAgents.includes(resolvedInfo.agent)) {
-        log(`[${HOOK_NAME}] Skipped: agent in skipAgents list`, { sessionID, agent: resolvedInfo.agent })
-        return
-      }
-
       const actionableTodos = filterActionableTodos(todos, resolvedInfo?.agent)
       const actionableCount = actionableTodos.length
       
       if (actionableCount === 0) {
-        log(`[${HOOK_NAME}] All actionable todos complete`, { sessionID, total: todos.length, agent: resolvedInfo?.agent })
+        if (resolvedInfo?.agent && skipAgents.includes(resolvedInfo.agent)) {
+          log(`[${HOOK_NAME}] Skipped: agent in skipAgents list and no actionable todos`, { sessionID, agent: resolvedInfo.agent })
+        } else {
+          log(`[${HOOK_NAME}] All actionable todos complete`, { sessionID, total: todos.length, agent: resolvedInfo?.agent })
+        }
         return
       }
 

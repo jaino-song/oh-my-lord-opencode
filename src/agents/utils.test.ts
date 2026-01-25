@@ -3,46 +3,6 @@ import { createBuiltinAgents } from "./utils"
 import type { AgentConfig } from "@opencode-ai/sdk"
 
 describe("createBuiltinAgents with model overrides", () => {
-  test("Sisyphus with default model has thinking config", () => {
-    // #given - no overrides
-
-    // #when
-    const agents = createBuiltinAgents()
-
-    // #then
-    expect(agents.Sisyphus.model).toBe("anthropic/claude-opus-4-5")
-    expect(agents.Sisyphus.thinking).toEqual({ type: "enabled", budgetTokens: 32000 })
-    expect(agents.Sisyphus.reasoningEffort).toBeUndefined()
-  })
-
-  test("Sisyphus with GPT model override has reasoningEffort, no thinking", () => {
-    // #given
-    const overrides = {
-      Sisyphus: { model: "github-copilot/gpt-5.2" },
-    }
-
-    // #when
-    const agents = createBuiltinAgents([], overrides)
-
-    // #then
-    expect(agents.Sisyphus.model).toBe("github-copilot/gpt-5.2")
-    expect(agents.Sisyphus.reasoningEffort).toBe("medium")
-    expect(agents.Sisyphus.thinking).toBeUndefined()
-  })
-
-  test("Sisyphus with systemDefaultModel GPT has reasoningEffort, no thinking", () => {
-    // #given
-    const systemDefaultModel = "openai/gpt-5.2"
-
-    // #when
-    const agents = createBuiltinAgents([], {}, undefined, systemDefaultModel)
-
-    // #then
-    expect(agents.Sisyphus.model).toBe("openai/gpt-5.2")
-    expect(agents.Sisyphus.reasoningEffort).toBe("medium")
-    expect(agents.Sisyphus.thinking).toBeUndefined()
-  })
-
   test("Oracle with default model has reasoningEffort", () => {
     // #given - no overrides
 
@@ -72,19 +32,6 @@ describe("createBuiltinAgents with model overrides", () => {
     expect(agents.oracle.textVerbosity).toBeUndefined()
   })
 
-  test("non-model overrides are still applied after factory rebuild", () => {
-    // #given
-    const overrides = {
-      Sisyphus: { model: "github-copilot/gpt-5.2", temperature: 0.5 },
-    }
-
-    // #when
-    const agents = createBuiltinAgents([], overrides)
-
-    // #then
-    expect(agents.Sisyphus.model).toBe("github-copilot/gpt-5.2")
-    expect(agents.Sisyphus.temperature).toBe(0.5)
-  })
 })
 
 describe("buildAgent with category and skills", () => {

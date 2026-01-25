@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.opencode/node_modules/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Logs & caches
+*.log
+.cache/
+.turbo/
+
+# Lock files (large, not useful for context)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lockb
+
+# Git
+.git/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test outputs
+coverage/
+.nyc_output/
+
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib

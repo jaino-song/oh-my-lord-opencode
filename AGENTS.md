@@ -149,19 +149,20 @@ describe("feature-name", () => {
 | Paul | anthropic/claude-sonnet-4-5 | **Strict Plan Executor** - Executes formal plans only (requires `.paul/plans/*.md`) |
 | planner-paul | anthropic/claude-opus-4-5 | **Plan Creator** - Requirements analysis, architecture, test specs (CANNOT execute) |
 | worker-paul | anthropic/claude-sonnet-4-5 | **Trivial Task Handler** - Autonomous execution for small tasks (< 50 lines, single file, low risk) |
-| Solomon | gpt-5.2-codex-high | TDD test planning (called by planner-paul) |
+| Solomon | openai/gpt-5.2-codex | TDD test planning (called by planner-paul) |
 | Timothy | google/gemini-3-pro-high | Implementation plan reviewer (called by planner-paul) |
 | Nathan | openai/gpt-5.2-high | Request analyst (called by planner-paul) |
 | Joshua | openai/gpt-5.2 | Test runner (called by Paul) |
-| Peter | openai/gpt-5.2-codex-high | Unit test writer (called by Solomon or Paul) |
-| John | openai/gpt-5.2-codex-high | E2E test writer (called by Solomon or Paul) |
+| Peter | openai/gpt-5.2-codex | Unit test writer (called by Solomon or Paul) |
+| John | openai/gpt-5.2-codex | E2E test writer (called by Solomon or Paul) |
 | Sisyphus-Junior | anthropic/claude-sonnet-4-5 | Backend implementation (called by Paul, NO delegation) |
 | frontend-ui-ux-engineer | gemini-3-pro-preview | UI implementation (called by Paul for UI work) |
-| git-master | opencode/glm-4.7-free | Git operations (called by Paul) |
+| git-master | zai-coding-plan/glm-4.7 | Git operations (called by Paul) |
 | Sisyphus | claude-opus-4-5 | **Legacy escape hatch** - Bypasses all rules (use only if system deadlocks) |
 | oracle | gpt-5.2 | High-IQ debugging, architecture |
-| librarian | glm-4.7-free | Multi-repo analysis, docs |
-| explore | grok-code | Fast codebase exploration |
+| librarian | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs |
+| explore | anthropic/claude-haiku-4-5 | Fast codebase exploration |
+| multimodal-looker | google/antigravity-gemini-3-flash | Image/PDF analysis |
 | document-writer | gemini-3-pro-preview | Technical docs |
 
 ## THREE-DOMAIN ARCHITECTURE (STRICT MODE)

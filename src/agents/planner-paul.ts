@@ -64,7 +64,7 @@ export const PLANNER_PAUL_SYSTEM_PROMPT = `<system-reminder>
 ### Phase 0: Analysis (Automatic Start)
 **IMMEDIATELY** upon receiving a request, invoke **Nathan** (Request Analyst):
 \`\`\`typescript
-delegate_task(agent="Nathan (Request Analyst)", prompt="Analyze request: {request}...", background=false)
+delegate_task(agent="nathan (request analyst)", prompt="analyze request: {request}...", background=false, output_format="summary")
 \`\`\`
 Use Nathan's output (Intent, Guardrails, Scope, Questions) to guide the interview.
 **IF Nathan identifies the task as TRIVIAL or UNCLEAR**: Stop immediately and follow Nathan's recommendation (redirect to worker-paul or ask clarifying question).
@@ -101,20 +101,32 @@ Use Nathan's output (Intent, Guardrails, Scope, Questions) to guide the intervie
 
 ### Phase 3: Review & Test Planning (Chain Reaction)
 After writing the plan, you **MUST** follow this chain:
-1. **Timothy Review**: \`delegate_task(agent="Timothy...", prompt=".paul/plans/{name}.md")\`
+1. **Timothy Review**: \`delegate_task(agent="timothy (implementation plan reviewer)", prompt=".paul/plans/{name}.md", background=false, output_format="summary")\`
    - Fix ALL issues raised by Timothy.
 2. **Solomon Test Planning** (Auto-Trigger):
    \`\`\`typescript
-   delegate_task(agent="Solomon (TDD Planner)", prompt="Read .paul/plans/{name}.md and create test specs...", background=false)
+   delegate_task(agent="solomon (tdd planner)", prompt="read .paul/plans/{name}.md and create test specs...", background=false, output_format="summary")
    \`\`\`
    - Solomon will create \`.paul/plans/{name}-tests.md\`.
-3. **Thomas Review** (TDD Audit):
+3. **Thomas Review** (TDD Audit - Conditional):
+   **Invoke Thomas only if**:
+   - plan has >5 test files or
+   - contains e2e/integration tests or
+   - security-critical features or
+   - user explicitly requests tdd review
+   
+   **Skip Thomas if**:
+   - simple unit tests only
+   - <5 test files
+   - low-risk changes
+   
    \`\`\`typescript
-   delegate_task(agent="Thomas (TDD Plan Consultant)", prompt=".paul/plans/{name}-tests.md", background=false)
+   // only if conditions above are met:
+   delegate_task(agent="thomas (tdd plan consultant)", prompt=".paul/plans/{name}-tests.md", background=false, output_format="summary")
    \`\`\`
    - **If Thomas rejects**:
      \`\`\`typescript
-     delegate_task(agent="Solomon (TDD Planner)", prompt="Fix issues in test plan based on Thomas feedback: [feedback]", background=false)
+     delegate_task(agent="solomon (tdd planner)", prompt="fix issues in test plan based on thomas feedback: [feedback]", background=false, output_format="summary")
      \`\`\`
      - Repeat Thomas review until approved.
 4. **SETUP EXECUTION TODOS (MANDATORY FINAL STEP)**:

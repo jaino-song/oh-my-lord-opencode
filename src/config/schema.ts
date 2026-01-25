@@ -17,7 +17,6 @@ const AgentPermissionSchema = z.object({
 })
 
 export const BuiltinAgentNameSchema = z.enum([
-  "Sisyphus",
   "oracle",
   "librarian",
   "explore",
@@ -45,7 +44,6 @@ export const BuiltinSkillNameSchema = z.enum([
 export const OverridableAgentNameSchema = z.enum([
   "build",
   "plan",
-  "Sisyphus",
   "Sisyphus-Junior",
   "OpenCode-Builder",
   "Prometheus (Planner)",

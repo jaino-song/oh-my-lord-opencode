@@ -161,10 +161,10 @@ describe("ELIJAH_SYSTEM_PROMPT constraints", () => {
 })
 
 describe("createElijahAgent factory function", () => {
-  test("createElijahAgent with default model returns GPT-5.2-codex-high config", () => {
+  test("createElijahAgent with default model returns GPT-5.2-codex config", () => {
     const agent = createElijahAgent()
 
-    expect(agent.model).toBe("openai/gpt-5.2-codex-high")
+    expect(agent.model).toBe("openai/gpt-5.2-codex")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
@@ -287,7 +287,7 @@ describe("ELIJAH_PROMPT_METADATA", () => {
 describe("elijahAgent default export", () => {
   test("elijahAgent is properly configured", () => {
     expect(elijahAgent).toBeDefined()
-    expect(elijahAgent.model).toBe("openai/gpt-5.2-codex-high")
+    expect(elijahAgent.model).toBe("openai/gpt-5.2-codex")
     expect(elijahAgent.prompt).toBe(ELIJAH_SYSTEM_PROMPT)
   })
 

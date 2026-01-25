@@ -96,7 +96,7 @@ const gitMasterSkill: BuiltinSkill = {
   name: "git-master",
   description:
     "MUST USE for ANY git operations. Atomic commits, rebase/squash, history search (blame, bisect, log -S). STRONGLY RECOMMENDED: Use with delegate_task(category='quick', skills=['git-master'], ...) to save context. Triggers: 'commit', 'rebase', 'squash', 'who wrote', 'when was X added', 'find the commit that'.",
-  model: "opencode/glm-4.7-free",
+  model: "zai-coding-plan/glm-4.7",
   template: `# Git Master Agent
 
 You are a Git expert combining three specializations:

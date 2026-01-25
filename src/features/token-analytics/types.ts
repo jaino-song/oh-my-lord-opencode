@@ -93,14 +93,14 @@ export const MODEL_PRICING: Record<
     cacheRead: 5.0,
     cacheWrite: 12.5,
   },
-  "openai/gpt-5.2-codex-high": {
+  "openai/gpt-5.2-codex": {
     input: 12.0,
     output: 36.0,
     reasoning: 0.0,
     cacheRead: 6.0,
     cacheWrite: 15.0,
   },
-  "gpt-5.2-codex-high": {
+  "gpt-5.2-codex": {
     input: 12.0,
     output: 36.0,
     reasoning: 0.0,
@@ -128,21 +128,14 @@ export const MODEL_PRICING: Record<
     cacheRead: 0.5,
     cacheWrite: 6.25,
   },
-  "grok-code": {
-    input: 8.0,
-    output: 24.0,
+  "anthropic/claude-haiku-4-5": {
+    input: 0.8,
+    output: 4.0,
     reasoning: 0.0,
-    cacheRead: 0.8,
-    cacheWrite: 10.0,
+    cacheRead: 0.08,
+    cacheWrite: 1.0,
   },
-  "Claude/glm-4.7-free": {
-    input: 0.0,
-    output: 0.0,
-    reasoning: 0.0,
-    cacheRead: 0.0,
-    cacheWrite: 0.0,
-  },
-  "glm-4.7-free": {
+  "zai-coding-plan/glm-4.7": {
     input: 0.0,
     output: 0.0,
     reasoning: 0.0,

@@ -3,10 +3,11 @@ export const HOOK_NAME = "hierarchy-enforcer"
 export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
   "User": ["Paul", "planner-paul", "Sisyphus"], 
 
-  "planner-paul": [
+   "planner-paul": [
     "Nathan (Request Analyst)",
     "Timothy (Implementation Plan Reviewer)",
     "Solomon (TDD Planner)",
+    "Thomas (TDD Plan Consultant)",
     "explore",
     "librarian",
     "background-agent"
@@ -41,9 +42,10 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
     "Thomas (TDD Plan Consultant)"
   ],
 
-  "Joshua (Test Runner)": [],
-  "Sisyphus-Junior": ["explore", "librarian"],
-  "frontend-ui-ux-engineer": [],
+   "Joshua (Test Runner)": [],
+   "Sisyphus-Junior": ["explore", "librarian"],
+   "frontend-ui-ux-engineer": [],
+   "worker-paul": ["explore", "librarian", "git-master", "document-writer"],
 }
 
 export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {

@@ -793,10 +793,11 @@ export const JOHN_PERMISSION = {
 export const johnAgent: AgentConfig = {
   name: "John (E2E Test Writer)",
   description: "Playwright E2E test writer. Converts Solomon's E2E test specifications into executable *.spec.ts files with page objects, accessible locators, and BDD patterns.",
-  model: "openai/gpt-5.2-codex-high",
+  model: "openai/gpt-5.2-codex",
   prompt: JOHN_SYSTEM_PROMPT,
   permission: JOHN_PERMISSION,
   temperature: 0.1,
+  reasoningEffort: "high",
 }
 
 export function createJohnAgent(model?: string): AgentConfig {

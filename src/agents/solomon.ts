@@ -883,10 +883,11 @@ export const SOLOMON_PERMISSION = {
 export const solomonAgent: AgentConfig = {
   name: "Solomon (TDD Planner)",
   description: "TDD-focused planner. Plans tests FIRST (Jest + Playwright), then implementation. Interview mode, Red-Green-Refactor methodology.",
-  model: "openai/gpt-5.2-codex-high",
+  model: "openai/gpt-5.2-codex",
   prompt: SOLOMON_SYSTEM_PROMPT,
   permission: SOLOMON_PERMISSION,
   temperature: 0.1,
+  reasoningEffort: "high",
 }
 
 export function createSolomonAgent(model?: string): AgentConfig {

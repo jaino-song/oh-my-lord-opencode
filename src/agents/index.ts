@@ -1,5 +1,4 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
-import { sisyphusAgent } from "./sisyphus"
 import { oracleAgent } from "./oracle"
 import { librarianAgent } from "./librarian"
 import { exploreAgent } from "./explore"
@@ -23,7 +22,6 @@ import { workerPaulAgent } from "./worker-paul"
 import { saulAgent } from "./saul"
 
 export const builtinAgents: Record<string, AgentConfig> = {
-  Sisyphus: sisyphusAgent,
   Saul: saulAgent,
   // DEPRECATED: Use "Elijah (Deep Reasoning Advisor)" instead
   oracle: oracleAgent,

@@ -315,11 +315,11 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
 
   if (!installConfig.hasClaude) {
     agents["Sisyphus"] = {
-      model: installConfig.hasCopilot ? "github-copilot/claude-opus-4.5" : "opencode/glm-4.7-free",
+      model: installConfig.hasCopilot ? "github-copilot/claude-opus-4.5" : "opencode/big-pickle",
     }
   }
 
-  agents["librarian"] = { model: "opencode/glm-4.7-free" }
+  agents["librarian"] = { model: "zai-coding-plan/glm-4.7" }
 
   // Gemini models use `antigravity-` prefix for explicit Antigravity quota routing
   // @see ANTIGRAVITY_PROVIDER_CONFIG comments for rationale
@@ -330,7 +330,7 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
   } else if (installConfig.hasCopilot) {
     agents["explore"] = { model: "github-copilot/grok-code-fast-1" }
   } else {
-    agents["explore"] = { model: "opencode/glm-4.7-free" }
+    agents["explore"] = { model: "opencode/gpt-5-nano" }
   }
 
   if (!installConfig.hasChatGPT) {
@@ -338,7 +338,7 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
       ? "github-copilot/gpt-5.2"
       : installConfig.hasClaude
         ? "anthropic/claude-opus-4-5"
-        : "opencode/glm-4.7-free"
+        : "opencode/big-pickle"
     agents["oracle"] = { model: oracleFallback }
   }
 
@@ -355,9 +355,9 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
     agents["document-writer"] = { model: "github-copilot/gemini-3-flash-preview" }
     agents["multimodal-looker"] = { model: "github-copilot/gemini-3-flash-preview" }
   } else {
-    agents["frontend-ui-ux-engineer"] = { model: "opencode/glm-4.7-free" }
-    agents["document-writer"] = { model: "opencode/glm-4.7-free" }
-    agents["multimodal-looker"] = { model: "opencode/glm-4.7-free" }
+    agents["frontend-ui-ux-engineer"] = { model: "opencode/big-pickle" }
+    agents["document-writer"] = { model: "opencode/big-pickle" }
+    agents["multimodal-looker"] = { model: "opencode/gpt-5-nano" }
   }
 
   if (Object.keys(agents).length > 0) {
@@ -703,17 +703,17 @@ export function detectCurrentConfig(): DetectedConfig {
 
     const agents = omoConfig.agents ?? {}
 
-    if (agents["Sisyphus"]?.model === "opencode/glm-4.7-free") {
+    if (agents["Sisyphus"]?.model === "opencode/big-pickle") {
       result.hasClaude = false
       result.isMax20 = false
-    } else if (agents["librarian"]?.model === "opencode/glm-4.7-free") {
+    } else if (agents["librarian"]?.model === "zai-coding-plan/glm-4.7") {
       result.hasClaude = true
       result.isMax20 = false
     }
 
     if (agents["oracle"]?.model?.startsWith("anthropic/")) {
       result.hasChatGPT = false
-    } else if (agents["oracle"]?.model === "opencode/glm-4.7-free") {
+    } else if (agents["oracle"]?.model === "opencode/big-pickle") {
       result.hasChatGPT = false
     }
 

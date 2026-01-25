@@ -1,7 +1,6 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { BuiltinAgentName, AgentOverrideConfig, AgentOverrides, AgentFactory, AgentPromptMetadata } from "./types"
 import type { CategoriesConfig, CategoryConfig, GitMasterConfig } from "../config/schema"
-import { createSisyphusAgent } from "./sisyphus"
 // @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
 import { createOracleAgent, ORACLE_PROMPT_METADATA } from "./oracle"
 import { createLibrarianAgent, LIBRARIAN_PROMPT_METADATA } from "./librarian"
@@ -47,7 +46,6 @@ const USER_SELECTABLE_AGENTS: BuiltinAgentName[] = [
 ]
 
 const agentSources: Record<BuiltinAgentName, AgentSource> = {
-   Sisyphus: createSisyphusAgent,
    Saul: saulAgent,
    // @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
    oracle: createOracleAgent,
@@ -198,11 +196,10 @@ export function createBuiltinAgents(
     ? { ...DEFAULT_CATEGORIES, ...categories }
     : DEFAULT_CATEGORIES
 
-  for (const [name, source] of Object.entries(agentSources)) {
-    const agentName = name as BuiltinAgentName
+   for (const [name, source] of Object.entries(agentSources)) {
+     const agentName = name as BuiltinAgentName
 
-    if (agentName === "Sisyphus") continue
-    if (agentName === "orchestrator-sisyphus") continue
+     if (agentName === "orchestrator-sisyphus") continue
     if (disabledAgents.includes(agentName)) continue
 
     const override = agentOverrides[agentName]
@@ -233,31 +230,9 @@ export function createBuiltinAgents(
         metadata,
       })
     }
-  }
+   }
 
-  if (!disabledAgents.includes("Sisyphus")) {
-    const sisyphusOverride = agentOverrides["Sisyphus"]
-    const sisyphusModel = sisyphusOverride?.model ?? systemDefaultModel
-
-    let sisyphusConfig = createSisyphusAgent(sisyphusModel, availableAgents)
-
-    if (directory && sisyphusConfig.prompt) {
-      const envContext = createEnvContext()
-      sisyphusConfig = { ...sisyphusConfig, prompt: sisyphusConfig.prompt + envContext }
-    }
-
-    if (sisyphusOverride) {
-      sisyphusConfig = mergeAgentConfig(sisyphusConfig, sisyphusOverride)
-    }
-
-    if (!USER_SELECTABLE_AGENTS.includes("Sisyphus")) {
-      sisyphusConfig = { ...sisyphusConfig, hidden: true }
-    }
-
-    result["Sisyphus"] = sisyphusConfig
-  }
-
-  if (!disabledAgents.includes("Paul")) {
+   if (!disabledAgents.includes("Paul")) {
     const paulOverride = agentOverrides["Paul"]
     const paulModel = paulOverride?.model ?? systemDefaultModel
     let paulConfig = createOrchestratorSisyphusAgent({

@@ -12,8 +12,8 @@ agents/
 ├── elijah.ts                # Deep Reasoning Advisor (replaces Oracle)
 ├── nathan.ts                # Request Analyst (replaces Metis)
 ├── oracle.ts                # DEPRECATED - use elijah.ts
-├── librarian.ts             # Multi-repo research (GLM-4.7-free)
-├── explore.ts               # Fast codebase grep (Grok Code)
+├── librarian.ts             # Multi-repo research (zai-coding-plan/glm-4.7)
+├── explore.ts               # Fast codebase grep (claude-haiku-4-5)
 ├── frontend-ui-ux-engineer.ts  # UI generation (Gemini 3 Pro Preview)
 ├── document-writer.ts       # Technical docs (Gemini 3 Pro Preview)
 ├── multimodal-looker.ts     # PDF/image analysis (Gemini 3 Flash)
@@ -32,12 +32,12 @@ agents/
 | Agent | Default Model | Purpose |
 |-------|---------------|---------|
 | Paul | anthropic/claude-sonnet-4-5 | Primary orchestrator. 32k extended thinking budget. |
-| Solomon | openai/gpt-5.2-codex-high | TDD test planning. Plans tests FIRST, then implementation. |
+| Solomon | openai/gpt-5.2-codex | TDD test planning. Plans tests FIRST, then implementation. |
 | Sisyphus | anthropic/claude-opus-4-5 | Primary orchestrator. 32k extended thinking budget. |
-| Elijah | openai/gpt-5.2-codex-high | Deep Reasoning Advisor. 5 modes: --debug, --architecture, --security, --performance, --stuck. High reasoning effort, 64k tokens. |
+| Elijah | openai/gpt-5.2-codex | Deep Reasoning Advisor. 5 modes: --debug, --architecture, --security, --performance, --stuck. High reasoning effort, 64k tokens. |
 | Nathan | openai/gpt-5.2-high | Request Analyst. Intent classification, guardrails, question prioritization before planning. |
-| librarian | opencode/glm-4.7-free | Multi-repo analysis, docs research, GitHub examples. |
-| explore | opencode/grok-code | Fast contextual grep. Fallbacks: Gemini-3-Flash, Haiku-4-5. |
+| librarian | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs research, GitHub examples. |
+| explore | anthropic/claude-haiku-4-5 | Fast contextual grep. Fallbacks: opencode/gpt-5-nano. |
 | frontend-ui-ux | google/gemini-3-pro-preview | Production-grade UI/UX generation and styling. |
 | document-writer | google/gemini-3-pro-preview | Technical writing, guides, API documentation. |
 | Prometheus | anthropic/claude-opus-4-5 | Strategic planner. Interview mode, orchestrates Metis/Momus. |

@@ -37,7 +37,7 @@ const PERMISSIONS = {
 export const gitMasterAgent: AgentConfig = {
   name: "git-master",
   description: "Specialized Git operations agent. Handles commits, rebases, squashing, history analysis, and conflict resolution.",
-  model: "opencode/glm-4.7-free",
+  model: "zai-coding-plan/glm-4.7",
   prompt: GIT_MASTER_PROMPT,
   permission: PERMISSIONS,
   temperature: 0.1,

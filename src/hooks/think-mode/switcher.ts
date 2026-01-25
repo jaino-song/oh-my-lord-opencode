@@ -83,83 +83,67 @@ function resolveProvider(providerID: string, modelID: string): string {
   return providerID
 }
 
-// Maps model IDs to their "high reasoning" variant (internal convention)
-// For OpenAI models, this signals that reasoning_effort should be set to "high"
+// Maps model IDs to their "high reasoning" variant
+// Only models with explicit high variants are mapped here.
+// Most providers use thinking parameters (THINKING_CONFIGS) instead of variant switching.
 const HIGH_VARIANT_MAP: Record<string, string> = {
-  // Claude
-  "claude-sonnet-4-5": "claude-sonnet-4-5-high",
-  "claude-opus-4-5": "claude-opus-4-5-high",
-  // Gemini
-  "gemini-3-pro": "gemini-3-pro-high",
-  "gemini-3-pro-low": "gemini-3-pro-high",
-  "gemini-3-pro-preview": "gemini-3-pro-preview-high",
-  "gemini-3-flash": "gemini-3-flash-high",
-  "gemini-3-flash-preview": "gemini-3-flash-preview-high",
-  // GPT-5
-  "gpt-5": "gpt-5-high",
-  "gpt-5-mini": "gpt-5-mini-high",
-  "gpt-5-nano": "gpt-5-nano-high",
-  "gpt-5-pro": "gpt-5-pro-high",
-  "gpt-5-chat-latest": "gpt-5-chat-latest-high",
-  // GPT-5.1
-  "gpt-5-1": "gpt-5-1-high",
-  "gpt-5-1-chat-latest": "gpt-5-1-chat-latest-high",
-  "gpt-5-1-codex": "gpt-5-1-codex-high",
-  "gpt-5-1-codex-mini": "gpt-5-1-codex-mini-high",
-  "gpt-5-1-codex-max": "gpt-5-1-codex-max-high",
-  // GPT-5.2
-  "gpt-5-2": "gpt-5-2-high",
-  "gpt-5-2-chat-latest": "gpt-5-2-chat-latest-high",
-  "gpt-5-2-pro": "gpt-5-2-pro-high",
+  // Google Antigravity is the only provider with explicit high variant model
+  "google/antigravity-gemini-3-pro-low": "google/antigravity-gemini-3-pro-high",
 }
 
 const ALREADY_HIGH: Set<string> = new Set(Object.values(HIGH_VARIANT_MAP))
 
-export const THINKING_CONFIGS = {
-  anthropic: {
-    thinking: {
-      type: "enabled",
-      budgetTokens: 64000,
-    },
-    maxTokens: 128000,
-  },
-  "amazon-bedrock": {
-    reasoningConfig: {
-      type: "enabled",
-      budgetTokens: 32000,
-    },
-    maxTokens: 64000,
-  },
-  google: {
-    providerOptions: {
-      google: {
-        thinkingConfig: {
-          thinkingLevel: "HIGH",
-        },
-      },
-    },
-  },
-  "google-vertex": {
-    providerOptions: {
-      "google-vertex": {
-        thinkingConfig: {
-          thinkingLevel: "HIGH",
-        },
-      },
-    },
-  },
-  openai: {
-    reasoning_effort: "high",
-  },
-} as const satisfies Record<string, Record<string, unknown>>
+ export const THINKING_CONFIGS = {
+   anthropic: {
+     thinking: {
+       type: "enabled",
+       budgetTokens: 64000,
+     },
+     maxTokens: 128000,
+   },
+   "amazon-bedrock": {
+     reasoningConfig: {
+       type: "enabled",
+       budgetTokens: 32000,
+     },
+     maxTokens: 64000,
+   },
+   google: {
+     // Antigravity models use high variant switching instead of thinking parameters
+     // see HIGH_VARIANT_MAP and getThinkingConfig logic
+     providerOptions: {
+       google: {
+         thinkingConfig: {
+           thinkingLevel: "HIGH",
+         },
+       },
+     },
+   },
+   "google-vertex": {
+     // Vertex AI models don't have separate high variants
+     // Extended thinking handled by provider, not model switching
+     providerOptions: {
+       "google-vertex": {
+         thinkingConfig: {
+           thinkingLevel: "HIGH",
+         },
+       },
+     },
+   },
+   openai: {
+     reasoning_effort: "high",
+   },
+ } as const satisfies Record<string, Record<string, unknown>>
 
-const THINKING_CAPABLE_MODELS = {
-  anthropic: ["claude-sonnet-4", "claude-opus-4", "claude-3"],
-  "amazon-bedrock": ["claude", "anthropic"],
-  google: ["gemini-2", "gemini-3"],
-  "google-vertex": ["gemini-2", "gemini-3"],
-  openai: ["gpt-5", "o1", "o3"],
-} as const satisfies Record<string, readonly string[]>
+ const THINKING_CAPABLE_MODELS = {
+   anthropic: ["claude-sonnet-4", "claude-opus-4", "claude-3"],
+   "amazon-bedrock": ["claude", "anthropic"],
+   google: ["gemini-3"], // Gemini 3 only (flash and pro don't support extended thinking)
+   "google-vertex": ["gemini-3"], // Gemini 3 only
+   openai: ["gpt-5", "o1", "o3"],
+   // Antigravity has explicit high variant models (see HIGH_VARIANT_MAP)
+   // Use model switching for antigravity provider
+ } as const satisfies Record<string, readonly string[]>
 
 export function getHighVariant(modelID: string): string | null {
   const normalized = normalizeModelID(modelID)
@@ -192,31 +176,33 @@ function isThinkingProvider(provider: string): provider is ThinkingProvider {
   return provider in THINKING_CONFIGS
 }
 
-export function getThinkingConfig(
-  providerID: string,
-  modelID: string
-): Record<string, unknown> | null {
-  const normalized = normalizeModelID(modelID)
-  const { base } = extractModelPrefix(normalized)
+ export function getThinkingConfig(
+   providerID: string,
+   modelID: string
+ ): Record<string, unknown> | null {
+   const normalized = normalizeModelID(modelID)
+   const { base } = extractModelPrefix(normalized)
 
-  if (isAlreadyHighVariant(normalized)) {
-    return null
-  }
+   // Check if provider supports thinking
+   const resolvedProvider = resolveProvider(providerID, modelID)
+   if (!isThinkingProvider(resolvedProvider)) {
+     return null
+   }
 
-  const resolvedProvider = resolveProvider(providerID, modelID)
+   // For Antigravity provider, use high variant switching instead
+   // Don't inject thinking config directly
+   if (resolvedProvider === "google" && modelID.startsWith("google/antigravity-gemini")) {
+     return null
+   }
 
-  if (!isThinkingProvider(resolvedProvider)) {
-    return null
-  }
+   const config = THINKING_CONFIGS[resolvedProvider]
+   const capablePatterns = THINKING_CAPABLE_MODELS[resolvedProvider]
 
-  const config = THINKING_CONFIGS[resolvedProvider]
-  const capablePatterns = THINKING_CAPABLE_MODELS[resolvedProvider]
+   // Check capability using base model name (without prefix)
+   const baseLower = base.toLowerCase()
+   const isCapable = capablePatterns.some((pattern) =>
+     baseLower.includes(pattern.toLowerCase())
+   )
 
-  // Check capability using base model name (without prefix)
-  const baseLower = base.toLowerCase()
-  const isCapable = capablePatterns.some((pattern) =>
-    baseLower.includes(pattern.toLowerCase())
-  )
-
-  return isCapable ? config : null
-}
+   return isCapable ? config : null
+ }
