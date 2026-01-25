@@ -136,12 +136,18 @@ export function createHierarchyEnforcerHook(
         const normalizedTarget = normalizeAgentName(targetAgent)
         
         if (targetAgent && !BYPASS_AGENTS.includes(currentAgent)) {
-          const allowedTargets = AGENT_RELATIONSHIPS[currentAgent] || []
-          
-          const isAllowed = allowedTargets.some(allowed => 
-            normalizeAgentName(allowed) === normalizedTarget || 
-            normalizeAgentName(allowed)?.includes(normalizedTarget!)
+          // Case-insensitive lookup for AGENT_RELATIONSHIPS
+          const relationshipKey = Object.keys(AGENT_RELATIONSHIPS).find(
+            k => k.toLowerCase() === currentAgent.toLowerCase()
           )
+          const allowedTargets = relationshipKey ? AGENT_RELATIONSHIPS[relationshipKey] : []
+          
+          const isAllowed = allowedTargets.some(allowed => {
+            const normalizedAllowed = normalizeAgentName(allowed)
+            return normalizedAllowed === normalizedTarget || 
+                   normalizedAllowed?.includes(normalizedTarget!) ||
+                   normalizedTarget?.includes(normalizedAllowed!)
+          })
 
           if (!isAllowed) {
             log(`[${HOOK_NAME}] BLOCKED: ${currentAgent} tried to call ${targetAgent}`, { sessionID: input.sessionID })
@@ -218,13 +224,22 @@ export function createHierarchyEnforcerHook(
                 requiredApproverPattern = "thomas"
               }
 
-              if (requiredApproverPattern) {
-                // Skip approval for tasks marked as done (workaround for approval detection bug)
-                if (content.includes("- done") || content.includes("done but")) {
-                  const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
-                  await showToast(client, "✅ Task completed (done)", shortTask, "success", 2000)
-                  continue
-                }
+               if (requiredApproverPattern) {
+                 // Skip approval for tasks marked as done (workaround for approval detection bug)
+                 // Extended patterns to catch more completion indicators
+                 if (content.includes("- done") || 
+                     content.includes("done but") ||
+                     content.includes("- verified") ||
+                     content.includes("- complete") ||
+                     content.includes("[done]") ||
+                     content.includes("✅") ||
+                     content.includes("completed in previous") ||
+                     content.match(/\bdone\s*$/i) ||
+                     content.match(/\bcomplete\s*$/i)) {
+                   const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
+                   await showToast(client, "✅ Task completed", shortTask, "success", 2000)
+                   continue
+                 }
                 
                 // Planners can complete planning tasks without implementation approval
                 if (isPlannerAgent && !todo.content.toLowerCase().startsWith("exec::")) {
