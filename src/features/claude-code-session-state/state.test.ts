@@ -93,12 +93,13 @@ describe("claude-code-session-state", () => {
       expect(getMainSessionID()).toBe(mainID)
     })
 
-    test("should return undefined when not set", () => {
-      // #given - not set
+     test("should return undefined when not set", () => {
+       // #given - explicitly reset state (defensive against test parallelism)
+       setMainSession(undefined)
 
-      // #then
-      expect(getMainSessionID()).toBeUndefined()
-    })
+       // #then
+       expect(getMainSessionID()).toBeUndefined()
+     })
   })
 
   describe("prometheus-md-only integration scenario", () => {
