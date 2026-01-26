@@ -9,15 +9,16 @@
 
 | Version | Branch | Status | Description |
 |---------|--------|--------|-------------|
+| [v0.11.1](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.11.1) | `dev` | Pre-release | Sisyphus → Paul migration, naming cleanup |
+| [v0.11.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.11.0) | `dev` | Pre-release | v3.1 agents, toast notifications, 87% token reduction |
 | [v0.9.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.9.0) | `dev` | Pre-release | v3.1 agents, toast notifications, 87% token reduction |
-| [v0.7.1](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.7.1) | `master` | Stable | TDD enforcement, autonomous execution mode |
 
-## What's New in v0.9.0
+## What's New in v0.11.1
 
-- **v3.1 Agents**: Paul, planner-paul, worker-paul with tighter trivial task threshold (<10 lines)
-- **Toast Notifications**: Real-time visibility into workflow events and subagent completions
-- **87% Token Reduction**: Optimized injected prompts (~2,910 tokens saved per plan execution)
-- **Smarter Trivial Detection**: Components/UI changes always require planning
+- **Complete Sisyphus → Paul Migration**: All agent names updated (sisyphus-junior → paul-junior, etc.)
+- **Repository Rename**: oh-my-opencode → oh-my-lord-opencode
+- **Improved Hierarchy Enforcer**: Session notifications for delegation results
+- **Test Stability**: Fixed parallel test race conditions in CI
 
 ## What Changed from oh-my-opencode
 
@@ -26,7 +27,7 @@ This fork introduces **HARD BLOCKS** for TDD violations and a **Strict Hub-and-S
 ### 1. Strict Hub-and-Spoke Architecture
 Subagents (Spokes) **NEVER** delegate to other subagents.
 - **Paul** (Hub) orchestrates EVERYTHING directly.
-- **Sisyphus-Junior** (Spoke) only writes code. He cannot call UI or Git agents.
+- **Paul-Junior** (Spoke) only writes code. He cannot call UI or Git agents.
 - **Solomon** (Spoke) only plans tests. He cannot call Reviewers.
 
 ### 2. Massive Token Optimization (~87% Reduction)
@@ -41,7 +42,7 @@ Subagents (Spokes) **NEVER** delegate to other subagents.
 
 ### 4. Toast Notifications (v0.9.0+)
 Real-time workflow visibility:
-- Delegation events: `Paul → Sisyphus-Junior`
+- Delegation events: `Paul → Paul-Junior`
 - Subagent completions: Nathan analysis, Timothy review, Solomon test planning
 - TDD warnings, competency hints, approval status
 
@@ -65,7 +66,7 @@ Real-time workflow visibility:
 | **Timothy** | Plan Review | planner-paul | Read-only advisor. |
 | **Solomon** | TDD Planning | planner-paul | **NO DELEGATION**. Generates test specs only. |
 | **Thomas** | TDD Review | planner-paul | Read-only advisor. |
-| **Sisyphus-Junior**| Backend/Logic | Paul | **NO DELEGATION**. Implementation only. |
+| **Paul-Junior**| Backend/Logic | Paul | **NO DELEGATION**. Implementation only. |
 | **frontend-ui-ux-engineer** | UI/CSS/React | Paul | **NO DELEGATION**. UI Implementation only. |
 | **ultrabrain** | Complex Logic | Paul | **NO DELEGATION**. Algorithms/Security only (o1). |
 | **git-master** | Git Ops | Paul | **NO DELEGATION**. Git commands only. |
@@ -79,7 +80,7 @@ Real-time workflow visibility:
 
 The system uses a "Pull" model instead of a "Push" model for context.
 
-| Feature | Legacy Sisyphus | Oh My Lord Paul | Impact |
+| Feature | Legacy (pre-v0.11) | Oh My Lord Paul | Impact |
 |---------|-----------------|-----------------|--------|
 | **Context** | Auto-injected (`AGENTS.md` + `README`) | Lazy-loaded (On-demand read) | **-13k tokens/turn** |
 | **Delegation** | Full transcript returned | Summarized JSON returned | **-3k tokens/call** |
@@ -110,11 +111,11 @@ The system uses a "Pull" model instead of a "Push" model for context.
     *   **Paul** calls **Peter** or **John** to write failing tests.
     *   **Paul** calls **Joshua** to verify failure.
 2.  **Green Phase (Implementation)**:
-    *   **Paul** selects specialist based on plan hint:
-        *   Standard → **Sisyphus-Junior**
-        *   UI/Visual → **frontend-ui-ux-engineer**
-        *   Complex/Hard → **ultrabrain**
-    *   Specialist implements code.
+     *   **Paul** selects specialist based on plan hint:
+         *   Standard → **Paul-Junior**
+         *   UI/Visual → **frontend-ui-ux-engineer**
+         *   Complex/Hard → **ultrabrain**
+     *   Specialist implements code.
 3.  **Refactor Phase (Verification)**:
     *   **Paul** calls **Joshua** to verify success.
     *   Runs build/lint checks.
@@ -125,7 +126,7 @@ The system uses a "Pull" model instead of a "Push" model for context.
 
 ### 1. Strict Hub-and-Spoke (HARD BLOCK)
 The `hierarchy-enforcer` hook blocks nested delegation.
-- `Sisyphus-Junior` cannot call `frontend-ui-ux-engineer`.
+- `Paul-Junior` cannot call `frontend-ui-ux-engineer`.
 - `Solomon` cannot call `Thomas`.
 - **Reason**: Maintains visibility for the Hub and reduces token bloat.
 
