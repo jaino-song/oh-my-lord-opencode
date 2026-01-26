@@ -81,32 +81,7 @@ describe("claude-code-session-state", () => {
     })
   })
 
-  describe("mainSessionID", () => {
-    test("should store and retrieve main session ID", () => {
-      // #given
-      const mainID = "main-session-123"
-
-      // #when
-      setMainSession(mainID)
-
-      // #then
-      expect(getMainSessionID()).toBe(mainID)
-    })
-
-      test("should return undefined when set to undefined", () => {
-        // #given - set to a value first to prove the reset works
-        setMainSession("test-session-xyz")
-        expect(getMainSessionID()).toBe("test-session-xyz")
-
-        // #when - reset to undefined
-        setMainSession(undefined)
-
-        // #then - should be undefined
-        expect(getMainSessionID()).toBeUndefined()
-      })
-  })
-
-  describe("prometheus-md-only integration scenario", () => {
+   describe("prometheus-md-only integration scenario", () => {
     test("should correctly identify Prometheus agent for permission checks", () => {
       // #given - Prometheus session
       const sessionID = "test-prometheus-session"

@@ -30,19 +30,51 @@ async function showToast(
   await client.tui.showToast({ body: { title, message, variant, duration } }).catch(() => {})
 }
 
+type NotificationStatus = "delegated" | "completed" | "failed"
+
+interface NotificationOptions {
+  fromAgent?: string
+  toAgent?: string
+  task?: string
+  duration?: string
+  reason?: string
+}
+
 async function injectNotification(
   client: ToastClient,
   sessionID: string,
-  title: string,
-  message: string,
-  variant: "success" | "error" | "info" = "info"
+  status: NotificationStatus,
+  options: NotificationOptions = {}
 ): Promise<void> {
   if (!client.session?.prompt) return
-  const icon = variant === "success" ? "✅" : variant === "error" ? "❌" : "ℹ️"
+  
+  const statusIcon = status === "delegated" ? "🚀" : status === "completed" ? "✅" : "❌"
+  const statusText = status === "delegated" 
+    ? "delegated" 
+    : status === "completed" 
+      ? "task complete" 
+      : "task failed"
+  
+  const lines: string[] = []
+  
+  if (options.fromAgent && options.toAgent) {
+    lines.push(`⚡ ${options.fromAgent.toLowerCase()} → ${options.toAgent}`)
+  }
+  if (options.task) {
+    lines.push(`task: ${options.task}`)
+  }
+  if (options.duration) {
+    lines.push(`duration: ${options.duration}`)
+  }
+  lines.push(`${statusIcon} ${statusText}`)
+  if (status === "failed" && options.reason) {
+    lines.push(`error: ${options.reason}`)
+  }
+  
   const notification = `<system-reminder>
-${icon} ${title}
-${message}
+${lines.join("\n")}
 </system-reminder>`
+  
   await client.session.prompt({
     path: { id: sessionID },
     body: { noReply: true, parts: [{ type: "text", text: notification }] },
@@ -230,7 +262,7 @@ export function createHierarchyEnforcerHook(
             const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
             if (todo.status === "completed") {
               await showToast(client, "✅ Task Completed", shortTask, "success", 5000)
-              await injectNotification(client, input.sessionID, "Task Completed", `Task: ${todo.content}`, "success")
+              await injectNotification(client, input.sessionID, "completed", { task: todo.content })
             } else if (todo.status === "in_progress") {
               await showToast(client, "🔄 Task Started", shortTask, "info", 5000)
             }
@@ -306,11 +338,17 @@ export function createHierarchyEnforcerHook(
                 const errorMatch = result.match(/(?:error|failed|failure)[:\s]*([^\n]{1,80})/i)
                 const errorReason = errorMatch ? errorMatch[1].trim() : "check test output"
                 await showToast(client, "❌ Joshua: Tests Failed", `${failCount} test(s) failing - ${errorReason}`, "error", 5000)
-                await injectNotification(client, input.sessionID, "Joshua: Tests Failed", `${failCount} test(s) failing\nReason: ${errorReason}`, "error")
+                await injectNotification(client, input.sessionID, "failed", { 
+                  fromAgent: "Paul", toAgent: "Joshua", 
+                  task: `${failCount} test(s) failing`, reason: errorReason 
+                })
               } else if (passedMatch) {
                 const passCount = testCountMatch ? testCountMatch[1] : "all"
                 await showToast(client, "✅ Joshua: Tests Passed", `${passCount} test(s) passing`, "success", 5000)
-                await injectNotification(client, input.sessionID, "Joshua: Tests Passed", `${passCount} test(s) passing`, "success")
+                await injectNotification(client, input.sessionID, "completed", { 
+                  fromAgent: "Paul", toAgent: "Joshua", 
+                  task: `${passCount} test(s) passing` 
+                })
                 recordApproval(ctx.directory, input.callID, "Joshua", "approved")
               } else {
                 await showToast(client, "🧪 Joshua Complete", "Test run finished", "info", 5000)
@@ -333,10 +371,16 @@ export function createHierarchyEnforcerHook(
                 const taskMatch = cleanResult.match(/(?:task|implementing|working on)[:\s]*([^\n]{1,50})/i)
                 const taskName = taskMatch ? taskMatch[1].trim() : "implementation"
                 await showToast(client, `❌ ${targetAgent} failed`, `Task: ${taskName} - ${errorReason}`, "error", 5000)
-                await injectNotification(client, input.sessionID, `${targetAgent} Failed`, `Task: ${taskName}\nReason: ${errorReason}`, "error")
+                await injectNotification(client, input.sessionID, "failed", { 
+                  fromAgent: "Paul", toAgent: targetAgent, 
+                  task: taskName, reason: errorReason 
+                })
               } else {
                 await showToast(client, `✅ ${targetAgent}`, "implementation complete", "success", 5000)
-                await injectNotification(client, input.sessionID, `${targetAgent} Complete`, "Implementation successful", "success")
+                await injectNotification(client, input.sessionID, "completed", { 
+                  fromAgent: "Paul", toAgent: targetAgent, 
+                  task: "implementation" 
+                })
               }
             }
           
@@ -386,10 +430,16 @@ export function createHierarchyEnforcerHook(
                 const taskMatch = cleanResult.match(/(?:task|todo|working on)[:\s]*([^\n]{1,50})/i)
                 const taskName = taskMatch ? taskMatch[1].trim() : "task"
                 await showToast(client, `❌ ${targetAgent || "Agent"} failed`, `Task: ${taskName} - ${errorReason}`, "error", 5000)
-                await injectNotification(client, input.sessionID, `${targetAgent || "Agent"} Failed`, `Task: ${taskName}\nReason: ${errorReason}`, "error")
+                await injectNotification(client, input.sessionID, "failed", { 
+                  fromAgent: "Paul", toAgent: targetAgent || "Agent", 
+                  task: taskName, reason: errorReason 
+                })
               } else if (hasSuccess) {
                 await showToast(client, `✅ ${targetAgent || "task"} complete`, "delegation successful", "success", 5000)
-                await injectNotification(client, input.sessionID, `${targetAgent || "Task"} Complete`, "Delegation successful", "success")
+                await injectNotification(client, input.sessionID, "completed", { 
+                  fromAgent: "Paul", toAgent: targetAgent || "Task", 
+                  task: "delegation" 
+                })
               }
             }
 
