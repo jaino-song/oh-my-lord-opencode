@@ -333,8 +333,10 @@ export function createHierarchyEnforcerHook(
                 const taskMatch = cleanResult.match(/(?:task|implementing|working on)[:\s]*([^\n]{1,50})/i)
                 const taskName = taskMatch ? taskMatch[1].trim() : "implementation"
                 await showToast(client, `❌ ${targetAgent} failed`, `Task: ${taskName} - ${errorReason}`, "error", 5000)
+                await injectNotification(client, input.sessionID, `${targetAgent} Failed`, `Task: ${taskName}\nReason: ${errorReason}`, "error")
               } else {
                 await showToast(client, `✅ ${targetAgent}`, "implementation complete", "success", 5000)
+                await injectNotification(client, input.sessionID, `${targetAgent} Complete`, "Implementation successful", "success")
               }
             }
           
@@ -384,8 +386,10 @@ export function createHierarchyEnforcerHook(
                 const taskMatch = cleanResult.match(/(?:task|todo|working on)[:\s]*([^\n]{1,50})/i)
                 const taskName = taskMatch ? taskMatch[1].trim() : "task"
                 await showToast(client, `❌ ${targetAgent || "Agent"} failed`, `Task: ${taskName} - ${errorReason}`, "error", 5000)
+                await injectNotification(client, input.sessionID, `${targetAgent || "Agent"} Failed`, `Task: ${taskName}\nReason: ${errorReason}`, "error")
               } else if (hasSuccess) {
                 await showToast(client, `✅ ${targetAgent || "task"} complete`, "delegation successful", "success", 5000)
+                await injectNotification(client, input.sessionID, `${targetAgent || "Task"} Complete`, "Delegation successful", "success")
               }
             }
 
