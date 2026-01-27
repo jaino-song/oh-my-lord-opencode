@@ -150,8 +150,11 @@ async function getContributors(previous: string): Promise<string[]> {
 
 function getDistTag(version: string): string | null {
   if (!version.includes("-")) return null
-  const prerelease = version.split("-")[1]
-  const tag = prerelease?.split(".")[0]
+  const parts = version.split("-")
+  if (parts.length < 2) return null
+  const prereleasePart = parts[1]
+  if (!prereleasePart || /^\d/.test(prereleasePart)) return null
+  const tag = prereleasePart.split(".")[0]
   return tag || "next"
 }
 
