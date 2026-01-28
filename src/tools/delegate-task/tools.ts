@@ -14,6 +14,7 @@ import { getsessiontokenusage } from "../../features/task-toast-manager/token-ut
 import { subagentSessions, getSessionAgent } from "../../features/claude-code-session-state"
 import { log, getAgentToolRestrictions } from "../../shared"
 import { truncateToTokenLimit } from "../../shared/dynamic-truncator"
+import { getParentAgentName } from "../../features/agent-context"
 
 type OpencodeClient = PluginInput["client"]
 
@@ -204,6 +205,7 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
     },
     async execute(args: DelegateTaskArgs, toolContext) {
       const ctx = toolContext as ToolContextWithMetadata
+      const parentAgentName = getParentAgentName(ctx.sessionID, "agent")
       if (args.run_in_background === undefined) {
         return `❌ Invalid arguments: 'run_in_background' parameter is REQUIRED. Use run_in_background=false for task delegation, run_in_background=true only for parallel exploration.`
       }
@@ -438,7 +440,7 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
           ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
           : ""
 
-        return `⚡ paul → ${resumeAgent ?? "agent"}
+        return `⚡ ${parentAgentName} → ${resumeAgent ?? "agent"}
 task: ${args.description}
 ${tokenline}
 duration: ${duration}
@@ -579,7 +581,7 @@ ${formattedOutput}`
             metadata: { sessionId: task.sessionID, category: args.category },
           })
 
-          return `paul → ${task.agent}
+          return `${parentAgentName} → ${task.agent}
 task: ${task.description}
 parallelism: yes
 
@@ -801,7 +803,7 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
           ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
           : ""
 
-        return `⚡ paul → ${agentToUse}
+        return `⚡ ${parentAgentName} → ${agentToUse}
 task: ${args.description}
 ${tokenline}
 duration: ${duration}

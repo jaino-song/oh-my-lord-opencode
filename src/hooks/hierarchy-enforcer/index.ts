@@ -1,6 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin"
-import { getSessionAgent } from "../../features/claude-code-session-state"
-import { findNearestMessageWithFields, findFirstMessageWithAgent, MESSAGE_STORAGE } from "../../features/hook-message-injector"
+import { getParentAgentName } from "../../features/agent-context"
 import { existsSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS, CATEGORY_TO_AGENT } from "./constants"
@@ -44,7 +43,8 @@ async function injectNotification(
   client: ToastClient,
   sessionID: string,
   status: NotificationStatus,
-  options: NotificationOptions = {}
+  options: NotificationOptions = {},
+  currentAgent?: string
 ): Promise<void> {
   if (!client.session?.prompt) return
   
@@ -77,29 +77,12 @@ ${lines.join("\n")}
   
   await client.session.prompt({
     path: { id: sessionID },
-    body: { noReply: true, parts: [{ type: "text", text: notification }] },
+    body: { 
+      noReply: true, 
+      ...(currentAgent !== undefined ? { agent: currentAgent } : {}),
+      parts: [{ type: "text", text: notification }] 
+    },
   }).catch(() => {})
-}
-
-function getMessageDir(sessionID: string): string | null {
-  if (!existsSync(MESSAGE_STORAGE)) return null
-  const directPath = join(MESSAGE_STORAGE, sessionID)
-  if (existsSync(directPath)) return directPath
-  for (const dir of readdirSync(MESSAGE_STORAGE)) {
-    const sessionPath = join(MESSAGE_STORAGE, dir, sessionID)
-    if (existsSync(sessionPath)) return sessionPath
-  }
-  return null
-}
-
-function getAgentFromMessageFiles(sessionID: string): string | undefined {
-  const messageDir = getMessageDir(sessionID)
-  if (!messageDir) return undefined
-  return findFirstMessageWithAgent(messageDir) ?? findNearestMessageWithFields(messageDir)?.agent
-}
-
-function getAgentFromSession(sessionID: string): string | undefined {
-  return getSessionAgent(sessionID) ?? getAgentFromMessageFiles(sessionID)
 }
 
 function normalizeAgentName(agentArg: string | undefined): string | null {
@@ -171,7 +154,7 @@ export function createHierarchyEnforcerHook(
       output: { args: Record<string, unknown>; message?: string }
     ): Promise<void> => {
       const tool = input.tool.toLowerCase()
-      const currentAgent = getAgentFromSession(input.sessionID) || "User"
+      const currentAgent = getParentAgentName(input.sessionID, "User")
       
       if (tool === "delegate_task" || tool === "task" || tool === "call_omo_agent") {
         const category = output.args.category as string | undefined
@@ -215,7 +198,7 @@ export function createHierarchyEnforcerHook(
 
           if (currentAgent === "Paul") {
             const shortDesc = description.slice(0, 50) + (description.length > 50 ? "..." : "")
-            await showToast(client, `⚡ Paul → ${targetAgent}`, shortDesc || "Delegating task...", "info", 5000)
+            await showToast(client, `⚡ ${currentAgent} → ${targetAgent}`, shortDesc || "Delegating task...", "info", 5000)
             
             if (normalizedTarget === "paul-junior" || normalizedTarget === "ultrabrain" || normalizedTarget === "frontend-ui-ux-engineer") {
               const hasRecentTestRun = hasRecentApproval(ctx.directory, "joshua", 600000)
@@ -258,11 +241,16 @@ export function createHierarchyEnforcerHook(
         // TODOs are for tracking, not enforcement. Verification happens via test runs, not status updates.
         const todos = output.args.todos as Array<{ content: string; status: string; id: string }> | undefined
         if (todos) {
+          const todoCurrentAgent = getParentAgentName(input.sessionID, "User")
           for (const todo of todos) {
             const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
             if (todo.status === "completed") {
               await showToast(client, "✅ Task Completed", shortTask, "success", 5000)
-              await injectNotification(client, input.sessionID, "completed", { task: todo.content })
+              await injectNotification(client, input.sessionID, "completed", { 
+                fromAgent: todoCurrentAgent, 
+                toAgent: "todo", 
+                task: todo.content 
+              }, todoCurrentAgent)
             } else if (todo.status === "in_progress") {
               await showToast(client, "🔄 Task Started", shortTask, "info", 5000)
             }
@@ -279,6 +267,7 @@ export function createHierarchyEnforcerHook(
         const result = output.output
         const targetAgent = (output.args?.agent || output.args?.subagent_type || output.args?.name) as string | undefined
         const normalizedAgent = targetAgent?.toLowerCase() || ""
+        const currentAgent = getParentAgentName(input.sessionID, "User")
         
         if (typeof result === "string") {
           const lowerResult = result.toLowerCase()
@@ -339,16 +328,16 @@ export function createHierarchyEnforcerHook(
                 const errorReason = errorMatch ? errorMatch[1].trim() : "check test output"
                 await showToast(client, "❌ Joshua: Tests Failed", `${failCount} test(s) failing - ${errorReason}`, "error", 5000)
                 await injectNotification(client, input.sessionID, "failed", { 
-                  fromAgent: "Paul", toAgent: "Joshua", 
+                  fromAgent: currentAgent, toAgent: "Joshua", 
                   task: `${failCount} test(s) failing`, reason: errorReason 
-                })
+                }, currentAgent)
               } else if (passedMatch) {
                 const passCount = testCountMatch ? testCountMatch[1] : "all"
                 await showToast(client, "✅ Joshua: Tests Passed", `${passCount} test(s) passing`, "success", 5000)
                 await injectNotification(client, input.sessionID, "completed", { 
-                  fromAgent: "Paul", toAgent: "Joshua", 
+                  fromAgent: currentAgent, toAgent: "Joshua", 
                   task: `${passCount} test(s) passing` 
-                })
+                }, currentAgent)
                 recordApproval(ctx.directory, input.callID, "Joshua", "approved")
               } else {
                 await showToast(client, "🧪 Joshua Complete", "Test run finished", "info", 5000)
@@ -372,15 +361,15 @@ export function createHierarchyEnforcerHook(
                 const taskName = taskMatch ? taskMatch[1].trim() : "implementation"
                 await showToast(client, `❌ ${targetAgent} failed`, `Task: ${taskName} - ${errorReason}`, "error", 5000)
                 await injectNotification(client, input.sessionID, "failed", { 
-                  fromAgent: "Paul", toAgent: targetAgent, 
+                  fromAgent: currentAgent, toAgent: targetAgent, 
                   task: taskName, reason: errorReason 
-                })
+                }, currentAgent)
               } else {
                 await showToast(client, `✅ ${targetAgent}`, "implementation complete", "success", 5000)
                 await injectNotification(client, input.sessionID, "completed", { 
-                  fromAgent: "Paul", toAgent: targetAgent, 
+                  fromAgent: currentAgent, toAgent: targetAgent, 
                   task: "implementation" 
-                })
+                }, currentAgent)
               }
             }
           
@@ -431,15 +420,15 @@ export function createHierarchyEnforcerHook(
                 const taskName = taskMatch ? taskMatch[1].trim() : "task"
                 await showToast(client, `❌ ${targetAgent || "Agent"} failed`, `Task: ${taskName} - ${errorReason}`, "error", 5000)
                 await injectNotification(client, input.sessionID, "failed", { 
-                  fromAgent: "Paul", toAgent: targetAgent || "Agent", 
+                  fromAgent: currentAgent, toAgent: targetAgent || "Agent", 
                   task: taskName, reason: errorReason 
-                })
+                }, currentAgent)
               } else if (hasSuccess) {
                 await showToast(client, `✅ ${targetAgent || "task"} complete`, "delegation successful", "success", 5000)
                 await injectNotification(client, input.sessionID, "completed", { 
-                  fromAgent: "Paul", toAgent: targetAgent || "Task", 
+                  fromAgent: currentAgent, toAgent: targetAgent || "Task", 
                   task: "delegation" 
-                })
+                }, currentAgent)
               }
             }
 

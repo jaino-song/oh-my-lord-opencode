@@ -12,6 +12,7 @@ import { findNearestMessageWithFields, MESSAGE_STORAGE } from "../../features/ho
 import { log } from "../../shared/logger"
 import { createSystemDirective, SYSTEM_DIRECTIVE_PREFIX, SystemDirectiveTypes } from "../../shared/system-directive"
 import type { BackgroundManager } from "../../features/background-agent"
+import { getParentAgentName } from "../../features/agent-context"
 
 export const HOOK_NAME = "paul-orchestrator"
 
@@ -482,10 +483,11 @@ export function createPaulOrchestratorHook(
           : undefined
       }
 
+       const currentAgent = getParentAgentName(sessionID, "Paul")
        await ctx.client.session.prompt({
          path: { id: sessionID },
          body: {
-           agent: "Paul",
+           agent: currentAgent,
            ...(model !== undefined ? { model } : {}),
            parts: [{ type: "text", text: prompt }],
          },

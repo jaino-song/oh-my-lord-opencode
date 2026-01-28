@@ -830,8 +830,9 @@ Use \`background_output(task_id="<id>")\` to retrieve each result.
         ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
         : ""
       
+      const parentAgentName = task.parentAgent || "agent"
       notification = `<system-reminder>
-⚡ paul → ${task.agent}
+⚡ ${parentAgentName} → ${task.agent}
 task: ${task.description}
 ${tokenLine}
 duration: ${duration}
