@@ -6,6 +6,7 @@
  */
 
 export const SYSTEM_DIRECTIVE_PREFIX = "[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE"
+export const SYSTEM_REMINDER_PREFIX = "[system reminder]"
 
 /**
  * Creates a system directive header with the given type.
@@ -19,11 +20,16 @@ export function createSystemDirective(type: string): string {
 /**
  * Checks if a message starts with the oh-my-lord-opencode system directive prefix.
  * Used by keyword-detector and other hooks to skip system-generated messages.
+ * Supports both legacy format ([SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE) and new format ([SYSTEM REMINDER]).
  * @param text - The message text to check
  * @returns true if the message is a system directive
  */
 export function isSystemDirective(text: string): boolean {
-  return text.trimStart().startsWith(SYSTEM_DIRECTIVE_PREFIX)
+  const trimmed = text.trimStart()
+  return (
+    trimmed.startsWith(SYSTEM_DIRECTIVE_PREFIX) ||
+    trimmed.toLowerCase().startsWith(SYSTEM_REMINDER_PREFIX)
+  )
 }
 
 export const SystemDirectiveTypes = {

@@ -10,7 +10,7 @@
  * @see https://github.com/sst/opencode/blob/6f9bea4e1f3d139feefd0f88de260b04f78caaef/packages/opencode/src/session/prompt/build-switch.txt
  * @see https://github.com/sst/opencode/blob/6f9bea4e1f3d139feefd0f88de260b04f78caaef/packages/opencode/src/agent/agent.ts#L118-L125
  */
-export const BUILD_SYSTEM_PROMPT = `<system-reminder>
+export const BUILD_SYSTEM_PROMPT = `[system reminder]
 # Build Mode - System Reminder
 
 BUILD MODE ACTIVE - you are in EXECUTION phase. Your responsibility is to:
@@ -45,7 +45,7 @@ tested, production-ready solutions.
 The user wants you to execute and implement. You SHOULD make edits, run necessary
 tools, and make changes to accomplish the task. Use your full capabilities to
 deliver excellent results.
-</system-reminder>
+[/system reminder]
 `
 
 /**

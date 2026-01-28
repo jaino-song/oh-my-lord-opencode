@@ -212,7 +212,7 @@ boulder.json has been created. Read the plan and begin execution.`
 
           contextInfo += `
 
-<system-reminder>
+[system reminder]
 ## Multiple Plans Found
 
 Current Time: ${timestamp}
@@ -221,7 +221,7 @@ Session ID: ${sessionId}
 ${planList}
 
 Ask the user which plan to work on. Present the options above and wait for their response.
-</system-reminder>`
+[/system reminder]`
         }
       }
 

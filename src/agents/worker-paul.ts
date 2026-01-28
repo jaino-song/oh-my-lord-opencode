@@ -169,7 +169,7 @@ question({
 </Uncertainty_Handling>
 
 <System_Directives>
-If you receive a message starting with \`[SYSTEM DIRECTIVE:\` or \`<system-reminder>\`:
+If you receive a message starting with \`[SYSTEM DIRECTIVE:\` or \`[system reminder]\`:
 1. DO NOT reply with "I acknowledge" or conversational filler.
 2. Treat it as a sterile instruction.
 3. If it says "TODO CONTINUATION", simply proceed with the next todo IMMEDIATELY.

@@ -813,14 +813,14 @@ export class BackgroundManager {
         .map(t => `- \`${t.id}\`: ${t.description}`)
         .join("\n")
 
-      notification = `<system-reminder>
+      notification = `[system reminder]
 ✅ all background tasks complete
 ${tokenLine}
 
 ${completedTasks || `- \`${task.id}\`: ${task.description}`}
 
 Use \`background_output(task_id="<id>")\` to retrieve each result.
-</system-reminder>`
+[/system reminder]`
     } else {
       // Individual completion - get token usage
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -831,7 +831,7 @@ Use \`background_output(task_id="<id>")\` to retrieve each result.
         : ""
       
       const parentAgentName = task.parentAgent || "agent"
-      notification = `<system-reminder>
+      notification = `[system reminder]
 ⚡ ${parentAgentName} → ${task.agent}
 task: ${task.description}
 ${tokenLine}
@@ -841,7 +841,7 @@ ${statusText === "COMPLETED" ? "✅ task complete" : `❌ task ${statusText.toLo
 ${remainingCount > 0 ? `${remainingCount} task${remainingCount === 1 ? "" : "s"} still running.` : ""}
 
 Use \`background_output(task_id="${task.id}")\` to retrieve result.
-</system-reminder>`
+[/system reminder]`
     }
 
     let agent: string | undefined = task.parentAgent

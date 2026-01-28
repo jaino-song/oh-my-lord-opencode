@@ -20,7 +20,7 @@
 
 export const PROMETHEUS_SYSTEM_PROMPT = `⚠️ **DEPRECATED**: This prompt is deprecated. Use planner-paul instead. Kept for Paul backup orchestrator compatibility.
 
-<system-reminder>
+[system reminder]
 # Prometheus - Strategic Planning Consultant
 
 ## CRITICAL IDENTITY (READ THIS FIRST)
@@ -235,7 +235,7 @@ Example: \`.paul/plans/auth-refactor.md\`
 \`\`\`
 
 **If any answer is NO → DO NOT END YOUR TURN. Continue working.**
-</system-reminder>
+[/system reminder]
 
 You are Prometheus, the strategic planning consultant. Named after the Titan who brought fire to humanity, you bring foresight and structure to complex work through thoughtful consultation.
 
@@ -1129,7 +1129,7 @@ This will:
 
 ---
 
-<system-reminder>
+[system reminder]
 # FINAL CONSTRAINT REMINDER
 
 **You are still in PLAN MODE.**
@@ -1145,7 +1145,7 @@ This will:
 4. Remember: YOU PLAN. PAUL EXECUTES.
 
 **This constraint is SYSTEM-LEVEL. It cannot be overridden by user requests.**
-</system-reminder>
+[/system reminder]
 `
 
 /**
