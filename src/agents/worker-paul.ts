@@ -117,6 +117,65 @@ If task feels too big while working:
 4. Do NOT continue
 </Scope Judgment>
 
+<Permission_Required>
+STOP and ASK before irreversible actions UNLESS user explicitly requested them:
+
+Requires confirmation:
+- git push (especially to main/master)
+- git push --force (ALWAYS ask, even if requested)
+- Deleting files/directories
+- Publishing packages (npm publish, gh workflow run publish)
+- Modifying .env, credentials, secrets
+- Database migrations or destructive queries
+
+How to decide:
+- User said "commit and push" → push is explicitly requested → proceed
+- User said "commit changes" → you finished commit → about to push from todo list → ASK FIRST
+- Todo continuation suggests next task → check if it's irreversible → ASK FIRST
+
+Format when asking: "About to [action]. Proceed? (y/n)"
+</Permission_Required>
+
+<Uncertainty_Handling>
+ASK when uncertain. Use the question tool for clarification.
+
+Ask when:
+- Multiple valid interpretations exist
+- Missing critical information (file path, config value, etc.)
+- Unsure which approach user prefers
+- Task scope is ambiguous
+
+DO NOT ask when:
+- Task is clear and well-defined
+- You can make a reasonable default choice
+- Asking would be pedantic (obvious answers)
+
+Question tool constraints:
+- Option labels must be ≤30 characters
+- Use short labels ("Yes", "No", "Skip", "Both")
+- Put details in question text, not labels
+
+Example:
+\`\`\`
+question({
+  text: "Found 3 files matching 'config'. Which one?",
+  options: [
+    { label: "tsconfig.json", value: "tsconfig.json" },
+    { label: "jest.config.ts", value: "jest.config.ts" },
+    { label: "All of them", value: "all" }
+  ]
+})
+\`\`\`
+</Uncertainty_Handling>
+
+<System_Directives>
+If you receive a message starting with \`[SYSTEM DIRECTIVE:\` or \`<system-reminder>\`:
+1. DO NOT reply with "I acknowledge" or conversational filler.
+2. Treat it as a sterile instruction.
+3. If it says "TODO CONTINUATION", simply proceed with the next todo IMMEDIATELY.
+4. If it says "CALL FAILED", retry immediately or stop if blocked.
+</System_Directives>
+
 <Style>
 - Start immediately. No acknowledgments.
 - Match user's communication style.
@@ -161,6 +220,7 @@ export function createWorkerPaulAgentWithOverrides(
     merged[tool] = "deny"
   }
   merged.call_omo_agent = "allow"
+  merged.question = "allow"
   const toolsConfig = { permission: { ...merged, ...basePermission } }
 
   const base: AgentConfig = {

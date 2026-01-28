@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { getParentAgentName } from "../../features/agent-context"
+import { findNearestMessageWithFields, findFirstMessageWithAgent, MESSAGE_STORAGE, type StoredMessage } from "../../features/hook-message-injector"
 import { existsSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS, CATEGORY_TO_AGENT } from "./constants"
@@ -44,7 +45,8 @@ async function injectNotification(
   sessionID: string,
   status: NotificationStatus,
   options: NotificationOptions = {},
-  currentAgent?: string
+  currentAgent?: string,
+  currentModel?: StoredMessage["model"]
 ): Promise<void> {
   if (!client.session?.prompt) return
   
@@ -79,11 +81,34 @@ ${lines.join("\n")}
     path: { id: sessionID },
     body: { 
       noReply: true, 
-      ...(currentAgent !== undefined ? { agent: currentAgent } : {}),
-      parts: [{ type: "text", text: notification }] 
+      parts: [{ type: "text", text: notification }],
+      ...(currentAgent ? { agent: currentAgent } : {}),
+      ...(currentModel ? { model: currentModel } : {})
     },
   }).catch(() => {})
 }
+
+function getMessageDir(sessionID: string): string | null {
+  if (!existsSync(MESSAGE_STORAGE)) return null
+  const directPath = join(MESSAGE_STORAGE, sessionID)
+  if (existsSync(directPath)) return directPath
+  for (const dir of readdirSync(MESSAGE_STORAGE)) {
+    const sessionPath = join(MESSAGE_STORAGE, dir, sessionID)
+    if (existsSync(sessionPath)) return sessionPath
+  }
+  return null
+}
+
+function getAgentFromMessageFiles(sessionID: string): string | undefined {
+  const messageDir = getMessageDir(sessionID)
+  if (!messageDir) return undefined
+  return findFirstMessageWithAgent(messageDir) ?? findNearestMessageWithFields(messageDir)?.agent
+}
+
+// Deprecated in favor of getParentAgentName but kept for compatibility if needed internally
+// function getAgentFromSession(sessionID: string): string | undefined {
+//   return getSessionAgent(sessionID) ?? getAgentFromMessageFiles(sessionID)
+// }
 
 function normalizeAgentName(agentArg: string | undefined): string | null {
   if (!agentArg) return null
@@ -155,6 +180,10 @@ export function createHierarchyEnforcerHook(
     ): Promise<void> => {
       const tool = input.tool.toLowerCase()
       const currentAgent = getParentAgentName(input.sessionID, "User")
+      
+      const messageDir = getMessageDir(input.sessionID)
+      const nearestMsg = messageDir ? findNearestMessageWithFields(messageDir) : null
+      const currentModel = nearestMsg?.model
       
       if (tool === "delegate_task" || tool === "task" || tool === "call_omo_agent") {
         const category = output.args.category as string | undefined
@@ -250,7 +279,7 @@ export function createHierarchyEnforcerHook(
                 fromAgent: todoCurrentAgent, 
                 toAgent: "todo", 
                 task: todo.content 
-              }, todoCurrentAgent)
+              }, todoCurrentAgent, currentModel)
             } else if (todo.status === "in_progress") {
               await showToast(client, "🔄 Task Started", shortTask, "info", 5000)
             }
@@ -267,7 +296,11 @@ export function createHierarchyEnforcerHook(
         const result = output.output
         const targetAgent = (output.args?.agent || output.args?.subagent_type || output.args?.name) as string | undefined
         const normalizedAgent = targetAgent?.toLowerCase() || ""
-        const currentAgent = getParentAgentName(input.sessionID, "User")
+        const currentAgent = getParentAgentName(input.sessionID, "Paul")
+        
+        const messageDir = getMessageDir(input.sessionID)
+        const nearestMsg = messageDir ? findNearestMessageWithFields(messageDir) : null
+        const currentModel = nearestMsg?.model
         
         if (typeof result === "string") {
           const lowerResult = result.toLowerCase()
@@ -330,14 +363,14 @@ export function createHierarchyEnforcerHook(
                 await injectNotification(client, input.sessionID, "failed", { 
                   fromAgent: currentAgent, toAgent: "Joshua", 
                   task: `${failCount} test(s) failing`, reason: errorReason 
-                }, currentAgent)
+                }, currentAgent, currentModel)
               } else if (passedMatch) {
                 const passCount = testCountMatch ? testCountMatch[1] : "all"
                 await showToast(client, "✅ Joshua: Tests Passed", `${passCount} test(s) passing`, "success", 5000)
                 await injectNotification(client, input.sessionID, "completed", { 
                   fromAgent: currentAgent, toAgent: "Joshua", 
                   task: `${passCount} test(s) passing` 
-                }, currentAgent)
+                }, currentAgent, currentModel)
                 recordApproval(ctx.directory, input.callID, "Joshua", "approved")
               } else {
                 await showToast(client, "🧪 Joshua Complete", "Test run finished", "info", 5000)
@@ -363,13 +396,13 @@ export function createHierarchyEnforcerHook(
                 await injectNotification(client, input.sessionID, "failed", { 
                   fromAgent: currentAgent, toAgent: targetAgent, 
                   task: taskName, reason: errorReason 
-                }, currentAgent)
+                }, currentAgent, currentModel)
               } else {
                 await showToast(client, `✅ ${targetAgent}`, "implementation complete", "success", 5000)
                 await injectNotification(client, input.sessionID, "completed", { 
                   fromAgent: currentAgent, toAgent: targetAgent, 
                   task: "implementation" 
-                }, currentAgent)
+                }, currentAgent, currentModel)
               }
             }
           
@@ -422,13 +455,13 @@ export function createHierarchyEnforcerHook(
                 await injectNotification(client, input.sessionID, "failed", { 
                   fromAgent: currentAgent, toAgent: targetAgent || "Agent", 
                   task: taskName, reason: errorReason 
-                }, currentAgent)
+                }, currentAgent, currentModel)
               } else if (hasSuccess) {
                 await showToast(client, `✅ ${targetAgent || "task"} complete`, "delegation successful", "success", 5000)
                 await injectNotification(client, input.sessionID, "completed", { 
                   fromAgent: currentAgent, toAgent: targetAgent || "Task", 
                   task: "delegation" 
-                }, currentAgent)
+                }, currentAgent, currentModel)
               }
             }
 
