@@ -293,21 +293,21 @@ async function main() {
   const previous = await fetchPreviousVersion()
   const newVersion = versionOverride || (bump ? bumpVersion(previous, bump) : bumpVersion(previous, "patch"))
   console.log(`New version: ${newVersion}\n`)
-
-  if (await checkVersionExists(newVersion)) {
-    console.log(`Version ${newVersion} already exists on npm. Skipping publish.`)
-    process.exit(0)
+  
+  const versionExists = await checkVersionExists(newVersion)
+  if (versionExists) {
+    console.log(`Version ${newVersion} already exists on npm. Will attempt publish anyway (npm handles idempotency).`)
   }
-
+  
   await updateAllPackageVersions(newVersion)
   const changelog = await generateChangelog(previous)
   const contributors = await getContributors(previous)
   const notes = [...changelog, ...contributors]
-
+  
   await buildPackages()
   await publishAllPackages(newVersion)
   await gitTagAndRelease(newVersion, notes)
-
+  
   console.log(`\n=== Successfully published ${PACKAGE_NAME}@${newVersion} (8 packages) ===`)
 }
 
