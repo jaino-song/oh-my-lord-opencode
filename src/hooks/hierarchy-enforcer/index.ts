@@ -1,6 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { getParentAgentName } from "../../features/agent-context"
-import { findNearestMessageWithFields, findFirstMessageWithAgent, MESSAGE_STORAGE, type StoredMessage } from "../../features/hook-message-injector"
+import { findNearestMessageWithFields, MESSAGE_STORAGE, type StoredMessage } from "../../features/hook-message-injector"
 import { existsSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS, CATEGORY_TO_AGENT } from "./constants"
@@ -73,9 +73,9 @@ async function injectNotification(
     lines.push(`error: ${options.reason}`)
   }
   
-  const notification = `<system-reminder>
+  const notification = `[system reminder]
 ${lines.join("\n")}
-</system-reminder>`
+[/system reminder]`
   
   await client.session.prompt({
     path: { id: sessionID },
@@ -98,17 +98,6 @@ function getMessageDir(sessionID: string): string | null {
   }
   return null
 }
-
-function getAgentFromMessageFiles(sessionID: string): string | undefined {
-  const messageDir = getMessageDir(sessionID)
-  if (!messageDir) return undefined
-  return findFirstMessageWithAgent(messageDir) ?? findNearestMessageWithFields(messageDir)?.agent
-}
-
-// Deprecated in favor of getParentAgentName but kept for compatibility if needed internally
-// function getAgentFromSession(sessionID: string): string | undefined {
-//   return getSessionAgent(sessionID) ?? getAgentFromMessageFiles(sessionID)
-// }
 
 function normalizeAgentName(agentArg: string | undefined): string | null {
   if (!agentArg) return null
@@ -160,6 +149,17 @@ const COMPETENCY_RULES = [
     errorMsg: "External documentation research MUST be delegated to 'librarian'."
   }
 ]
+
+// Track notified todo IDs per session to prevent duplicate notifications
+const notifiedTodos = new Map<string, Set<string>>()
+
+export function clearNotifiedTodos(sessionID?: string): void {
+  if (sessionID) {
+    notifiedTodos.delete(sessionID)
+  } else {
+    notifiedTodos.clear()
+  }
+}
 
 export function createHierarchyEnforcerHook(
   ctx: PluginInput,
@@ -267,19 +267,27 @@ export function createHierarchyEnforcerHook(
       }
 
       if (tool === "todowrite") {
-        // TODOs are for tracking, not enforcement. Verification happens via test runs, not status updates.
         const todos = output.args.todos as Array<{ content: string; status: string; id: string }> | undefined
         if (todos) {
           const todoCurrentAgent = getParentAgentName(input.sessionID, "User")
+          
+          if (!notifiedTodos.has(input.sessionID)) {
+            notifiedTodos.set(input.sessionID, new Set<string>())
+          }
+          const sessionNotified = notifiedTodos.get(input.sessionID)!
+          
           for (const todo of todos) {
             const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
             if (todo.status === "completed") {
-              await showToast(client, "✅ Task Completed", shortTask, "success", 5000)
-              await injectNotification(client, input.sessionID, "completed", { 
-                fromAgent: todoCurrentAgent, 
-                toAgent: "todo", 
-                task: todo.content 
-              }, todoCurrentAgent, currentModel)
+              if (!sessionNotified.has(todo.id)) {
+                await showToast(client, "✅ Task Completed", shortTask, "success", 5000)
+                await injectNotification(client, input.sessionID, "completed", { 
+                  fromAgent: todoCurrentAgent, 
+                  toAgent: "todo", 
+                  task: todo.content 
+                }, todoCurrentAgent, currentModel)
+                sessionNotified.add(todo.id)
+              }
             } else if (todo.status === "in_progress") {
               await showToast(client, "🔄 Task Started", shortTask, "info", 5000)
             }

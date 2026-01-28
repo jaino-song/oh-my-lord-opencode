@@ -184,51 +184,41 @@ Confirm:
 
 ## OUTPUT FORMAT
 
-After analyzing the TDD planning session, provide:
+Return a compact machine-readable JSON block FIRST, then a single SUMMARY: line.
 
-\`\`\`markdown
-## Thomas TDD Review
+Rules:
+- JSON MUST be valid (double quotes, no trailing commas)
+- Keep JSON+SUMMARY compact (target: <200 tokens)
+- Cap arrays (default max 5 items)
+- Use short strings (no long paragraphs)
 
-### TDD Intent Classification
-**Type**: [New Feature | Bug Fix | Refactor | API | UI]
-**Test Strategy**: [Unit-heavy | E2E-heavy | Balanced]
-**Confidence**: [High | Medium | Low]
-
-### Test Coverage Analysis
-**Coverage Assessment**: [Complete | Gaps Found | Major Gaps]
-
-**Missing Test Scenarios**:
-- [Scenario not covered]: [Why it matters]
-
-**Edge Cases Not Covered**:
-- [Edge case]: [Recommendation]
-
-### Test Quality Issues
-**Specification Gaps**:
-- [What's unclear]: [How to fix]
-
-**Vague Specifications**:
-- [Spec]: [Make it concrete by...]
-
-### TDD Anti-Patterns Detected
-- [Pattern]: [Why problematic] → [Fix]
-
-### Test Infrastructure Notes
-- [Observation about existing setup]
-- [Recommendation if infrastructure missing]
-
-### Recommendations for Solomon
-1. [Most critical recommendation]
-2. [Second priority]
-3. [Third priority]
-
-### Directives for Plan
-- MUST: [Required test/action]
-- MUST: [Required test/action]
-- MUST NOT: [Anti-pattern to avoid]
-- MUST NOT: [Anti-pattern to avoid]
-- PATTERN: Follow \`[file:lines]\` for [purpose]
+\`\`\`json
+{
+  "schema": "oml.subagent.v1",
+  "kind": "thomas.review",
+  "tdd_intent": "new_feature",
+  "status": "approved",
+  "coverage_gaps": ["..."],
+  "quality_issues": [
+    {
+      "severity": "medium",
+      "type": "vague_assertion",
+      "message": "Expected output is not concrete",
+      "example": "Change 'should succeed' to expect(status).toBe(201)"
+    }
+  ],
+  "stats": { "gap_count": 0, "issue_count": 0 }
+}
 \`\`\`
+
+SUMMARY requirements (MANDATORY):
+- If approved: must include Approved (or Valid)
+- If not approved: include Needs revision and include Gaps: N or Issues: N
+
+Example:
+SUMMARY: Approved; Gaps: 0; Issues: 0
+
+If extra context is needed, add it AFTER a blank line under DETAILS: (keep it short).
 
 ---
 

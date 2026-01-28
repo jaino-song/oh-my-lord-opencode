@@ -1,74 +1,76 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test"
+import { describe, test, expect, beforeEach, afterEach } from "bun:test"
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
+import { getParentAgentName } from "./index"
+import { MESSAGE_STORAGE } from "../hook-message-injector"
+import { clearSessionAgent, setSessionAgent } from "../claude-code-session-state"
 
-type StoredMessage = { agent?: string }
-
-const getSessionAgentMock = mock((_sessionID: string) => undefined as string | undefined)
-const getMessageDirMock = mock((_sessionID: string) => null as string | null)
-const findFirstMessageWithAgentMock = mock((_messageDir: string) => null as string | null)
-const findNearestMessageWithFieldsMock = mock(
-  (_messageDir: string) => null as StoredMessage | null
-)
-
-mock.module("../claude-code-session-state", () => ({
-  getSessionAgent: getSessionAgentMock,
-}))
-
-mock.module("../hook-message-injector", () => ({
-  getMessageDir: getMessageDirMock,
-  findFirstMessageWithAgent: findFirstMessageWithAgentMock,
-  findNearestMessageWithFields: findNearestMessageWithFieldsMock,
-}))
-
-const { getParentAgentName } = await import("./index")
+function removeDir(path: string): void {
+  if (!existsSync(path)) return
+  rmSync(path, { recursive: true, force: true })
+}
 
 describe("getParentAgentName", () => {
-  beforeEach(() => {
-    getSessionAgentMock.mockClear()
-    getMessageDirMock.mockClear()
-    findFirstMessageWithAgentMock.mockClear()
-    findNearestMessageWithFieldsMock.mockClear()
+  const SESSION_WITH_AGENT = "agent-context-test-session-agent"
+  const SESSION_WITH_FILES = "agent-context-test-session-files"
 
-    getSessionAgentMock.mockImplementation(() => undefined)
-    getMessageDirMock.mockImplementation(() => null)
-    findFirstMessageWithAgentMock.mockImplementation(() => null)
-    findNearestMessageWithFieldsMock.mockImplementation(() => null)
+  const messageDirFor = (sessionID: string) => join(MESSAGE_STORAGE, sessionID)
+
+  beforeEach(() => {
+    clearSessionAgent(SESSION_WITH_AGENT)
+    clearSessionAgent(SESSION_WITH_FILES)
+
+    // Ensure these test dirs are clean so other test runs don't interfere
+    removeDir(messageDirFor(SESSION_WITH_AGENT))
+    removeDir(messageDirFor(SESSION_WITH_FILES))
+  })
+
+  afterEach(() => {
+    clearSessionAgent(SESSION_WITH_AGENT)
+    clearSessionAgent(SESSION_WITH_FILES)
+
+    // Cleanup message dirs
+    removeDir(messageDirFor(SESSION_WITH_AGENT))
+    removeDir(messageDirFor(SESSION_WITH_FILES))
   })
 
   test("should return session agent when available", () => {
     // #given
-    const sessionID = "session-123"
-    getSessionAgentMock.mockImplementation(() => "planner-paul")
+    setSessionAgent(SESSION_WITH_AGENT, "planner-paul")
 
     // #when
-    const result = getParentAgentName(sessionID)
+    const result = getParentAgentName(SESSION_WITH_AGENT)
 
     // #then
     expect(result).toBe("planner-paul")
-    expect(getSessionAgentMock).toHaveBeenCalledWith(sessionID)
   })
 
   test("should fall back to message files when session agent unavailable", () => {
     // #given
-    const sessionID = "session-456"
-    getMessageDirMock.mockImplementation(() => "/tmp/message-dir")
-    findFirstMessageWithAgentMock.mockImplementation(() => null)
-    findNearestMessageWithFieldsMock.mockImplementation(() => ({ agent: "sisyphus" }))
+    clearSessionAgent(SESSION_WITH_FILES)
+    const dir = messageDirFor(SESSION_WITH_FILES)
+    mkdirSync(dir, { recursive: true })
+
+    writeFileSync(
+      join(dir, "msg_001.json"),
+      JSON.stringify({ agent: "sisyphus", model: { providerID: "test", modelID: "test" } })
+    )
 
     // #when
-    const result = getParentAgentName(sessionID)
+    const result = getParentAgentName(SESSION_WITH_FILES)
 
     // #then
     expect(result).toBe("sisyphus")
-    expect(getMessageDirMock).toHaveBeenCalledWith(sessionID)
-    expect(findFirstMessageWithAgentMock).toHaveBeenCalledWith("/tmp/message-dir")
-    expect(findNearestMessageWithFieldsMock).toHaveBeenCalledWith("/tmp/message-dir")
   })
 
   test("should return fallback when no agent can be resolved", () => {
     // #given
-    const sessionID = "session-789"
+    const sessionID = "agent-context-test-session-missing"
     const fallback = "fallback-agent"
-    getMessageDirMock.mockImplementation(() => null)
+    clearSessionAgent(sessionID)
+    // Do NOT create message storage dir
+    const dir = messageDirFor(sessionID)
+    removeDir(dir)
 
     // #when
     const result = getParentAgentName(sessionID, fallback)

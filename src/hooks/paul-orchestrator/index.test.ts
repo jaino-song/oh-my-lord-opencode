@@ -12,6 +12,8 @@ import type { BoulderState } from "../../features/boulder-state"
 
 import { MESSAGE_STORAGE } from "../../features/hook-message-injector"
 
+import { setMainSession, subagentSessions } from "../../features/claude-code-session-state"
+
 describe("paul-orchestrator hook", () => {
   const TEST_DIR = join(tmpdir(), "paul-orchestrator-test-" + Date.now())
   const PAUL_DIR = join(TEST_DIR, ".paul")
@@ -597,14 +599,14 @@ describe("paul-orchestrator hook", () => {
     const MAIN_SESSION_ID = "main-session-123"
 
      beforeEach(() => {
-       mock.module("../../features/claude-code-session-state", () => ({
-         getMainSessionID: () => MAIN_SESSION_ID,
-         subagentSessions: new Set<string>(),
-       }))
-       setupMessageStorage(MAIN_SESSION_ID, "Paul")
-     })
+       setMainSession(MAIN_SESSION_ID)
+       subagentSessions.clear()
+        setupMessageStorage(MAIN_SESSION_ID, "Paul")
+      })
 
     afterEach(() => {
+      setMainSession(undefined)
+      subagentSessions.clear()
       cleanupMessageStorage(MAIN_SESSION_ID)
     })
 

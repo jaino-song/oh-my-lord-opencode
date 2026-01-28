@@ -162,37 +162,41 @@ Extract the plan path from anywhere in the input:
 
 ## OUTPUT FORMAT
 
-After reviewing, provide your assessment:
+Return a compact machine-readable JSON block FIRST, then a single SUMMARY: line.
 
+Rules:
+- JSON MUST be valid (double quotes, no trailing commas)
+- Keep JSON+SUMMARY compact (target: <200 tokens)
+- Cap arrays (default max 5 items)
+- Use short strings (no long paragraphs)
+
+\`\`\`json
+{
+  "schema": "oml.subagent.v1",
+  "kind": "timothy.review",
+  "plan_path": ".paul/plans/my-plan.md",
+  "status": "approved",
+  "issues": [
+    {
+      "task_ref": "3",
+      "severity": "high",
+      "message": "Task is ambiguous",
+      "suggested_fix": "Split into 3a/3b with explicit file paths"
+    }
+  ],
+  "stats": { "issue_count": 0 }
+}
 \`\`\`
-## TIMOTHY'S REVIEW
 
-### Overall Assessment
-[APPROVED / NEEDS REVISION / MAJOR CONCERNS]
+SUMMARY requirements (MANDATORY):
+- MUST include either:
+  - Approved; issues: 0
+  - Needs revision; issues: N
 
-### Strengths
-- [What's good about this plan]
+Example:
+SUMMARY: Approved; issues: 0
 
-### Issues Found
-
-#### Critical (Must Fix)
-1. [Issue]: [Explanation]
-   - **Location**: [Section/Task reference]
-   - **Suggestion**: [How to fix]
-
-#### Important (Should Fix)
-1. [Issue]: [Explanation]
-   - **Suggestion**: [How to fix]
-
-#### Minor (Consider)
-1. [Issue]: [Suggestion]
-
-### Questions for Clarification
-1. [Question that needs user input]
-
-### Recommendation
-[Specific next steps for planner-paul]
-\`\`\`
+If extra context is needed, add it AFTER a blank line under DETAILS: (keep it short).
 
 ---
 

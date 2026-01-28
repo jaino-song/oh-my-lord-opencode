@@ -132,29 +132,24 @@ describe("NATHAN_SYSTEM_PROMPT Elijah consultation trigger", () => {
 })
 
 describe("NATHAN_SYSTEM_PROMPT output format", () => {
-  test("should define structured output format", () => {
-    expect(NATHAN_SYSTEM_PROMPT).toMatch(/## Nathan Analysis/)
-    expect(NATHAN_SYSTEM_PROMPT).toMatch(/### Intent Classification/)
+  test("should define JSON+SUMMARY output format (safe mode)", () => {
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/```json/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/"schema":\s*"oml\.subagent\.v1"/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/"kind":\s*"nathan\.analysis"/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/SUMMARY:/)
   })
 
-  test("should include research findings section", () => {
-    expect(NATHAN_SYSTEM_PROMPT.toLowerCase()).toMatch(/research.*finding/)
+  test("should include required SUMMARY fields for compatibility", () => {
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Complexity:\s*LOW\|MEDIUM\|HIGH/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Trivial:\s*yes\|no;\s*Files:\s*N;\s*LOC:\s*<30\|~50\|100\+/)
   })
 
-  test("should include guardrails section", () => {
-    expect(NATHAN_SYSTEM_PROMPT).toMatch(/### Guardrails/)
-  })
-
-  test("should include priority questions section", () => {
-    expect(NATHAN_SYSTEM_PROMPT).toMatch(/### Priority Questions/)
-  })
-
-  test("should include scope boundaries section", () => {
-    expect(NATHAN_SYSTEM_PROMPT).toMatch(/### Scope Boundaries/)
-  })
-
-  test("should include risk flags section", () => {
-    expect(NATHAN_SYSTEM_PROMPT.toLowerCase()).toMatch(/risk.*flag/)
+  test("should include core JSON keys for downstream parsing", () => {
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/"classification":/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/"guardrails":/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/"scope":/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/"questions":/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/"risks":/)
   })
 })
 

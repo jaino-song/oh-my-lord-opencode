@@ -9,6 +9,10 @@ import { getMessageDir, findFirstMessageWithAgent, findNearestMessageWithFields 
  * 3. provided fallback value
  */
 export function getParentAgentName(sessionID: string, fallback: string = "agent"): string {
+  if (typeof sessionID !== "string" || sessionID.trim().length === 0) {
+    return fallback
+  }
+
   const sessionAgent = getSessionAgent(sessionID)
   if (sessionAgent) return sessionAgent
   

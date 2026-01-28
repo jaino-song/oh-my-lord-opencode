@@ -1,7 +1,7 @@
 import { describe, expect, test, beforeEach, afterEach, spyOn } from "bun:test"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { tmpdir, homedir } from "node:os"
+import { tmpdir } from "node:os"
 import { createStartWorkHook } from "./index"
 import {
   writeBoulderState,
@@ -206,8 +206,8 @@ describe("start-work hook", () => {
       )
 
       // #then - should use system-reminder tag format
-      expect(output.parts[0].text).toContain("<system-reminder>")
-      expect(output.parts[0].text).toContain("</system-reminder>")
+      expect(output.parts[0].text).toContain("[system reminder]")
+      expect(output.parts[0].text).toContain("[/system reminder]")
       expect(output.parts[0].text).toContain("Multiple Plans Found")
     })
 

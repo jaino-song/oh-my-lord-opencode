@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test"
+import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test"
 import { mkdtempSync, rmSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
@@ -12,6 +12,9 @@ describe("hierarchy-enforcer", () => {
       tui: {
         showToast: () => Promise<void>
       }
+      session: {
+        prompt: () => Promise<void>
+      }
     }
   }
   const TEST_SESSION_ID = "test-session-hierarchy"
@@ -24,6 +27,9 @@ describe("hierarchy-enforcer", () => {
       client: {
         tui: {
           showToast: async () => {}
+        },
+        session: {
+          prompt: async () => {}
         }
       }
     }
@@ -75,7 +81,7 @@ describe("hierarchy-enforcer", () => {
       }
 
       // #when / #then - should NOT throw
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -96,7 +102,7 @@ describe("hierarchy-enforcer", () => {
       }
 
       // #when / #then - should NOT throw
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
@@ -122,9 +128,70 @@ describe("hierarchy-enforcer", () => {
       }
 
       // #when / #then - should NOT throw
-      await expect(
+      return expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
+    })
+  })
+
+  describe("todo notification deduplication", () => {
+    test("should notify once for the same completed todo across repeated calls", async () => {
+      // #given - hook with spies and repeated completed todo
+      const { createHierarchyEnforcerHook, clearNotifiedTodos } = await import("./index")
+      clearNotifiedTodos(TEST_SESSION_ID)
+      const hook = createHierarchyEnforcerHook(mockCtx as any)
+      const showToastSpy = spyOn(mockCtx.client.tui, "showToast").mockResolvedValue(undefined)
+      const promptSpy = spyOn(mockCtx.client.session, "prompt").mockResolvedValue(undefined)
+
+      const input = { tool: "todowrite", sessionID: TEST_SESSION_ID, callID: "test-call" }
+      const output = {
+        args: {
+          todos: [
+            { id: "todo-1", content: "Finish dedup logic", status: "completed" }
+          ]
+        }
+      }
+
+      // #when - same completed todo is reported twice
+      await hook["tool.execute.before"](input, output)
+      await hook["tool.execute.before"](input, output)
+
+      // #then - only one notification should be sent
+      expect(showToastSpy).toHaveBeenCalledTimes(1)
+      expect(promptSpy).toHaveBeenCalledTimes(1)
+    })
+
+    test("should notify separately for distinct completed todo IDs", async () => {
+      // #given - hook with spies and two completed todos
+      const { createHierarchyEnforcerHook, clearNotifiedTodos } = await import("./index")
+      clearNotifiedTodos(TEST_SESSION_ID)
+      const hook = createHierarchyEnforcerHook(mockCtx as any)
+      const showToastSpy = spyOn(mockCtx.client.tui, "showToast").mockResolvedValue(undefined)
+      const promptSpy = spyOn(mockCtx.client.session, "prompt").mockResolvedValue(undefined)
+
+      const input = { tool: "todowrite", sessionID: TEST_SESSION_ID, callID: "test-call" }
+      const outputFirst = {
+        args: {
+          todos: [
+            { id: "todo-1", content: "Finish dedup logic", status: "completed" }
+          ]
+        }
+      }
+      const outputSecond = {
+        args: {
+          todos: [
+            { id: "todo-2", content: "Add second notification", status: "completed" }
+          ]
+        }
+      }
+
+      // #when - two distinct completed todo IDs are reported
+      await hook["tool.execute.before"](input, outputFirst)
+      await hook["tool.execute.before"](input, outputSecond)
+
+      // #then - both notifications should be sent
+      expect(showToastSpy).toHaveBeenCalledTimes(2)
+      expect(promptSpy).toHaveBeenCalledTimes(2)
     })
   })
 })

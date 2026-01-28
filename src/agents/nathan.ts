@@ -170,74 +170,60 @@ If ANY of these conditions are met, recommend Elijah consultation:
 
 ## OUTPUT FORMAT
 
-\`\`\`markdown
-## Nathan Analysis: [Brief Request Summary]
+Return a compact machine-readable JSON block FIRST, then a single SUMMARY: line.
 
-### Intent Classification
-**Primary Intent**: [Build | Fix | Refactor | Architecture | Research | Trivial | Unclear]
-**Secondary Intent**: [Type] (optional)
-**Confidence**: [0-100%]
-**Rationale**: [1-2 sentences explaining classification]
+Rules:
+- JSON MUST be valid (double quotes, no trailing commas)
+- Keep JSON+SUMMARY compact (target: <200 tokens)
+- Cap arrays (default max 5 items)
+- Use short strings (no long paragraphs)
+- If you need extra narrative, add it after a blank line under DETAILS:
 
----
-
-### Research Findings
-
-#### Codebase Patterns (from explore)
-- [Pattern 1]: [Location] - [Implication for this request]
-- [Pattern 2]: [Location] - [Implication for this request]
-
-#### External Context (from librarian)
-- [Finding 1]: [Source] - [Relevance]
-- [Finding 2]: [Source] - [Relevance]
-
----
-
-### Guardrails (Must NOT Have)
-
-1. **[Guardrail 1]**: [Reason - what AI-slop this prevents]
-2. **[Guardrail 2]**: [Reason]
-3. **[Guardrail 3]**: [Reason]
-
----
-
-### Priority Questions (for planner-paul)
-
-1. **[Critical]** [Question]
-   - Why: [Why this blocks progress]
-   - Options: [A, B, C if applicable]
-
-2. **[High]** [Question]
-   - Why: [Why this matters]
-
-3. **[Medium]** [Question]
-   - Why: [What this clarifies]
-
----
-
-### Scope Boundaries
-
-**IN Scope:**
-- [Item 1]
-- [Item 2]
-
-**OUT of Scope:**
-- [Item 1]: [Why excluded]
-- [Item 2]: [Why excluded]
-
----
-
-### Risk Flags
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| [Risk 1] | [H/M/L] | [H/M/L] | [Suggested action] |
-
----
-
-### Elijah Consultation: [YES | NO]
-[If YES: Specific reason and suggested consultation focus]
+\`\`\`json
+{
+  "schema": "oml.subagent.v1",
+  "kind": "nathan.analysis",
+  "complexity": "low",
+  "classification": {
+    "primary": "build",
+    "secondary": null,
+    "confidence": 0.85,
+    "rationale": "..."
+  },
+  "triviality": {
+    "is_trivial": false,
+    "estimated_files": 1,
+    "estimated_loc_changed": 25,
+    "reason": "..."
+  },
+  "research": {
+    "codebase_patterns": ["..."],
+    "external_context": ["..."]
+  },
+  "guardrails": {
+    "must_have": ["..."],
+    "must_not_have": ["..."]
+  },
+  "scope": {
+    "in_scope": ["..."],
+    "out_of_scope": ["..."]
+  },
+  "questions": [
+    { "priority": 1, "question": "...", "options": ["..."] }
+  ],
+  "risks": [
+    { "risk": "...", "likelihood": "low", "impact": "medium", "mitigation": "..." }
+  ],
+  "elijah": { "needed": false, "reason": null }
+}
 \`\`\`
+
+SUMMARY requirements (MANDATORY):
+- MUST include: Complexity: LOW|MEDIUM|HIGH
+- MUST include: Trivial: yes|no; Files: N; LOC: <30|~50|100+
+
+Example:
+SUMMARY: Complexity: LOW; Trivial: yes; Files: 1; LOC: <30
 
 ---
 

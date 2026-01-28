@@ -19,7 +19,7 @@
 
 import type { AgentConfig } from "@opencode-ai/sdk"
 
-export const SOLOMON_SYSTEM_PROMPT = `<system-reminder>
+export const SOLOMON_SYSTEM_PROMPT = `[system reminder]
 # Solomon - TDD Planner
 
 ## CRITICAL IDENTITY (READ THIS FIRST)
@@ -601,6 +601,20 @@ Ezra only says "OKAY" when:
 
 Generate plan to: \`.paul/plans/{name}.md\`
 
+Before the full plan body, include a compact header for orchestrators:
+
+\`\`\`json
+{
+  "schema": "oml.subagent.v1",
+  "kind": "solomon.tdd_plan",
+  "stats": { "unit_tests": 0, "e2e_tests": 0 },
+  "plan_path": ".paul/plans/{name}.md"
+}
+\`\`\`
+SUMMARY: {total} tests planned; plan: {name}.md
+
+Then output the full markdown plan.
+
 \`\`\`markdown
 # TDD Plan: {Feature Name}
 
@@ -870,6 +884,7 @@ To begin execution, run:
 ---
 
 **REMINDER**: Refer to CRITICAL IDENTITY section at the top for constraint enforcement.
+[/system reminder]
 `
 
 /**

@@ -112,56 +112,6 @@ todowrite([
 
 **BLOCKING: DO NOT proceed to Step 4 until Steps 1-3 are VERIFIED.**`
 
-const ORCHESTRATOR_DELEGATION_REQUIRED = `
-
----
-
-⚠️⚠️⚠️ ${createSystemDirective(SystemDirectiveTypes.DELEGATION_REQUIRED)} ⚠️⚠️⚠️
-
-**STOP. YOU ARE VIOLATING ORCHESTRATOR PROTOCOL.**
-
-You (Paul) are attempting to directly modify a file outside \`.paul/\`.
-
-**Path attempted:** $FILE_PATH
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🚫 **THIS IS FORBIDDEN** (except for VERIFICATION purposes)
-
-As an ORCHESTRATOR, you MUST:
-1. **DELEGATE** all implementation work via \`delegate_task\`
-2. **VERIFY** the work done by subagents (reading files is OK)
-3. **COORDINATE** - you orchestrate, you don't implement
-
-**ALLOWED direct file operations:**
-- Files inside \`.paul/\` (plans, notepads, drafts)
-- Reading files for verification
-- Running diagnostics/tests
-
-**FORBIDDEN direct file operations:**
-- Writing/editing source code
-- Creating new files outside \`.paul/\`
-- Any implementation work
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-**IF THIS IS FOR VERIFICATION:**
-Proceed if you are verifying subagent work by making a small fix.
-But for any substantial changes, USE \`delegate_task\`.
-
-**CORRECT APPROACH:**
-\`\`\`
-delegate_task(
-  category="...",
-  prompt="[specific single task with clear acceptance criteria]"
-)
-\`\`\`
-
-⚠️⚠️⚠️ DELEGATE. DON'T IMPLEMENT. ⚠️⚠️⚠️
-
----
-`
-
 const SINGLE_TASK_DIRECTIVE = `
 ${createSystemDirective(SystemDirectiveTypes.SINGLE_TASK_ONLY)}
 ONE task only. If given multiple tasks, REFUSE and demand single-task clarity.
@@ -681,7 +631,7 @@ export function createPaulOrchestratorHook(
       if (input.tool === "delegate_task") {
         const prompt = output.args.prompt as string | undefined
         if (prompt && !prompt.includes(SYSTEM_DIRECTIVE_PREFIX)) {
-          output.args.prompt = prompt + `\n<system-reminder>${SINGLE_TASK_DIRECTIVE}</system-reminder>`
+          output.args.prompt = prompt + `\n[system reminder]${SINGLE_TASK_DIRECTIVE}[/system reminder]`
           log(`[${HOOK_NAME}] Injected single-task directive to delegate_task`, {
             sessionID: input.sessionID,
           })
@@ -759,9 +709,9 @@ ${fileChanges}
 
 ${originalResponse}
 
-<system-reminder>
+[system reminder]
 ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)}
-</system-reminder>`
+[/system reminder]`
 
           log(`[${HOOK_NAME}] Output transformed for orchestrator mode (boulder)`, {
             plan: boulderState.plan_name,
@@ -769,7 +719,7 @@ ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)
             fileCount: gitStats.length,
           })
         } else {
-          output.output += `\n<system-reminder>\n${buildStandaloneVerificationReminder(subagentSessionId)}\n</system-reminder>`
+          output.output += `\n[system reminder]\n${buildStandaloneVerificationReminder(subagentSessionId)}\n[/system reminder]`
 
           log(`[${HOOK_NAME}] Verification reminder appended for orchestrator`, {
             sessionID: input.sessionID,
