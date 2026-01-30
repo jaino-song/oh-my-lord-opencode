@@ -139,6 +139,7 @@ jobs:
           BUMP: ${{ inputs.bump }}
           VERSION: ${{ inputs.version }}
           CI: true
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
           SKIP_PLATFORM_PACKAGES: true
 

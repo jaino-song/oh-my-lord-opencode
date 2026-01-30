@@ -167,14 +167,19 @@ interface PublishResult {
 async function publishPackage(cwd: string, distTag: string | null): Promise<PublishResult> {
   const tagArgs = distTag ? ["--tag", distTag] : []
   const provenanceArgs = process.env.CI ? ["--provenance"] : []
-  
+
+  const token = process.env.NPM_TOKEN
+  if (token) {
+    await $`npm config set //registry.npmjs.org/:_authToken ${token}`.cwd(cwd)
+    console.log("Configured npm with NPM_TOKEN from environment")
+  }
+
   try {
     await $`npm publish --access public --ignore-scripts ${provenanceArgs} ${tagArgs}`.cwd(cwd)
     return { success: true }
   } catch (error: any) {
     const stderr = error?.stderr?.toString() || error?.message || ""
-    
-    // E409 = version already exists (idempotent success)
+
     if (
       stderr.includes("EPUBLISHCONFLICT") ||
       stderr.includes("E409") ||
@@ -183,7 +188,7 @@ async function publishPackage(cwd: string, distTag: string | null): Promise<Publ
     ) {
       return { success: true, alreadyPublished: true }
     }
-    
+
     return { success: false, error: stderr }
   }
 }
