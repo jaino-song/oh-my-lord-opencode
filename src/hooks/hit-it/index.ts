@@ -12,16 +12,16 @@ import {
 import { log } from "../../shared/logger"
 import { clearSessionAgent } from "../../features/claude-code-session-state"
 
-export const HOOK_NAME = "start-work"
+export const HOOK_NAME = "hit-it"
 
-const KEYWORD_PATTERN = /\b(ultrawork|ulw)\b/gi
+const KEYWORD_PATTERN = /\b(hit-it|hititx)\b/gi
 
-interface StartWorkHookInput {
+interface HitItHookInput {
   sessionID: string
   messageID?: string
 }
 
-interface StartWorkHookOutput {
+interface HitItHookOutput {
   parts: Array<{ type: string; text?: string }>
 }
 
@@ -46,11 +46,11 @@ function findPlanByName(plans: string[], requestedName: string): string | null {
   return partialMatch || null
 }
 
-export function createStartWorkHook(ctx: PluginInput) {
+export function createHitItHook(ctx: PluginInput) {
   return {
     "chat.message": async (
-      input: StartWorkHookInput,
-      output: StartWorkHookOutput
+      input: HitItHookInput,
+      output: HitItHookOutput
     ): Promise<void> => {
       const parts = output.parts
       const promptText = parts
@@ -59,15 +59,15 @@ export function createStartWorkHook(ctx: PluginInput) {
         .join("\n")
         .trim() || ""
 
-       // Only trigger on actual command execution (contains <session-context> tag)
-       // NOT on description text like "Start Paul work session from Prometheus plan"
-       const isStartWorkCommand = promptText.includes("<session-context>")
+      // Only trigger on actual command execution (contains <session-context> tag)
+      // NOT on description text like "Start Paul work session from planner-paul plan"
+      const isHitItCommand = promptText.includes("<session-context>")
 
-      if (!isStartWorkCommand) {
+      if (!isHitItCommand) {
         return
       }
 
-      log(`[${HOOK_NAME}] Processing start-work command`, {
+      log(`[${HOOK_NAME}] Processing hit-it command`, {
         sessionID: input.sessionID,
       })
 
@@ -212,7 +212,7 @@ boulder.json has been created. Read the plan and begin execution.`
 
           contextInfo += `
 
-[system reminder]
+[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 ## Multiple Plans Found
 
 Current Time: ${timestamp}
@@ -221,7 +221,7 @@ Session ID: ${sessionId}
 ${planList}
 
 Ask the user which plan to work on. Present the options above and wait for their response.
-[/system reminder]`
+[/SYSTEM DIRECTIVE]`
         }
       }
 

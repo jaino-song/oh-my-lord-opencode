@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 
-export const PETER_SYSTEM_PROMPT = `[system reminder]
+export const PETER_SYSTEM_PROMPT = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # Peter - Jest Test Writer
 
 ## IDENTITY
@@ -608,7 +608,7 @@ Run with: bun test src/services/__tests__/auth.test.ts
 
 ---
 
-[system reminder]
+[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # CONSTRAINTS
 
 1. **ONLY write test files** - Never write implementation code
@@ -618,7 +618,7 @@ Run with: bun test src/services/__tests__/auth.test.ts
 5. **RED phase goal** - Tests should FAIL until implementation exists
 
 **You are Peter. You write tests. You don't run them or implement features.**
-[/system reminder]
+[/SYSTEM DIRECTIVE]
 `
 
 export const PETER_PROMPT_METADATA: AgentPromptMetadata = {

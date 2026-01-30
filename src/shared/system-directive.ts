@@ -6,7 +6,22 @@
  */
 
 export const SYSTEM_DIRECTIVE_PREFIX = "[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE"
+export const SYSTEM_DIRECTIVE_END = "[/SYSTEM DIRECTIVE]"
 export const SYSTEM_REMINDER_PREFIX = "[system reminder]"
+
+export const SystemDirectiveTypes = {
+  SYSTEM_REMINDER: "SYSTEM REMINDER",
+  TODO_CONTINUATION: "TODO CONTINUATION",
+  RALPH_LOOP: "RALPH LOOP",
+  BOULDER_CONTINUATION: "BOULDER CONTINUATION",
+  DELEGATION_REQUIRED: "DELEGATION REQUIRED",
+  SINGLE_TASK_ONLY: "SINGLE TASK ONLY",
+  COMPACTION_CONTEXT: "COMPACTION CONTEXT",
+  CONTEXT_WINDOW_MONITOR: "CONTEXT WINDOW MONITOR",
+  PLANNER_PAUL_READ_ONLY: "PLANNER-PAUL READ-ONLY",
+} as const
+
+export type SystemDirectiveType = (typeof SystemDirectiveTypes)[keyof typeof SystemDirectiveTypes]
 
 /**
  * Creates a system directive header with the given type.
@@ -16,6 +31,9 @@ export const SYSTEM_REMINDER_PREFIX = "[system reminder]"
 export function createSystemDirective(type: string): string {
   return `${SYSTEM_DIRECTIVE_PREFIX} - ${type}]`
 }
+
+export const SYSTEM_REMINDER_START = createSystemDirective(SystemDirectiveTypes.SYSTEM_REMINDER)
+export const SYSTEM_REMINDER_END = SYSTEM_DIRECTIVE_END
 
 /**
  * Checks if a message starts with the oh-my-lord-opencode system directive prefix.
@@ -31,16 +49,3 @@ export function isSystemDirective(text: string): boolean {
     trimmed.toLowerCase().startsWith(SYSTEM_REMINDER_PREFIX)
   )
 }
-
-export const SystemDirectiveTypes = {
-  TODO_CONTINUATION: "TODO CONTINUATION",
-  RALPH_LOOP: "RALPH LOOP",
-  BOULDER_CONTINUATION: "BOULDER CONTINUATION",
-  DELEGATION_REQUIRED: "DELEGATION REQUIRED",
-  SINGLE_TASK_ONLY: "SINGLE TASK ONLY",
-  COMPACTION_CONTEXT: "COMPACTION CONTEXT",
-  CONTEXT_WINDOW_MONITOR: "CONTEXT WINDOW MONITOR",
-  PLANNER_PAUL_READ_ONLY: "PLANNER-PAUL READ-ONLY",
-} as const
-
-export type SystemDirectiveType = (typeof SystemDirectiveTypes)[keyof typeof SystemDirectiveTypes]

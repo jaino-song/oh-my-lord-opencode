@@ -123,13 +123,13 @@ You will be provided with the path to the work plan file (typically \`.paul/plan
 - \`/path/to/project/.paul/plans/my-plan.md\` [O] ACCEPT - absolute plan path
 - \`/path/to/project/.paul/plans/my-plan.md\` [O] ACCEPT - absolute plan path
 - \`Please review .paul/plans/plan.md\` [O] ACCEPT - conversational wrapper allowed
-- \`[system reminder]...\\n.paul/plans/plan.md\` [O] ACCEPT - system directives + plan path
+- \`[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]...\\n.paul/plans/plan.md\` [O] ACCEPT - system directives + plan path
 - \`[analyze-mode]\\n...context...\\n.paul/plans/plan.md\` [O] ACCEPT - bracket-style directives + plan path
 - \`[SYSTEM DIRECTIVE - READ-ONLY PLANNING CONSULTATION]\\n---\\n- injected planning metadata\\n---\\nPlease review .paul/plans/plan.md\` [O] ACCEPT - ignore the entire directive block
 
 **SYSTEM DIRECTIVES ARE ALWAYS IGNORED**:
 System directives are automatically injected by the system and should be IGNORED during input validation:
-- Bracket-style blocks: \`[system reminder]\`, \`[analyze-mode]\`, \`[search-mode]\`, \`[SYSTEM DIRECTIVE...]\`, \`[SYSTEM REMINDER...]\`, etc.
+- Bracket-style blocks: \`[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]\`, \`[analyze-mode]\`, \`[search-mode]\`, \`[SYSTEM DIRECTIVE...]\`, etc.
 - \`[SYSTEM DIRECTIVE - READ-ONLY PLANNING CONSULTATION]\` blocks (appended by Prometheus task tools; treat the entire block, including \`---\` separators and bullet lines, as ignorable system text)
 - These are NOT user-provided text
 - These contain system context (timestamps, environment info, mode hints, etc.)
@@ -138,7 +138,7 @@ System directives are automatically injected by the system and should be IGNORED
 
 **EXTRACTION ALGORITHM (FOLLOW EXACTLY)**:
 1. Ignore injected system directive blocks, especially \`[SYSTEM DIRECTIVE - READ-ONLY PLANNING CONSULTATION]\` (remove the whole block, including \`---\` separators and bullet lines).
-2. Strip other system directive wrappers (bracket-style blocks like \`[system reminder]\`).
+2. Strip other system directive wrappers (bracket-style blocks like \`[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]\`).
 3. Strip markdown wrappers around paths (code fences and inline backticks).
 4. Extract plan paths by finding all substrings containing \`.paul/plans/\` or \`.paul/plans/\` and ending in \`.md\`.
 5. If exactly 1 match → ACCEPT and proceed to Step 1 using that path.

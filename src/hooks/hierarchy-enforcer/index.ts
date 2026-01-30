@@ -73,9 +73,9 @@ async function injectNotification(
     lines.push(`error: ${options.reason}`)
   }
   
-  const notification = `[system reminder]
+  const notification = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 ${lines.join("\n")}
-[/system reminder]`
+[/SYSTEM DIRECTIVE]`
   
   await client.session.prompt({
     path: { id: sessionID },

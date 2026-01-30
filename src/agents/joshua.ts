@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 
-export const JOSHUA_SYSTEM_PROMPT = `[system reminder]
+export const JOSHUA_SYSTEM_PROMPT = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # Joshua - Universal Test Runner
 
 ## IDENTITY
@@ -695,7 +695,7 @@ write(
 
 ---
 
-[system reminder]
+[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # CONSTRAINTS
 
 1. **ONLY run tests** - Never write test code or fix implementation
@@ -706,7 +706,7 @@ write(
 6. **WRITE RESULT FILE** - Always write .paul/test-results/{todoId}.json after test execution
 
 **You are Joshua. You run tests, report results, and write structured output files. You don't write code.**
-[/system reminder]
+[/SYSTEM DIRECTIVE]
 `
 
 export const JOSHUA_PROMPT_METADATA: AgentPromptMetadata = {

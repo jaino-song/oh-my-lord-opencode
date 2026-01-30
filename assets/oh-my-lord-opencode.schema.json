@@ -85,7 +85,7 @@
           "delegate-task-retry",
           "planner-md-only",
           "prometheus-md-only",
-          "start-work",
+          "hit-it",
           "paul-orchestrator",
           "tdd-enforcement",
           "strict-workflow",
@@ -101,7 +101,7 @@
         "type": "string",
         "enum": [
           "init-deep",
-          "start-work"
+          "hit-it"
         ]
       }
     },

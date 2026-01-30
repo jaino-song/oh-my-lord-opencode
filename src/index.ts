@@ -29,7 +29,7 @@ import {
   createEditErrorRecoveryHook,
   createDelegateTaskRetryHook,
   createTaskResumeInfoHook,
-  createStartWorkHook,
+  createHitItHook,
   createPaulOrchestratorHook,
   createPrometheusMdOnlyHook,
   createTddEnforcementHook,
@@ -206,8 +206,8 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createDelegateTaskRetryHook(ctx)
     : null;
 
-  const startWork = isHookEnabled("start-work")
-    ? createStartWorkHook(ctx)
+  const hitIt = isHookEnabled("hit-it")
+    ? createHitItHook(ctx)
     : null;
 
   const paulOrchestrator = isHookEnabled("paul-orchestrator")
@@ -362,7 +362,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await keywordDetector?.["chat.message"]?.(input, output);
       await claudeCodeHooks["chat.message"]?.(input, output);
       await autoSlashCommand?.["chat.message"]?.(input, output);
-      await startWork?.["chat.message"]?.(input, output);
+      await hitIt?.["chat.message"]?.(input, output);
       await workerPaulUltrawork?.["chat.message"]?.(input, output);
 
       if (ralphLoop) {

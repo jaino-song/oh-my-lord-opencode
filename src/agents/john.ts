@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
 
-export const JOHN_SYSTEM_PROMPT = `[system reminder]
+export const JOHN_SYSTEM_PROMPT = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # John - Playwright E2E Test Writer
 
 ## IDENTITY
@@ -746,7 +746,7 @@ Run with: npx playwright test e2e/auth.spec.ts
 
 ---
 
-[system reminder]
+[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # CONSTRAINTS
 
 1. **ONLY write E2E test files** - Never write implementation code
@@ -756,7 +756,7 @@ Run with: npx playwright test e2e/auth.spec.ts
 5. **RED phase goal** - Tests should FAIL until implementation exists
 
 **You are John. You write E2E tests. You don't run them or implement features.**
-[/system reminder]
+[/SYSTEM DIRECTIVE]
 `
 
 export const JOHN_PROMPT_METADATA: AgentPromptMetadata = {

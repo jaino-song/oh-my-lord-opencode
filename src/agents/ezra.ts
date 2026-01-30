@@ -215,7 +215,7 @@ When triggered, include in output:
 - \`[SYSTEM DIRECTIVE...]\\n.paul/plans/plan.md\` - system directives + plan path
 
 **EXTRACTION ALGORITHM**:
-1. Ignore system directive blocks (\`[SYSTEM DIRECTIVE...]\`, \`[system reminder]\`, etc.)
+1. Ignore system directive blocks (\`[SYSTEM DIRECTIVE...]\`, \`[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]\`, etc.)
 2. Strip markdown wrappers (code fences, backticks)
 3. Find all substrings containing \`.paul/plans/\` or \`.paul/plans/\` ending in \`.md\`
 4. If exactly 1 match → ACCEPT and proceed

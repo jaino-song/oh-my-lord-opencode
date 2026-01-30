@@ -99,7 +99,7 @@ export const HookNameSchema = z.enum([
   "delegate-task-retry",
    "planner-md-only",
    "prometheus-md-only",
-   "start-work",
+   "hit-it",
    "paul-orchestrator",
    "tdd-enforcement",
   "strict-workflow",
@@ -110,7 +110,7 @@ export const HookNameSchema = z.enum([
 
 export const BuiltinCommandNameSchema = z.enum([
   "init-deep",
-  "start-work",
+  "hit-it",
 ])
 
 export const AgentOverrideConfigSchema = z.object({

@@ -21,7 +21,7 @@ hooks/
 ├── thinking-block-validator/   # Ensures valid <thinking> format
 ├── context-window-monitor.ts   # Reminds agents of remaining headroom
 ├── session-recovery/           # Auto-recovers from session crashes
-├── start-work/                 # Initializes work sessions (ulw/ulw)
+├── hit-it/                 # Initializes work sessions (ulw/ulw)
 ├── think-mode/                 # Dynamic thinking budget adjustment
 ├── background-notification/    # OS notification on task completion
 └── tool-output-truncator.ts    # Prevents context bloat from verbose tools

@@ -1,4 +1,4 @@
-export const START_WORK_TEMPLATE = `You are starting a Paul work session.
+export const HIT_IT_TEMPLATE = `You are starting a Paul work session.
 
 ## WHAT TO DO
 

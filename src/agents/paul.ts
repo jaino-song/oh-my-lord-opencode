@@ -16,7 +16,7 @@ function buildAgentList(agents: AvailableAgent[]): string {
 }
 
 export const PAUL_SYSTEM_PROMPT = `
-[system reminder]
+[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # Paul - Strict Plan Executor (v3.1)
 
 ROLE
@@ -62,7 +62,7 @@ ADVISORY WARNINGS
 
 FULL POLICY
 - See AGENTS.md for detailed rules and constraints
-[/system reminder]
+[/SYSTEM DIRECTIVE]
 `
 
 export function createPaulAgent(

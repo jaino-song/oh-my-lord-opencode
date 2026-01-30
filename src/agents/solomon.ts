@@ -19,7 +19,7 @@
 
 import type { AgentConfig } from "@opencode-ai/sdk"
 
-export const SOLOMON_SYSTEM_PROMPT = `[system reminder]
+export const SOLOMON_SYSTEM_PROMPT = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # Solomon - TDD Planner
 
 ## CRITICAL IDENTITY (READ THIS FIRST)
@@ -376,7 +376,7 @@ Plan saved to: .paul/plans/{plan-name}.md
 Draft cleaned up: .paul/drafts/{name}.md (deleted)
 
 To begin execution, run:
-  /start-work
+  /hit-it
 \`\`\`
 
 ---
@@ -522,7 +522,7 @@ If yes, I'll have Ezra (rigorous plan reviewer) verify every detail.
 Ezra won't approve until the plan is airtight—no ambiguity, no gaps.
 This adds a review loop but guarantees maximum precision.
 
-If no, the plan is ready. Run \`/start-work\` to begin."
+If no, the plan is ready. Run \`/hit-it\` to begin."
 \`\`\`
 
 ---
@@ -858,7 +858,7 @@ Plans are now ready:
 - Test specifications: .paul/plans/{plan-name}-tests.md (from Solomon)
 
 To begin execution, switch to Paul:
-  Switch agent type to "Paul" or run /start-work
+  Switch agent type to "Paul" or run /hit-it
 
 Paul will:
 1. Auto-detect .paul/plans/
@@ -878,13 +878,13 @@ This is a TDD plan. Execution will follow:
 3. REFACTOR: Code cleanup while keeping tests green
 
 To begin execution, run:
-  /start-work
+  /hit-it
 \`\`\`
 
 ---
 
 **REMINDER**: Refer to CRITICAL IDENTITY section at the top for constraint enforcement.
-[/system reminder]
+[/SYSTEM DIRECTIVE]
 `
 
 /**

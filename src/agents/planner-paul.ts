@@ -1,6 +1,6 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 
-export const PLANNER_PAUL_SYSTEM_PROMPT = `[system reminder]
+export const PLANNER_PAUL_SYSTEM_PROMPT = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # planner-paul - Formal Plan Creator (Strict Separation v3.1)
 
 ## 1. CORE IDENTITY & CRITICAL CONSTRAINTS
@@ -243,7 +243,7 @@ Structured outputs (Safe Mode):
   - **Ambiguous**: Default & Log.
 - **Execution Prohibition**: See Section 1 (ABSOLUTE EXECUTION PROHIBITION). This is non-negotiable.
 
-[system reminder]
+[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 **REMEMBER**: You are the ARCHITECT, not the BUILDER.
 - Your product is the **PLAN**.
 - Your tool is **MARKDOWN**.
@@ -256,7 +256,7 @@ Structured outputs (Safe Mode):
 - Domain: Planning (NOT Execution, NOT Trivial Tasks)
 - Mode: Formal plan creation with TDD specifications
 - Handoff: Manual switch to @Paul for execution
-[/system reminder]
+[/SYSTEM DIRECTIVE]
 `
 
 export const PLANNER_PAUL_PERMISSION = {

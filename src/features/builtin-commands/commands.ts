@@ -3,7 +3,7 @@ import type { BuiltinCommandName, BuiltinCommands } from "./types"
 import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
 import { RALPH_LOOP_TEMPLATE, CANCEL_RALPH_TEMPLATE } from "./templates/ralph-loop"
 import { REFACTOR_TEMPLATE } from "./templates/refactor"
-import { START_WORK_TEMPLATE } from "./templates/start-work"
+import { HIT_IT_TEMPLATE } from "./templates/hit-it"
 
 const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
   "init-deep": {
@@ -42,11 +42,11 @@ ${REFACTOR_TEMPLATE}
 </command-instruction>`,
     argumentHint: "<refactoring-target> [--scope=<file|module|project>] [--strategy=<safe|aggressive>]",
   },
-   "start-work": {
-     description: "(builtin) Start Paul work session from Prometheus plan",
-     agent: "Paul",
+  "hit-it": {
+    description: "(builtin) Start Paul work session from planner-paul plan",
+    agent: "Paul",
     template: `<command-instruction>
-${START_WORK_TEMPLATE}
+${HIT_IT_TEMPLATE}
 </command-instruction>
 
 <session-context>

@@ -631,7 +631,7 @@ export function createPaulOrchestratorHook(
       if (input.tool === "delegate_task") {
         const prompt = output.args.prompt as string | undefined
         if (prompt && !prompt.includes(SYSTEM_DIRECTIVE_PREFIX)) {
-          output.args.prompt = prompt + `\n[system reminder]${SINGLE_TASK_DIRECTIVE}[/system reminder]`
+          output.args.prompt = prompt + `\n[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]${SINGLE_TASK_DIRECTIVE}[/SYSTEM DIRECTIVE]`
           log(`[${HOOK_NAME}] Injected single-task directive to delegate_task`, {
             sessionID: input.sessionID,
           })
@@ -709,9 +709,9 @@ ${fileChanges}
 
 ${originalResponse}
 
-[system reminder]
+[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)}
-[/system reminder]`
+[/SYSTEM DIRECTIVE]`
 
           log(`[${HOOK_NAME}] Output transformed for orchestrator mode (boulder)`, {
             plan: boulderState.plan_name,
@@ -719,7 +719,7 @@ ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)
             fileCount: gitStats.length,
           })
         } else {
-          output.output += `\n[system reminder]\n${buildStandaloneVerificationReminder(subagentSessionId)}\n[/system reminder]`
+          output.output += `\n[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]\n${buildStandaloneVerificationReminder(subagentSessionId)}\n[/SYSTEM DIRECTIVE]`
 
           log(`[${HOOK_NAME}] Verification reminder appended for orchestrator`, {
             sessionID: input.sessionID,

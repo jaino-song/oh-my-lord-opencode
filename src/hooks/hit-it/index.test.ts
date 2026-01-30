@@ -2,7 +2,7 @@ import { describe, expect, test, beforeEach, afterEach, spyOn } from "bun:test"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
-import { createStartWorkHook } from "./index"
+import { createHitItHook } from "./index"
 import {
   writeBoulderState,
   clearBoulderState,
@@ -10,15 +10,15 @@ import {
 import type { BoulderState } from "../../features/boulder-state"
 import * as sessionState from "../../features/claude-code-session-state"
 
-describe("start-work hook", () => {
-  const TEST_DIR = join(tmpdir(), "start-work-test-" + Date.now())
+describe("hit-it hook", () => {
+  const TEST_DIR = join(tmpdir(), "hit-it-test-" + Date.now())
   const PAUL_DIR = join(TEST_DIR, ".paul")
 
   function createMockPluginInput() {
     return {
       directory: TEST_DIR,
       client: {},
-    } as Parameters<typeof createStartWorkHook>[0]
+    } as Parameters<typeof createHitItHook>[0]
   }
 
   beforeEach(() => {
@@ -39,9 +39,9 @@ describe("start-work hook", () => {
   })
 
   describe("chat.message handler", () => {
-    test("should ignore non-start-work commands", async () => {
-      // #given - hook and non-start-work message
-      const hook = createStartWorkHook(createMockPluginInput())
+    test("should ignore non-hit-it commands", async () => {
+      // #given - hook and non-hit-it message
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [{ type: "text", text: "Just a regular message" }],
       }
@@ -56,9 +56,9 @@ describe("start-work hook", () => {
       expect(output.parts[0].text).toBe("Just a regular message")
     })
 
-    test("should detect start-work command via session-context tag", async () => {
-      // #given - hook and start-work message
-      const hook = createStartWorkHook(createMockPluginInput())
+    test("should detect hit-it command via session-context tag", async () => {
+      // #given - hook and hit-it message
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [
           {
@@ -91,7 +91,7 @@ describe("start-work hook", () => {
       }
       writeBoulderState(TEST_DIR, state)
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -109,7 +109,7 @@ describe("start-work hook", () => {
 
     test("should replace $SESSION_ID placeholder", async () => {
       // #given - hook and message with placeholder
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [
           {
@@ -132,7 +132,7 @@ describe("start-work hook", () => {
 
     test("should replace $TIMESTAMP placeholder", async () => {
       // #given - hook and message with placeholder
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [
           {
@@ -166,7 +166,7 @@ describe("start-work hook", () => {
       const plan2Path = join(plansDir, "plan-incomplete.md")
       writeFileSync(plan2Path, "# Plan Incomplete\n- [ ] Task 1\n- [x] Task 2")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -194,7 +194,7 @@ describe("start-work hook", () => {
       const plan2Path = join(plansDir, "plan-b.md")
       writeFileSync(plan2Path, "# Plan B\n- [ ] Task 2")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -205,9 +205,9 @@ describe("start-work hook", () => {
         output
       )
 
-      // #then - should use system-reminder tag format
-      expect(output.parts[0].text).toContain("[system reminder]")
-      expect(output.parts[0].text).toContain("[/system reminder]")
+      // #then - should use system directive tag format
+      expect(output.parts[0].text).toContain("[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]")
+      expect(output.parts[0].text).toContain("[/SYSTEM DIRECTIVE]")
       expect(output.parts[0].text).toContain("Multiple Plans Found")
     })
 
@@ -222,7 +222,7 @@ describe("start-work hook", () => {
       const plan2Path = join(plansDir, "plan-y.md")
       writeFileSync(plan2Path, "# Plan Y\n- [ ] Task 2")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -260,7 +260,7 @@ describe("start-work hook", () => {
       }
       writeBoulderState(TEST_DIR, staleState)
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [
           {
@@ -292,44 +292,44 @@ describe("start-work hook", () => {
       const planPath = join(plansDir, "my-feature-plan.md")
       writeFileSync(planPath, "# My Feature Plan\n- [ ] Task 1")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [
           {
             type: "text",
             text: `<session-context>
-<user-request>my-feature-plan ultrawork</user-request>
+<user-request>my-feature-plan hit-it</user-request>
 </session-context>`,
           },
         ],
       }
 
-      // #when - user specifies plan with ultrawork keyword
+      // #when - user specifies plan with hit-it keyword
       await hook["chat.message"](
         { sessionID: "session-123" },
         output
       )
 
-      // #then - should find plan without ultrawork suffix
+      // #then - should find plan without hit-it suffix
       expect(output.parts[0].text).toContain("my-feature-plan")
       expect(output.parts[0].text).toContain("Auto-Selected Plan")
     })
 
-     test("should strip ulw keyword from plan name argument", async () => {
-       // #given - plan with ulw keyword in user-request
+     test("should strip hititx keyword from plan name argument", async () => {
+       // #given - plan with hititx keyword in user-request
        const plansDir = join(TEST_DIR, ".paul", "plans")
       mkdirSync(plansDir, { recursive: true })
 
       const planPath = join(plansDir, "api-refactor.md")
       writeFileSync(planPath, "# API Refactor\n- [ ] Task 1")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [
           {
             type: "text",
             text: `<session-context>
-<user-request>api-refactor ulw</user-request>
+<user-request>api-refactor hititx</user-request>
 </session-context>`,
           },
         ],
@@ -341,7 +341,7 @@ describe("start-work hook", () => {
         output
       )
 
-      // #then - should find plan without ulw suffix
+      // #then - should find plan without hititx suffix
       expect(output.parts[0].text).toContain("api-refactor")
       expect(output.parts[0].text).toContain("Auto-Selected Plan")
     })
@@ -354,7 +354,7 @@ describe("start-work hook", () => {
       const planPath = join(plansDir, "2026-01-15-feature-implementation.md")
       writeFileSync(planPath, "# Feature Implementation\n- [ ] Task 1")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [
           {
@@ -379,16 +379,16 @@ describe("start-work hook", () => {
   })
 
   describe("session agent management", () => {
-    test("should clear session agent when start-work command is triggered", async () => {
+    test("should clear session agent when hit-it command is triggered", async () => {
       // #given - spy on clearSessionAgent
       const clearSpy = spyOn(sessionState, "clearSessionAgent")
       
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createHitItHook(createMockPluginInput())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
 
-      // #when - start-work command is processed
+      // #when - hit-it command is processed
       await hook["chat.message"](
         { sessionID: "ses-prometheus-to-sisyphus" },
         output

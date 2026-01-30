@@ -9,7 +9,7 @@ features/
 ├── background-agent/           # Task lifecycle, notifications (928 lines manager.ts)
 ├── boulder-state/              # Boulder state persistence
 ├── builtin-commands/           # Built-in slash commands
-│   └── templates/              # start-work, refactor, init-deep, ralph-loop
+│   └── templates/              # hit-it, refactor, init-deep, ralph-loop
 ├── builtin-skills/             # Built-in skills (1230 lines skills.ts)
 │   ├── git-master/             # Atomic commits, rebase, history search
 │   ├── playwright              # Browser automation skill

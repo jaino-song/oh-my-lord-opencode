@@ -29,7 +29,7 @@ export { createAutoSlashCommandHook } from "./auto-slash-command";
 export { createEditErrorRecoveryHook } from "./edit-error-recovery";
 export { createPlannerMdOnlyHook, createPrometheusMdOnlyHook } from "./planner-md-only";
 export { createTaskResumeInfoHook } from "./task-resume-info";
-export { createStartWorkHook } from "./start-work";
+export { createHitItHook } from "./hit-it";
 export { createPaulOrchestratorHook } from "./paul-orchestrator";
 export { createDelegateTaskRetryHook } from "./delegate-task-retry";
 export { createTddEnforcementHook } from "./tdd-enforcement";

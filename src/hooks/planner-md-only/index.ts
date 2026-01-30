@@ -159,7 +159,7 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
           throw new Error(
             `[${HOOK_NAME}] Planner agents cannot execute file-modifying bash commands. ` +
             `Detected dangerous pattern in command. ` +
-            `Planners are READ-ONLY. Use /start-work to execute the plan.`
+            `Planners are READ-ONLY. Use /hit-it to execute the plan.`
           )
         }
 
@@ -198,7 +198,7 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
         throw new Error(
           `[${HOOK_NAME}] Planner agents can only write/edit .md files within the workspace root. ` +
           `Attempted to modify: ${filePath} (${reasonMessage}). ` +
-          `Planners are READ-ONLY for code files. Use /start-work to execute the plan.`
+          `Planners are READ-ONLY for code files. Use /hit-it to execute the plan.`
         )
       }
 
