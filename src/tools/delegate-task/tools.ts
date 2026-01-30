@@ -15,6 +15,7 @@ import { subagentSessions, getSessionAgent } from "../../features/claude-code-se
 import { log, getAgentToolRestrictions } from "../../shared"
 import { truncateToTokenLimit } from "../../shared/dynamic-truncator"
 import { getParentAgentName } from "../../features/agent-context"
+import { AGENT_FALLBACK_MODELS, MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS, PAUL_JUNIOR_SUBSTITUTE } from "../../config/fallback-models"
 
 type OpencodeClient = PluginInput["client"]
 
@@ -54,6 +55,22 @@ function formatDuration(start: Date, end?: Date): string {
   if (hours > 0) return `${hours}h ${minutes % 60}m ${seconds % 60}s`
   if (minutes > 0) return `${minutes}m ${seconds % 60}s`
   return `${seconds}s`
+}
+
+function isRetryableError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase()
+  return message.includes("timeout") ||
+    message.includes("rate limit") ||
+    message.includes("rate_limit") ||
+    message.includes("unresponsive") ||
+    message.includes("503") ||
+    message.includes("429") ||
+    message.includes("overloaded")
+}
+
+function getFallbackModel(agentName: string): string | undefined {
+  const config = AGENT_FALLBACK_MODELS[agentName]
+  return config?.fallback
 }
 
 interface ErrorContext {
@@ -645,40 +662,85 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
           metadata: { sessionId: sessionID, category: args.category, sync: true },
         })
 
-        try {
-          await client.session.prompt({
-            path: { id: sessionID },
-            body: {
-              agent: agentToUse,
-              system: systemContent,
-              tools: {
-                task: false,
-                delegate_task: false,
-                call_omo_agent: true,
+        let currentModel = categoryModel
+        let currentAgent = agentToUse
+        let lastError: unknown = null
+
+        for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
+          try {
+            log(`[delegate_task] Attempt ${attempt}/${MAX_RETRY_ATTEMPTS} for ${currentAgent}`, {
+              model: currentModel ? `${currentModel.providerID}/${currentModel.modelID}` : "default",
+            })
+
+            await client.session.prompt({
+              path: { id: sessionID },
+              body: {
+                agent: currentAgent,
+                system: systemContent,
+                tools: {
+                  task: false,
+                  delegate_task: false,
+                  call_omo_agent: true,
+                },
+                parts: [{ type: "text", text: args.prompt }],
+                ...(currentModel ? { model: currentModel } : {}),
               },
-              parts: [{ type: "text", text: args.prompt }],
-              ...(categoryModel ? { model: categoryModel } : {}),
-            },
-          })
-        } catch (promptError) {
+            })
+            lastError = null
+            break
+          } catch (promptError) {
+            lastError = promptError
+            const errorMessage = promptError instanceof Error ? promptError.message : String(promptError)
+
+            if (errorMessage.includes("agent.name") || errorMessage.includes("undefined")) {
+              if (toastManager && taskId !== undefined) {
+                toastManager.removeTask(taskId)
+              }
+              return formatDetailedError(new Error(`Agent "${currentAgent}" not found. Make sure the agent is registered in your opencode.json or provided by a plugin.`), {
+                operation: "Send prompt to agent",
+                args,
+                sessionID,
+                agent: currentAgent,
+                category: args.category,
+              })
+            }
+
+            if (!isRetryableError(promptError) || attempt >= MAX_RETRY_ATTEMPTS) {
+              break
+            }
+
+            const fallbackModelStr = getFallbackModel(currentAgent)
+            if (fallbackModelStr) {
+              const parsed = parseModelString(fallbackModelStr)
+              if (parsed) {
+                currentModel = parsed
+                log(`[delegate_task] Retrying with fallback model: ${fallbackModelStr}`)
+              }
+            } else if (currentAgent !== PAUL_JUNIOR_SUBSTITUTE) {
+              currentAgent = PAUL_JUNIOR_SUBSTITUTE
+              const paulJuniorFallback = AGENT_FALLBACK_MODELS[PAUL_JUNIOR_SUBSTITUTE]
+              if (paulJuniorFallback) {
+                const parsed = parseModelString(paulJuniorFallback.main)
+                if (parsed) {
+                  currentModel = parsed
+                }
+              }
+              log(`[delegate_task] Substituting with ${PAUL_JUNIOR_SUBSTITUTE}`)
+            }
+
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS))
+          }
+        }
+
+        if (lastError) {
           if (toastManager && taskId !== undefined) {
             toastManager.removeTask(taskId)
           }
-          const errorMessage = promptError instanceof Error ? promptError.message : String(promptError)
-          if (errorMessage.includes("agent.name") || errorMessage.includes("undefined")) {
-            return formatDetailedError(new Error(`Agent "${agentToUse}" not found. Make sure the agent is registered in your opencode.json or provided by a plugin.`), {
-              operation: "Send prompt to agent",
-              args,
-              sessionID,
-              agent: agentToUse,
-              category: args.category,
-            })
-          }
-          return formatDetailedError(promptError, {
+          return formatDetailedError(lastError, {
             operation: "Send prompt",
             args,
             sessionID,
-            agent: agentToUse,
+            agent: currentAgent,
             category: args.category,
           })
         }
@@ -832,3 +894,5 @@ ${formattedOutput}`
     },
   })
 }
+
+

@@ -103,6 +103,7 @@ const HIGH_VARIANT_MAP: Record<string, string> = {
   "gpt-5-1": "gpt-5-1-high",
   "gpt-5-2": "gpt-5-2-high",
   "gpt-5-1-codex": "gpt-5-1-codex-high",
+  "gpt-5-2-codex": "gpt-5-2-codex-high",
 
   // o1 and o3 models (OpenAI reasoning models)
   "o1-preview": "o1-preview-high",

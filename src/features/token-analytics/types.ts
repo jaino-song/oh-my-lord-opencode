@@ -114,6 +114,20 @@ export const MODEL_PRICING: Record<
     cacheRead: 7.5,
     cacheWrite: 18.75,
   },
+  "openai/gpt-5.2-codex-high": {
+    input: 15.0,
+    output: 45.0,
+    reasoning: 0.0,
+    cacheRead: 7.5,
+    cacheWrite: 18.75,
+  },
+  "gpt-5.2-codex-high": {
+    input: 15.0,
+    output: 45.0,
+    reasoning: 0.0,
+    cacheRead: 7.5,
+    cacheWrite: 18.75,
+  },
   "google/gemini-3-pro-high": {
     input: 7.5,
     output: 22.5,
