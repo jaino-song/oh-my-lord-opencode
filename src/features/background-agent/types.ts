@@ -39,6 +39,10 @@ export interface BackgroundTask {
   lastMsgCount?: number
   /** Number of consecutive polls with stable message count */
   stablePolls?: number
+  /** Count of consecutive idle polls with no output (for rate limit detection) */
+  noOutputIdleCount?: number
+  /** Timestamp of last "still working" toast */
+  lastWorkingToastAt?: Date
 }
 
 export interface LaunchInput {

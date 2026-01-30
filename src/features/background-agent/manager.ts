@@ -17,8 +17,10 @@ import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
 const TASK_TTL_MS = 30 * 60 * 1000
-const MIN_STABILITY_TIME_MS = 10 * 1000  // Must run at least 10s before stability detection kicks in
-const PROGRESS_TOAST_INTERVAL_MS = 10000  // 10 seconds between progress toasts
+const MIN_STABILITY_TIME_MS = 10 * 1000
+const PROGRESS_TOAST_INTERVAL_MS = 10000
+const NO_OUTPUT_TIMEOUT_MS = 60 * 1000
+const WORKING_TOAST_INTERVAL_MS = 15 * 1000
 
 type ProcessCleanupEvent = NodeJS.Signals | "beforeExit" | "exit"
 
@@ -503,9 +505,11 @@ export class BackgroundManager {
         }
 
         if (!hasValidOutput) {
-          log("[background-agent] Session.idle but no valid output yet, waiting:", task.id)
+          task.noOutputIdleCount = (task.noOutputIdleCount ?? 0) + 1
+          log("[background-agent] Session.idle but no valid output yet, waiting:", { taskId: task.id, noOutputIdleCount: task.noOutputIdleCount })
           return
         }
+        task.noOutputIdleCount = 0
 
         const hasIncompleteTodos = await this.checkSessionTodos(sessionID)
 
@@ -979,12 +983,28 @@ Use \`background_output(task_id="${task.id}")\` to retrieve result.
         
         // Don't skip if session not in status - fall through to message-based detection
         if (sessionStatus?.type === "idle") {
-          // Edge guard: Validate session has actual output before completing
           const hasValidOutput = await this.validateSessionHasOutput(task.sessionID)
           if (!hasValidOutput) {
-            log("[background-agent] Polling idle but no valid output yet, waiting:", task.id)
+            task.noOutputIdleCount = (task.noOutputIdleCount ?? 0) + 1
+            const elapsedNoOutput = task.noOutputIdleCount * 2000
+            
+            if (elapsedNoOutput >= NO_OUTPUT_TIMEOUT_MS) {
+              log("[background-agent] No output timeout - possible rate limiting:", { taskId: task.id })
+              task.status = "error"
+              task.error = "No output received after 60s - possible rate limiting or API error"
+              task.completedAt = new Date()
+              if (task.concurrencyKey) {
+                this.concurrencyManager.release(task.concurrencyKey)
+                task.concurrencyKey = undefined
+              }
+              await this.notifyParentSession(task)
+              continue
+            }
+            
+            log("[background-agent] Polling idle but no valid output yet, waiting:", { taskId: task.id, elapsedNoOutput })
             continue
           }
+          task.noOutputIdleCount = 0
 
           // Re-check status after async operation
           if (task.status !== "running") continue
@@ -997,6 +1017,23 @@ Use \`background_output(task_id="${task.id}")\` to retrieve result.
 
           await this.tryCompleteTask(task, "polling (idle status)")
           continue
+        }
+
+        const now = Date.now()
+        const lastWorkingToast = task.lastWorkingToastAt?.getTime() ?? 0
+        if (now - lastWorkingToast >= WORKING_TOAST_INTERVAL_MS) {
+          task.lastWorkingToastAt = new Date()
+          const toastManager = getTaskToastManager()
+          if (toastManager) {
+            const elapsed = this.formatDuration(task.startedAt, new Date())
+            toastManager.showProgressToast({
+              id: task.id,
+              description: task.description,
+              agent: task.agent,
+              progress: "Still working...",
+              elapsed,
+            })
+          }
         }
 
         const messagesResult = await this.client.session.messages({

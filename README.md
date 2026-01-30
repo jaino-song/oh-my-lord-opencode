@@ -29,6 +29,8 @@ Oh My Lord OpenCode is a batteries-included OpenCode plugin that provides advanc
 | **Paul** | Execute formal plans from `.paul/plans/` |
 | **worker-paul** | Small tasks (< 10 lines), single file, low risk |
 
+**Workflow**: `@planner-paul` creates plan → `/hit-it` switches to `@Paul` for execution
+
 ### Architecture Benefits
 
 **Hub-and-Spoke** pattern means:
@@ -49,6 +51,8 @@ Oh My Lord OpenCode optimizes token usage:
 
 | Version | Description |
 |---------|-------------|
+| [v0.14.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.14.0) | `/hit-it` command, mandatory todos, rate-limit detection |
+| [v0.13.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.13.0) | Automatic retry with fallback models |
 | [v0.12.1](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.12.1) | Timothy model migration, toast branding |
 | [v0.12.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.12.0) | Structured outputs, 65% token reduction |
 | [v0.11.2](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.11.2) | Approval system fix |
