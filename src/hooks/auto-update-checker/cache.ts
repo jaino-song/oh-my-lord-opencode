@@ -1,6 +1,6 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { CACHE_DIR, PACKAGE_NAME } from "./constants"
+import { CACHE_DIR, PACKAGE_NAME, VERSION_FILE } from "./constants"
 import { log } from "../../shared/logger"
 
 interface BunLockfile {
@@ -54,6 +54,7 @@ export function invalidatePackage(packageName: string = PACKAGE_NAME): boolean {
     let packageRemoved = false
     let dependencyRemoved = false
     let lockRemoved = false
+    let versionFileRemoved = false
 
     if (fs.existsSync(pkgDir)) {
       fs.rmSync(pkgDir, { recursive: true, force: true })
@@ -74,7 +75,13 @@ export function invalidatePackage(packageName: string = PACKAGE_NAME): boolean {
 
     lockRemoved = removeFromBunLock(packageName)
 
-    if (!packageRemoved && !dependencyRemoved && !lockRemoved) {
+    if (fs.existsSync(VERSION_FILE)) {
+      fs.rmSync(VERSION_FILE, { force: true })
+      log(`[auto-update-checker] Version file removed: ${VERSION_FILE}`)
+      versionFileRemoved = true
+    }
+
+    if (!packageRemoved && !dependencyRemoved && !lockRemoved && !versionFileRemoved) {
       log(`[auto-update-checker] Package not found, nothing to invalidate: ${packageName}`)
       return false
     }

@@ -561,6 +561,19 @@ ${formattedOutput}`
 
       const systemContent = buildSystemContent({ skillContent, categoryPromptAppend })
 
+      const progressContext = hadProgressMessages
+        ? {
+            progressByAgent: new Map(),
+          }
+        : null
+
+      if (progressContext) {
+        ctx.metadata({
+          key: CONTEXT_INJECTOR_INJECTED_KEY,
+          value: progressContext,
+        })
+      }
+
       if (runInBackground) {
         try {
           const task = await manager.launch({
@@ -580,6 +593,13 @@ ${formattedOutput}`
             title: args.description,
             metadata: { sessionId: task.sessionID, category: args.category },
           })
+
+          if (progressContext) {
+            ctx.metadata({
+              key: CONTEXT_INJECTOR_INJECTED_KEY,
+              value: progressContext,
+            })
+          }
 
           return `${parentAgentName} → ${task.agent}
 task: ${task.description}

@@ -154,7 +154,7 @@ export function getCachedVersion(): string | null {
     if (fs.existsSync(INSTALLED_PACKAGE_JSON)) {
       const content = fs.readFileSync(INSTALLED_PACKAGE_JSON, "utf-8")
       const pkg = JSON.parse(content) as PackageJson
-      if (pkg.version) return pkg.version
+      if (pkg.version && pkg.version.match(/^\d+\.\d+\.\d+/)) return pkg.version
     }
   } catch {}
 
@@ -164,7 +164,7 @@ export function getCachedVersion(): string | null {
     if (pkgPath) {
       const content = fs.readFileSync(pkgPath, "utf-8")
       const pkg = JSON.parse(content) as PackageJson
-      if (pkg.version) return pkg.version
+      if (pkg.version && pkg.version.match(/^\d+\.\d+\.\d+/)) return pkg.version
     }
   } catch (err) {
     log("[auto-update-checker] Failed to resolve version from current directory:", err)
