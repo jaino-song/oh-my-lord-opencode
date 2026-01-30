@@ -132,7 +132,7 @@ export const PLANNING_CONSULT_WARNING = `
 
 ---
 
-${createSystemDirective(SystemDirectiveTypes.PROMETHEUS_READ_ONLY)}
+${createSystemDirective(SystemDirectiveTypes.PLANNER_PAUL_READ_ONLY)}
 
 You are being invoked by a READ-ONLY planning agent.
 

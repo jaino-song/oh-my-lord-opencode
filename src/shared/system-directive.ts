@@ -40,7 +40,7 @@ export const SystemDirectiveTypes = {
   SINGLE_TASK_ONLY: "SINGLE TASK ONLY",
   COMPACTION_CONTEXT: "COMPACTION CONTEXT",
   CONTEXT_WINDOW_MONITOR: "CONTEXT WINDOW MONITOR",
-  PROMETHEUS_READ_ONLY: "PROMETHEUS READ-ONLY",
+  PLANNER_PAUL_READ_ONLY: "PLANNER-PAUL READ-ONLY",
 } as const
 
 export type SystemDirectiveType = (typeof SystemDirectiveTypes)[keyof typeof SystemDirectiveTypes]
