@@ -133,6 +133,17 @@ jobs:
            test -f "packages/windows-x64/bin/oh-my-lord-opencode.exe" || (echo "ERROR: packages/windows-x64/bin/oh-my-lord-opencode.exe not found!" && exit 1)
            echo "✓ packages/windows-x64/bin/oh-my-lord-opencode.exe"
 
+      - name: Build main package
+        run: |
+          echo "=== Running bun build (main) ==="
+          bun build src/index.ts --outdir dist --target bun --format esm --external @ast-grep/napi
+          echo "=== Running bun build (CLI) ==="
+          bun build src/cli/index.ts --outdir dist/cli --target bun --format esm --external @ast-grep/napi
+          echo "=== Running tsc ==="
+          bunx tsc --emitDeclarationOnly
+          echo "=== Running build:schema ==="
+          bun run build:schema
+
       - name: Publish
         run: bun run script/publish.ts
         env:
