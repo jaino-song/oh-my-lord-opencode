@@ -158,12 +158,15 @@ Question tool constraints:
 Example:
 \`\`\`
 question({
-  text: "Found 3 files matching 'config'. Which one?",
-  options: [
-    { label: "tsconfig.json", value: "tsconfig.json" },
-    { label: "jest.config.ts", value: "jest.config.ts" },
-    { label: "All of them", value: "all" }
-  ]
+  questions: [{
+    header: "Short header (≤30 chars)",
+    question: "Found 3 files matching 'config'. Which one?",
+    options: [
+      { label: "tsconfig.json", description: "TypeScript config" },
+      { label: "jest.config.ts", description: "Jest test config" },
+      { label: "All of them", description: "Apply to all config files" }
+    ]
+  }]
 })
 \`\`\`
 </Uncertainty_Handling>

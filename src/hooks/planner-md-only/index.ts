@@ -9,22 +9,34 @@ import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
 
 export * from "./constants"
 
-function isAllowedFile(filePath: string, workspaceRoot: string): boolean {
+type FileValidationResult = 
+  | { allowed: true }
+  | { allowed: false; reason: "outside_workspace" | "invalid_extension"; details: string }
+
+function isAllowedFile(filePath: string, workspaceRoot: string): FileValidationResult {
   const resolved = resolve(workspaceRoot, filePath)
   const rel = relative(workspaceRoot, resolved)
 
   if (rel.startsWith("..") || isAbsolute(rel)) {
-    return false
+    return { 
+      allowed: false, 
+      reason: "outside_workspace", 
+      details: `File is outside workspace root (${workspaceRoot})` 
+    }
   }
 
   const hasAllowedExtension = ALLOWED_EXTENSIONS.some(
     ext => resolved.toLowerCase().endsWith(ext.toLowerCase())
   )
   if (!hasAllowedExtension) {
-    return false
+    return { 
+      allowed: false, 
+      reason: "invalid_extension", 
+      details: `Only .md files are allowed, got: ${filePath.split('.').pop() || 'no extension'}` 
+    }
   }
 
-  return true
+  return { allowed: true }
 }
 
 function isSafeBashCommand(command: string): boolean {
@@ -169,16 +181,23 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
         return
       }
 
-      if (!isAllowedFile(filePath, ctx.directory)) {
-        log(`[${HOOK_NAME}] Blocked: Planner can only write .md files within workspace root`, {
+      const validationResult = isAllowedFile(filePath, ctx.directory)
+      if (!validationResult.allowed) {
+        log(`[${HOOK_NAME}] Blocked: ${validationResult.details}`, {
           sessionID: input.sessionID,
           tool: toolName,
           filePath,
           agent: agentName,
+          reason: validationResult.reason,
         })
+        
+        const reasonMessage = validationResult.reason === "outside_workspace"
+          ? `outside workspace root (${ctx.directory})`
+          : `invalid extension - ${validationResult.details}`
+        
         throw new Error(
           `[${HOOK_NAME}] Planner agents can only write/edit .md files within the workspace root. ` +
-          `Attempted to modify: ${filePath} (outside workspace root). ` +
+          `Attempted to modify: ${filePath} (${reasonMessage}). ` +
           `Planners are READ-ONLY for code files. Use /start-work to execute the plan.`
         )
       }

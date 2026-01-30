@@ -92,6 +92,272 @@ Match implementation complexity to aesthetic vision:
 Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. You are capable of extraordinary creative work—don't hold back.`,
 }
 
+const geminiFunctionCallingSkill: BuiltinSkill = {
+  name: "gemini-function-calling",
+  description:
+    "Integrate Google Gemini AI with function calling to enable intelligent app features. Use when building AI-powered apps where Gemini executes functions (create todos, search products, book appointments) rather than just generating text. Includes TypeScript/JavaScript, Next.js API routes, React components, system prompts, and best practices.",
+  template: `# Gemini Function Calling Integration
+
+Integrate Google Gemini with function calling to transform natural language requests into executable app features.
+
+## Quick Start
+
+When the user wants to integrate Gemini into their app:
+
+1. **Understand requirements**: Ask what features the app should support through Gemini
+2. **Create function declarations**: Define functions for each app feature
+3. **Implement service layer**: Create the Gemini service with function call loop
+4. **Set up API routes**: Create Next.js API endpoints
+5. **Test integration**: Verify function calling works correctly
+
+## Core Workflow
+
+### 1. Define App Features as Functions
+
+Create function declarations for each feature:
+
+\`\`\`typescript
+import { Type } from '@google/genai';
+
+const createTodoFunction = {
+  name: 'create_todo',
+  description: 'Creates a new todo item. Use when user wants to add tasks.',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      title: {
+        type: Type.STRING,
+        description: 'Todo title (e.g., "Buy groceries")'
+      },
+      priority: {
+        type: Type.STRING,
+        enum: ['low', 'medium', 'high'],
+        description: 'Priority level'
+      }
+    },
+    required: ['title']
+  }
+};
+\`\`\`
+
+**Key principles:**
+- Use descriptive function names (create_todo not do_action)
+- Provide clear descriptions with examples
+- Use enums for fixed value sets
+- Mark required parameters
+
+### 2. Create System Instructions
+
+System instructions teach Gemini about your app:
+
+\`\`\`typescript
+const systemInstruction = \`
+You are an AI assistant for [App Name].
+
+Available features:
+- Create todos: Add tasks with priorities
+- Search products: Find items in catalog
+- Book appointments: Schedule services
+
+Guidelines:
+- Ask clarifying questions when ambiguous
+- Confirm destructive actions
+- Use natural, friendly language
+\`;
+\`\`\`
+
+### 3. Implement Function Call Loop
+
+Handle Gemini's function calls:
+
+\`\`\`typescript
+let response = await ai.models.generateContent({
+  model: 'gemini-2.5-flash',
+  contents,
+  config: {
+    systemInstruction,
+    tools: [{ functionDeclarations }],
+    temperature: 0.2
+  }
+});
+
+// Loop until no more function calls
+while (response.functionCalls?.length > 0) {
+  const call = response.functionCalls[0];
+  const result = await executeFunction(call.name, call.args);
+  
+  // Send result back to Gemini
+  contents.push({ role: 'model', parts: [{ functionCall: call }] });
+  contents.push({ 
+    role: 'user', 
+    parts: [{ functionResponse: { name: call.name, response: { result } } }] 
+  });
+  
+  response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents,
+    config: { systemInstruction, tools: [{ functionDeclarations }] }
+  });
+}
+\`\`\`
+
+### 4. Connect to Your Backend
+
+Implement actual function handlers:
+
+\`\`\`typescript
+const functionHandlers = {
+  create_todo: async (args) => {
+    const todo = await db.todos.create({
+      title: args.title,
+      priority: args.priority || 'medium'
+    });
+    return { success: true, todoId: todo.id };
+  },
+  
+  search_products: async (args) => {
+    const products = await db.products.search(args.query);
+    return { products, count: products.length };
+  }
+};
+\`\`\`
+
+## Integration Patterns
+
+### Next.js API Route
+
+\`\`\`typescript
+// app/api/chat/route.ts
+export async function POST(req: Request) {
+  const { message, history } = await req.json();
+  
+  const result = await processGeminiMessage({
+    userMessage: message,
+    conversationHistory: history,
+    context: { userName: session.user.name }
+  });
+  
+  return Response.json({
+    message: result.text,
+    conversationHistory: result.conversationHistory
+  });
+}
+\`\`\`
+
+### React Component
+
+\`\`\`typescript
+const [messages, setMessages] = useState([]);
+const [history, setHistory] = useState([]);
+
+const sendMessage = async () => {
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    body: JSON.stringify({ message: input, history })
+  });
+  
+  const data = await response.json();
+  setMessages([...messages, { role: 'assistant', content: data.message }]);
+  setHistory(data.conversationHistory);
+};
+\`\`\`
+
+## Best Practices
+
+**Function Design:**
+- Keep descriptions clear and specific
+- Use enums instead of describing valid values
+- Provide examples in parameter descriptions
+- Mark required parameters explicitly
+
+**System Instructions:**
+- Include current date and user context
+- List all available features clearly
+- Provide interaction guidelines
+- Give examples of common queries
+
+**Implementation:**
+- Use temperature 0.2 for reliable function calling
+- Add iteration limits (max 10) to prevent infinite loops
+- Log function calls for debugging and analytics
+- Validate function results before returning
+
+**Error Handling:**
+- Wrap API calls in try-catch blocks
+- Provide helpful error messages
+- Implement retry logic for transient failures
+- Handle rate limiting gracefully
+
+## Common Issues
+
+**Issue: "Feature not available"**
+- Verify function declarations are included in request
+- Check system instruction mentions the feature
+- Ensure function description is clear
+
+**Issue: Wrong function called**
+- Make function names more distinct
+- Improve descriptions with examples
+- Use lower temperature (0.1-0.2)
+
+**Issue: Infinite loop**
+- Add iteration limit: \`if (iterations >= 10) break\`
+- Verify function responses are properly formatted
+- Check conversation history structure
+
+**Issue: Context lost between messages**
+- Always pass full conversation history
+- Include function calls and responses in history
+- Don't truncate history too aggressively
+
+## Advanced Features
+
+### Parallel Function Calling
+
+Gemini can call multiple functions simultaneously:
+
+\`\`\`typescript
+// User: "Add milk to my list and search for bread"
+// Gemini calls both functions at once
+
+for (const call of response.functionCalls) {
+  results.push(await executeFunction(call.name, call.args));
+}
+\`\`\`
+
+### Compositional Function Calling
+
+Chain functions for complex workflows:
+
+\`\`\`typescript
+// "If weather is cold in London, turn on heater"
+// 1. get_weather('London') → 15°C
+// 2. set_heater(true)
+\`\`\`
+
+### Dynamic Function Loading
+
+Filter functions based on context:
+
+\`\`\`typescript
+const functions = currentPage === '/todos'
+  ? todoFunctions
+  : allFunctions;
+\`\`\`
+
+## Dependencies
+
+\`\`\`json
+{
+  "dependencies": {
+    "@google/genai": "^0.1.0"
+  }
+}
+\`\`\`
+
+Install: \`npm install @google/genai\``,
+}
+
 const gitMasterSkill: BuiltinSkill = {
   name: "git-master",
   description:
@@ -1200,5 +1466,5 @@ POTENTIAL ACTIONS:
 }
 
 export function createBuiltinSkills(): BuiltinSkill[] {
-  return [playwrightSkill, frontendUiUxSkill, gitMasterSkill]
+  return [playwrightSkill, frontendUiUxSkill, gitMasterSkill, geminiFunctionCallingSkill]
 }

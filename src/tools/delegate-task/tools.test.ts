@@ -38,13 +38,13 @@ function resolveCategoryConfig(
 
 describe("paul-task", () => {
   describe("DEFAULT_CATEGORIES", () => {
-    test("visual-engineering category has gemini model", () => {
+    test("visual-engineering category has gpt model", () => {
       // #given
       const category = DEFAULT_CATEGORIES["visual-engineering"]
 
       // #when / #then
       expect(category).toBeDefined()
-      expect(category.model).toBe("google/antigravity-gemini-3-pro-high")
+      expect(category.model).toBe("openai/gpt-5.2")
       expect(category.temperature).toBe(0.7)
     })
 
@@ -138,12 +138,12 @@ describe("paul-task", () => {
       const categoryName = "visual-engineering"
 
       // #when
-      const result = resolveCategoryConfig(categoryName, {})
+       const result = resolveCategoryConfig(categoryName, {})
 
-       // #then
-       expect(result).not.toBeNull()
-       expect(result!.config.model).toBe("google/antigravity-gemini-3-pro-high")
-       expect(result!.promptAppend).toContain("VISUAL/UI")
+        // #then
+        expect(result).not.toBeNull()
+        expect(result!.config.model).toBe("openai/gpt-5.2")
+        expect(result!.promptAppend).toContain("VISUAL/UI")
     })
 
     test("user config overrides default model", () => {
@@ -163,12 +163,12 @@ describe("paul-task", () => {
 
     test("user prompt_append is appended to default", () => {
       // #given
-      const categoryName = "visual-engineering"
+       const categoryName = "visual-engineering"
        const userCategories = {
-         "visual-engineering": {
-           model: "google/antigravity-gemini-3-pro-high",
-           prompt_append: "Custom instructions here",
-         },
+          "visual-engineering": {
+            model: "openai/gpt-5.2",
+            prompt_append: "Custom instructions here",
+          },
        }
 
       // #when
@@ -203,12 +203,12 @@ describe("paul-task", () => {
 
     test("user category overrides temperature", () => {
       // #given
-      const categoryName = "visual-engineering"
+       const categoryName = "visual-engineering"
        const userCategories = {
-         "visual-engineering": {
-           model: "google/antigravity-gemini-3-pro-high",
-           temperature: 0.3,
-         },
+          "visual-engineering": {
+            model: "openai/gpt-5.2",
+            temperature: 0.3,
+          },
        }
 
       // #when
@@ -224,12 +224,12 @@ describe("paul-task", () => {
       const categoryName = "visual-engineering"
       const parentModelString = "cliproxy/claude-opus-4-5"
 
-      // #when
-      const result = resolveCategoryConfig(categoryName, { parentModelString })
+       // #when
+       const result = resolveCategoryConfig(categoryName, { parentModelString })
 
-       // #then - category default model wins, parent model is ignored for builtin categories
-       expect(result).not.toBeNull()
-       expect(result!.config.model).toBe("google/antigravity-gemini-3-pro-high")
+        // #then - category default model wins, parent model is ignored for builtin categories
+        expect(result).not.toBeNull()
+        expect(result!.config.model).toBe("openai/gpt-5.2")
     })
 
     test("parentModelString is used as fallback when category has no default model", () => {
@@ -267,11 +267,11 @@ describe("paul-task", () => {
       const categoryName = "visual-engineering"
 
       // #when
-      const result = resolveCategoryConfig(categoryName, {})
+       const result = resolveCategoryConfig(categoryName, {})
 
-       // #then
-       expect(result).not.toBeNull()
-       expect(result!.config.model).toBe("google/antigravity-gemini-3-pro-high")
+        // #then
+        expect(result).not.toBeNull()
+        expect(result!.config.model).toBe("openai/gpt-5.2")
      })
    })
 

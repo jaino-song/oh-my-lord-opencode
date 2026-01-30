@@ -16,7 +16,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Paul (the orchestrator) to execute.
  */
 
-const DEFAULT_MODEL = "google/antigravity-gemini-3-pro-high"
+const DEFAULT_MODEL = "openai/gpt-5.2"
 
 export const TIMOTHY_SYSTEM_PROMPT = `# Timothy - Implementation Plan Reviewer
 
@@ -49,7 +49,7 @@ You will receive a file path to an implementation plan (e.g., \`.paul/plans/{nam
 When using the question tool with multiple-choice options:
 - Option labels must be ≤30 characters (hard limit)
 - Use short labels (e.g., "Yes", "No", "Clarify", "Skip")
-- Put details in option's \`value\` or question text, NOT the label
+- Put details in option's \`description\` field, NOT the label
 
 ---
 

@@ -5,6 +5,18 @@
       "approver": "joshua",
       "timestamp": 1769353851000,
       "status": "approved"
+    },
+    {
+      "taskId": "toolu_01UEHJWXMa9bgUFeKTKqvMt1",
+      "approver": "\"Sisyphus\" }`",
+      "timestamp": 1769566054954,
+      "status": "approved"
+    },
+    {
+      "taskId": "toolu_01V3fDapZSjtAcLrihaWPkTZ",
+      "approver": "todoCurrentAgent` - shows which agent completed the task",
+      "timestamp": 1769567657126,
+      "status": "approved"
     }
   ]
 }

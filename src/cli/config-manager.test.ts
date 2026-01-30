@@ -286,9 +286,9 @@ describe("generateOmoConfig - GitHub Copilot fallback", () => {
     // #when generating config
     const result = generateOmoConfig(config)
 
-    // #then native Gemini should be used (NOT Copilot)
+    // #then GPT 5.2 should be used for frontend-ui-ux-engineer
     const agents = result.agents as Record<string, { model?: string }>
-    expect(agents["frontend-ui-ux-engineer"]?.model).toBe("google/antigravity-gemini-3-pro-high")
+    expect(agents["frontend-ui-ux-engineer"]?.model).toBe("openai/gpt-5.2")
   })
 
   test("native Claude takes priority over Copilot for frontend-ui-ux-engineer", () => {

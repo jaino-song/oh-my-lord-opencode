@@ -51,8 +51,9 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"])
 
     // #then
-    expect(agent.model).toBe("google/antigravity-gemini-3-pro-high")
+    expect(agent.model).toBe("openai/gpt-5.2")
     expect(agent.temperature).toBe(0.7)
+    expect(agent.reasoningEffort).toBe("high")
   })
 
   test("agent with category and existing model keeps existing model", () => {

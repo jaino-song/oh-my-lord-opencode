@@ -343,7 +343,7 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
   }
 
   if (installConfig.hasGemini) {
-    agents["frontend-ui-ux-engineer"] = { model: "google/antigravity-gemini-3-pro-high" }
+    agents["frontend-ui-ux-engineer"] = { model: "openai/gpt-5.2" }
     agents["document-writer"] = { model: "google/antigravity-gemini-3-flash" }
     agents["multimodal-looker"] = { model: "google/antigravity-gemini-3-flash" }
   } else if (installConfig.hasClaude) {
@@ -367,8 +367,8 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
   // Categories: override model for Antigravity auth or GitHub Copilot fallback
   if (installConfig.hasGemini) {
     config.categories = {
-      "visual-engineering": { model: "google/antigravity-gemini-3-pro-high" },
-      artistry: { model: "google/antigravity-gemini-3-pro-high" },
+      "visual-engineering": { model: "openai/gpt-5.2" },
+      artistry: { model: "openai/gpt-5.2" },
       writing: { model: "google/antigravity-gemini-3-flash" },
     }
   } else if (installConfig.hasCopilot) {

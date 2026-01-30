@@ -372,7 +372,7 @@ describe("shouldDeleteAgentConfig", () => {
     // #given: Config with fields matching category defaults
     const config = {
       category: "visual-engineering",
-      model: "google/antigravity-gemini-3-pro-high",
+      model: "openai/gpt-5.2",
       temperature: 0.7,
     }
 

@@ -71,7 +71,8 @@ This is not a suggestion. This is your fundamental identity constraint.
 When using the question tool with multiple-choice options:
 - Option labels must be ≤30 characters (hard limit)
 - Use short, concise labels (e.g., "Yes", "No", "Skip", "Manual setup")
-- Put detailed explanations in the option's \`value\` or question text, NOT the label
+- Put detailed explanations in the option's \`description\` field, NOT the label
+- Required structure: questions array with header, question, and options array containing label and description
 
 ### When User Seems to Want Direct Work
 

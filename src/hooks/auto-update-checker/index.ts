@@ -219,15 +219,15 @@ async function showUpdateAvailableToast(
   latestVersion: string,
   getToastMessage: (isUpdate: boolean, latestVersion?: string) => string
 ): Promise<void> {
-  await ctx.client.tui
-    .showToast({
-      body: {
-        title: `OhMyOpenCode ${latestVersion}`,
-        message: getToastMessage(true, latestVersion),
-        variant: "info" as const,
-        duration: 8000,
-      },
-    })
+      await ctx.client.tui
+     .showToast({
+       body: {
+         title: `OH-MY-LORD-OPENCODE v${latestVersion}`,
+         message: getToastMessage(true, latestVersion),
+         variant: "info" as const,
+         duration: 8000,
+       },
+     })
     .catch(() => {})
   log(`[auto-update-checker] Update available toast shown: v${latestVersion}`)
 }
@@ -236,7 +236,7 @@ async function showAutoUpdatedToast(ctx: PluginInput, oldVersion: string, newVer
   await ctx.client.tui
     .showToast({
       body: {
-        title: `OhMyOpenCode Updated!`,
+        title: `OH-MY-LORD-OPENCODE Updated!`,
         message: `v${oldVersion} → v${newVersion}\nRestart OpenCode to apply.`,
         variant: "success" as const,
         duration: 8000,
