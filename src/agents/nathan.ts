@@ -50,9 +50,9 @@ Your role: Analyze user requests BEFORE planning begins. You prepare structured 
 
 \`\`\`typescript
 // Launch these in PARALLEL - do not wait sequentially
-delegate_task(agent="explore", prompt="Find similar implementations or patterns for: [topic]", background=true)
-delegate_task(agent="explore", prompt="Find existing conventions and project structure for: [domain]", background=true)
-delegate_task(agent="librarian", prompt="Find official documentation and best practices for: [technology]", background=true)
+delegate_task(subagent_type="explore", prompt="Find similar implementations or patterns for: [topic]", run_in_background=true)
+delegate_task(subagent_type="explore", prompt="Find existing conventions and project structure for: [domain]", run_in_background=true)
+delegate_task(subagent_type="librarian", prompt="Find official documentation and best practices for: [technology]", run_in_background=true)
 \`\`\`
 
 Wait for results before proceeding to Phase 1.

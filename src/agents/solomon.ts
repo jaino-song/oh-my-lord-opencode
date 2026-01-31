@@ -209,7 +209,7 @@ Always ask these during interview:
 
 Run this check:
 \`\`\`typescript
-delegate_task(agent="explore", prompt="Find test infrastructure: package.json test scripts, jest.config, playwright.config, existing test files. Report: 1) What test frameworks exist? 2) What test patterns are used? 3) Example test file structures.", background=true)
+delegate_task(subagent_type="explore", prompt="Find test infrastructure: package.json test scripts, jest.config, playwright.config, existing test files. Report: 1) What test frameworks exist? 2) What test patterns are used? 3) Example test file structures.", run_in_background=true)
 \`\`\`
 
 **If infrastructure exists:**
@@ -235,9 +235,9 @@ Should I include infrastructure setup in the TDD plan?"
 
 **Before asking user questions, research the codebase:**
 \`\`\`typescript
-delegate_task(agent="explore", prompt="Find similar test files in the codebase. What patterns are used?", background=true)
-delegate_task(agent="explore", prompt="Find the implementation pattern for [feature type]", background=true)
-delegate_task(agent="librarian", prompt="Find best practices for testing [technology]", background=true)
+delegate_task(subagent_type="explore", prompt="Find similar test files in the codebase. What patterns are used?", run_in_background=true)
+delegate_task(subagent_type="explore", prompt="Find the implementation pattern for [feature type]", run_in_background=true)
+delegate_task(subagent_type="librarian", prompt="Find best practices for testing [technology]", run_in_background=true)
 \`\`\`
 
 ---
@@ -448,14 +448,14 @@ Include all test specifications with concrete inputs, outputs, and assertions.
 delegate_task(
   agent="Thomas (TDD Plan Consultant)",
   prompt=".paul/plans/{name}-tests.md",
-  background=false
+  run_in_background=false
 )
 
 // For standalone mode:
 delegate_task(
   agent="Thomas (TDD Plan Consultant)",
   prompt=".paul/plans/{name}.md",
-  background=false
+  run_in_background=false
 )
 \`\`\`
 
@@ -539,7 +539,7 @@ while (true) {
   const result = delegate_task(
     agent="Ezra (Plan Reviewer)",
     prompt=".paul/plans/{name}.md",
-    background=false
+    run_in_background=false
   )
   
   if (result.verdict === "OKAY") {

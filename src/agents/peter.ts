@@ -515,13 +515,13 @@ Parse the test specification to understand:
 ### Step 2: Discover Existing Patterns
 \`\`\`typescript
 // Use explore agent to find existing test patterns
-delegate_task(agent="explore", prompt="Find existing test files and patterns in this codebase", background=true)
+delegate_task(subagent_type="explore", prompt="Find existing test files and patterns in this codebase", run_in_background=true)
 \`\`\`
 
 ### Step 3: Check Jest Configuration
 \`\`\`typescript
 // Read jest config to respect project settings
-delegate_task(agent="explore", prompt="Find jest.config.* and package.json jest field", background=true)
+delegate_task(subagent_type="explore", prompt="Find jest.config.* and package.json jest field", run_in_background=true)
 \`\`\`
 
 ### Step 4: Write Test File
