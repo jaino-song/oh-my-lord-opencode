@@ -23,22 +23,12 @@ import { createBuiltinMcps } from "../mcp";
 import type { OhMyOpenCodeConfig } from "../config";
 import { log } from "../shared";
 import { migrateAgentConfig } from "../shared/permission-compat";
-import { PROMETHEUS_SYSTEM_PROMPT, PROMETHEUS_PERMISSION } from "../agents/prometheus-prompt";
-import { DEFAULT_CATEGORIES } from "../tools/delegate-task/constants";
 import type { ModelCacheState } from "../plugin-state";
-import type { CategoryConfig } from "../config/schema";
 
 export interface ConfigHandlerDeps {
   ctx: { directory: string };
   pluginConfig: OhMyOpenCodeConfig;
   modelCacheState: ModelCacheState;
-}
-
-export function resolveCategoryConfig(
-  categoryName: string,
-  userCategories?: Record<string, CategoryConfig>
-): CategoryConfig | undefined {
-  return userCategories?.[categoryName] ?? DEFAULT_CATEGORIES[categoryName];
 }
 
 export function createConfigHandler(deps: ConfigHandlerDeps) {
@@ -104,7 +94,6 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       pluginConfig.agents,
       ctx.directory,
       config.model as string | undefined,
-      pluginConfig.categories,
       pluginConfig.git_master
     );
 
@@ -130,8 +119,6 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     const isPaulEnabled = pluginConfig.paul_agent?.disabled !== true;
     const builderEnabled =
       pluginConfig.paul_agent?.default_builder_enabled ?? false;
-    const plannerEnabled =
-      pluginConfig.paul_agent?.planner_enabled ?? true;
     const replacePlan = pluginConfig.paul_agent?.replace_plan ?? true;
 
     type AgentConfig = Record<
@@ -183,64 +170,6 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
           : openCodeBuilderBase;
       }
 
-      if (plannerEnabled) {
-        const { name: _planName, mode: _planMode, ...planConfigWithoutName } =
-          configAgent?.plan ?? {};
-        const migratedPlanConfig = migrateAgentConfig(
-          planConfigWithoutName as Record<string, unknown>
-        );
-        const prometheusOverride =
-          pluginConfig.agents?.["Prometheus (Planner)"] as
-            | (Record<string, unknown> & { category?: string; model?: string })
-            | undefined;
-        const defaultModel = config.model as string | undefined;
-
-        // Resolve full category config (model, temperature, top_p, tools, etc.)
-        // Apply all category properties when category is specified, but explicit
-        // overrides (model, temperature, etc.) will take precedence during merge
-        const categoryConfig = prometheusOverride?.category
-          ? resolveCategoryConfig(
-              prometheusOverride.category,
-              pluginConfig.categories
-            )
-          : undefined;
-
-        const prometheusBase = {
-          model:
-            prometheusOverride?.model ??
-            categoryConfig?.model ??
-            defaultModel ??
-            "anthropic/claude-opus-4-5",
-          mode: "primary" as const,
-          hidden: true,
-          prompt: PROMETHEUS_SYSTEM_PROMPT,
-          permission: PROMETHEUS_PERMISSION,
-          description: `${configAgent?.plan?.description ?? "Plan agent"} (Prometheus - OhMyOpenCode)`,
-          color: (configAgent?.plan?.color as string) ?? "#FF6347",
-          ...(categoryConfig?.temperature !== undefined
-            ? { temperature: categoryConfig.temperature }
-            : {}),
-          ...(categoryConfig?.top_p !== undefined
-            ? { top_p: categoryConfig.top_p }
-            : {}),
-          ...(categoryConfig?.maxTokens !== undefined
-            ? { maxTokens: categoryConfig.maxTokens }
-            : {}),
-          ...(categoryConfig?.tools ? { tools: categoryConfig.tools } : {}),
-          ...(categoryConfig?.thinking ? { thinking: categoryConfig.thinking } : {}),
-          ...(categoryConfig?.reasoningEffort !== undefined
-            ? { reasoningEffort: categoryConfig.reasoningEffort }
-            : {}),
-          ...(categoryConfig?.textVerbosity !== undefined
-            ? { textVerbosity: categoryConfig.textVerbosity }
-            : {}),
-        };
-
-        agentConfig["Prometheus (Planner)"] = prometheusOverride
-          ? { ...prometheusBase, ...prometheusOverride }
-          : prometheusBase;
-      }
-
     const filteredConfigAgents = configAgent
       ? Object.fromEntries(
           Object.entries(configAgent)
@@ -286,38 +215,8 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
         ? migrateAgentConfig(configAgent.build as Record<string, unknown>)
         : {};
       
-      const additionalAgents: Record<string, unknown> = {};
-      
-      if (plannerEnabled) {
-        const prometheusOverride =
-          pluginConfig.agents?.["Prometheus (Planner)"] as
-            | (Record<string, unknown> & { category?: string; model?: string })
-            | undefined;
-        const defaultModel = config.model as string | undefined;
-        const categoryConfig = prometheusOverride?.category
-          ? resolveCategoryConfig(prometheusOverride.category, pluginConfig.categories)
-          : undefined;
-
-        const prometheusBase = {
-          model: prometheusOverride?.model ?? categoryConfig?.model ?? defaultModel ?? "anthropic/claude-opus-4-5",
-          mode: "primary" as const,
-          hidden: true,
-          prompt: PROMETHEUS_SYSTEM_PROMPT,
-          permission: PROMETHEUS_PERMISSION,
-          description: `${configAgent?.plan?.description ?? "Plan agent"} (Prometheus - OhMyOpenCode)`,
-          color: (configAgent?.plan?.color as string) ?? "#FF6347",
-          ...(categoryConfig?.temperature !== undefined ? { temperature: categoryConfig.temperature } : {}),
-          ...(categoryConfig?.thinking ? { thinking: categoryConfig.thinking } : {}),
-        };
-
-        additionalAgents["Prometheus (Planner)"] = prometheusOverride
-          ? { ...prometheusBase, ...prometheusOverride }
-          : prometheusBase;
-      }
-      
       config.agent = {
         ...builtinAgents,
-        ...additionalAgents,
         ...userAgents,
         ...projectAgents,
         ...pluginAgents,

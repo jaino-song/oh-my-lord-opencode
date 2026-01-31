@@ -29,7 +29,7 @@ import { createGitMasterAgent, GIT_MASTER_PROMPT_METADATA } from "./git-master"
 import { createUltrabrainAgent, ULTRABRAIN_PROMPT_METADATA } from "./ultrabrain"
 import type { AvailableAgent } from "./paul-prompt-builder"
 import { deepMerge } from "../shared"
-import { DEFAULT_CATEGORIES } from "../tools/delegate-task/constants"
+
 import { resolveMultipleSkills } from "../features/opencode-skill-loader/skill-content"
 
 type AgentSource = AgentFactory | AgentConfig
@@ -105,32 +105,13 @@ function isFactory(source: AgentSource): source is AgentFactory {
 export function buildAgent(
   source: AgentSource,
   model?: string,
-  categories?: CategoriesConfig,
   gitMasterConfig?: GitMasterConfig
 ): AgentConfig {
   const base = isFactory(source) ? source(model) : source
-  const categoryConfigs: Record<string, CategoryConfig> = categories
-    ? { ...DEFAULT_CATEGORIES, ...categories }
-    : DEFAULT_CATEGORIES
 
-  const agentWithCategory = base as AgentConfig & { category?: string; skills?: string[]; variant?: string }
-  if (agentWithCategory.category) {
-    const categoryConfig = categoryConfigs[agentWithCategory.category]
-    if (categoryConfig) {
-      if (!base.model) {
-        base.model = categoryConfig.model
-      }
-      if (base.temperature === undefined && categoryConfig.temperature !== undefined) {
-        base.temperature = categoryConfig.temperature
-      }
-      if (base.variant === undefined && categoryConfig.variant !== undefined) {
-        base.variant = categoryConfig.variant
-      }
-    }
-  }
-
-  if (agentWithCategory.skills?.length) {
-    const { resolved } = resolveMultipleSkills(agentWithCategory.skills, { gitMasterConfig })
+  const agentWithSkills = base as AgentConfig & { skills?: string[] }
+  if (agentWithSkills.skills?.length) {
+    const { resolved } = resolveMultipleSkills(agentWithSkills.skills, { gitMasterConfig })
     if (resolved.size > 0) {
       const skillContent = Array.from(resolved.values()).join("\n\n")
       base.prompt = skillContent + (base.prompt ? "\n\n" + base.prompt : "")
@@ -185,15 +166,10 @@ export function createBuiltinAgents(
   agentOverrides: AgentOverrides = {},
   directory?: string,
   systemDefaultModel?: string,
-  categories?: CategoriesConfig,
   gitMasterConfig?: GitMasterConfig
 ): Record<string, AgentConfig> {
   const result: Record<string, AgentConfig> = {}
   const availableAgents: AvailableAgent[] = []
-
-  const mergedCategories = categories
-    ? { ...DEFAULT_CATEGORIES, ...categories }
-    : DEFAULT_CATEGORIES
 
     for (const [name, source] of Object.entries(agentSources)) {
       const agentName = name as BuiltinAgentName
@@ -203,7 +179,7 @@ export function createBuiltinAgents(
     const override = agentOverrides[agentName]
     const model = override?.model
 
-    let config = buildAgent(source, model, mergedCategories, gitMasterConfig)
+    let config = buildAgent(source, model, gitMasterConfig)
 
     if (agentName === "librarian" && directory && config.prompt) {
       const envContext = createEnvContext()
