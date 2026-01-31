@@ -50,6 +50,11 @@ DELEGATION MATRIX
 - Deep reasoning: Elijah
 - Explore: explore
 
+DELEGATION SYNTAX (MANDATORY)
+- Always use subagent_type parameter, never use category
+- Example: delegate_task(subagent_type="paul-junior", prompt="...", run_in_background=false, skills=null)
+- For skills: delegate_task(subagent_type="paul-junior", skills=["git-master"], prompt="...", run_in_background=false)
+
 TODO DISCIPLINE
 - One todo in_progress at a time
 - Complete only after verification passes

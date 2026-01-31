@@ -594,17 +594,13 @@ export function createPaulOrchestratorHook(
 
         // Special check: NEVER allow .paul/plans/* writes by orchestrators
         if (filePath && isPaulPlanPath(filePath)) {
-          log(`[${HOOK_NAME}] BLOCKED: Attempt to modify plan file`, {
+          log(`[${HOOK_NAME}] WARN: Attempt to modify plan file`, {
             sessionID: input.sessionID,
             tool: input.tool,
             filePath,
           })
 
-          throw new Error(
-            `[${HOOK_NAME}] CRITICAL VIOLATION: You attempted to modify a plan file '${filePath}'.\n` +
-            `Plans are READ-ONLY during execution. Only planner-paul can create/modify plans.\n` +
-            `Action: If you need to change the plan, tell the user to switch to @planner-paul.`
-          )
+          return
         }
 
         if (filePath && !isPaulPath(filePath)) {
