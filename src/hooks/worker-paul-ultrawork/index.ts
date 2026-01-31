@@ -48,7 +48,7 @@ function buildExplorationDirective(keywords: string[]): string {
   const explorationCalls = keywords
     .map(
       (kw) =>
-        `delegate_task(agent="explore", prompt="Find all files and patterns related to: ${kw}", run_in_background=true)`
+        `delegate_task(subagent_type="explore", prompt="Find all files and patterns related to: ${kw}", run_in_background=true)`
     )
     .join("\n")
 

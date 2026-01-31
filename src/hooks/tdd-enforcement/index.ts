@@ -83,7 +83,7 @@ You cannot mark this task as 'completed' because you have unverified code change
 ${dirtyFiles.map(f => `- ${f}`).join("\n")}
 
 **Requirement**: You MUST run Joshua (Test Runner) to verify changes before completing the todo.
-Use: \`delegate_task(agent="Joshua (Test Runner)", prompt="Run tests")\`
+Use: \`delegate_task(subagent_type="Joshua (Test Runner)", prompt="Run tests")\`
 `
              throw new Error(errorMsg)
           }
@@ -128,7 +128,7 @@ You have modified code that has not been verified yet.
 ${dirtyFiles.map(f => `- ${f}`).join("\n")}
 
 **You MUST run tests before starting any new task.**
-Use: \`delegate_task(agent="Joshua (Test Runner)", prompt="Run tests")\`
+Use: \`delegate_task(subagent_type="Joshua (Test Runner)", prompt="Run tests")\`
 `
           throw new Error(errorMsg)
         }
@@ -184,8 +184,8 @@ You attempted to write implementation code without tests:
 
 **Action Required**:
 Create test file first, OR delegate to test writers:
-- Unit tests: \`delegate_task(agent="Peter (Test Writer)", prompt="Write tests for ${basename(filePath)}")\`
-- E2E tests: \`delegate_task(agent="John (E2E Test Writer)", prompt="Write E2E tests")\`
+- Unit tests: \`delegate_task(subagent_type="Peter (Test Writer)", prompt="Write tests for ${basename(filePath)}")\`
+- E2E tests: \`delegate_task(subagent_type="John (E2E Test Writer)", prompt="Write E2E tests")\`
 `
           log(`[${HOOK_NAME}] BLOCKED: Implementation without tests`, {
             sessionID: input.sessionID,
