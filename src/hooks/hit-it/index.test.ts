@@ -376,6 +376,55 @@ describe("hit-it hook", () => {
       expect(output.parts[0].text).toContain("2026-01-15-feature-implementation")
       expect(output.parts[0].text).toContain("Auto-Selected Plan")
     })
+
+    test("should detect quick fix request and bypass plan selection", async () => {
+      // #given - multiple plans exist, user request is a quick fix
+      const plansDir = join(TEST_DIR, ".paul", "plans")
+      mkdirSync(plansDir, { recursive: true })
+      writeFileSync(join(plansDir, "plan-a.md"), "# Plan A\n- [ ] Task 1")
+      writeFileSync(join(plansDir, "plan-b.md"), "# Plan B\n- [ ] Task 2")
+
+      const hook = createHitItHook(createMockPluginInput())
+      const output = {
+        parts: [{
+          type: "text",
+          text: `<session-context>
+<user-request>fix backend/module/chat-session.module.ts line 16</user-request>
+</session-context>`,
+        }],
+      }
+
+      // #when
+      await hook["chat.message"]({ sessionID: "session-123" }, output)
+
+      // #then - should detect quick fix, not show plan selection
+      expect(output.parts[0].text).toContain("Quick Fix Detected")
+      expect(output.parts[0].text).not.toContain("Multiple Plans Found")
+    })
+
+    test("should still match plan names that look like file paths", async () => {
+      // #given - plan name contains file-like pattern
+      const plansDir = join(TEST_DIR, ".paul", "plans")
+      mkdirSync(plansDir, { recursive: true })
+      writeFileSync(join(plansDir, "fix-auth-module.md"), "# Fix Auth\n- [ ] Task 1")
+
+      const hook = createHitItHook(createMockPluginInput())
+      const output = {
+        parts: [{
+          type: "text",
+          text: `<session-context>
+<user-request>fix-auth-module</user-request>
+</session-context>`,
+        }],
+      }
+
+      // #when
+      await hook["chat.message"]({ sessionID: "session-123" }, output)
+
+      // #then - should match plan, not treat as quick fix
+      expect(output.parts[0].text).toContain("Auto-Selected Plan")
+      expect(output.parts[0].text).toContain("fix-auth-module")
+    })
   })
 
   describe("session agent management", () => {

@@ -16,6 +16,27 @@ export const HOOK_NAME = "hit-it"
 
 const KEYWORD_PATTERN = /\b(hit-it|hititx)\b/gi
 
+const quick_fix_patterns = [
+  /\b(fix|edit|change|update|add|remove)\b.*\b(line|file)\b/i,
+  /\b(typo|spelling|grammar)\b/i,
+  /\bexport[s]?\b.*\b(add|remove|change)\b/i,
+]
+
+const file_mention_pattern = /\b[\w\-./]+\.(ts|tsx|js|jsx|py|md|json|yaml|yml|css|scss|html)\b/i
+
+function isquickfixrequest(userrequest: string): boolean {
+  if (!userrequest || userrequest.length < 5) return false
+  
+  // check if mentions a specific file
+  const mentionsfile = file_mention_pattern.test(userrequest)
+  
+  // check if matches quick fix patterns
+  const matchesquickfix = quick_fix_patterns.some(p => p.test(userrequest))
+  
+  // quick fix = mentions file or matches quick fix pattern
+  return mentionsfile || matchesquickfix
+}
+
 interface HitItHookInput {
   sessionID: string
   messageID?: string
@@ -117,6 +138,19 @@ All ${progress.total} tasks are done. Create a new plan with: /plan "your task"`
 
 boulder.json has been created. Read the plan and begin execution.`
           }
+         } else if (isquickfixrequest(explicitPlanName)) {
+           // this is a quick fix request, not a plan name
+           contextInfo = `
+## Quick Fix Detected
+
+User request appears to be a quick fix task, not a plan name.
+**request**: "${explicitPlanName}"
+
+Use your fast-path logic to handle this without selecting a plan:
+- if UI/visual keywords → delegate to frontend-ui-ux-engineer
+- otherwise → delegate to paul-junior
+
+Proceed with the quick fix immediately.`
         } else {
           const incompletePlans = allPlans.filter(p => !getPlanProgress(p).isComplete)
           if (incompletePlans.length > 0) {
