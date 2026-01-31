@@ -12,6 +12,7 @@ import {
   injectTextPart,
   prependThinkingPart,
   readParts,
+  removeToolUseParts,
   replaceEmptyTextParts,
   stripThinkingParts,
 } from "./storage"
@@ -129,6 +130,14 @@ export function detectErrorType(error: unknown): RecoveryErrorType {
     return "tool_result_missing"
   }
 
+  if (message.includes("tool_use") && message.includes("without") && message.includes("tool_result")) {
+    return "tool_result_missing"
+  }
+
+  if (message.includes("each `tool_use` block must have a corresponding `tool_result` block")) {
+    return "tool_result_missing"
+  }
+
   if (
     message.includes("thinking") &&
     (message.includes("first block") ||
@@ -153,44 +162,23 @@ function extractToolUseIds(parts: MessagePart[]): string[] {
 }
 
 async function recoverToolResultMissing(
-  client: Client,
-  sessionID: string,
+  _client: Client,
+  _sessionID: string,
   failedAssistantMsg: MessageData
 ): Promise<boolean> {
-  // Try API parts first, fallback to filesystem if empty
-  let parts = failedAssistantMsg.parts || []
-  if (parts.length === 0 && failedAssistantMsg.info?.id) {
-    const storedParts = readParts(failedAssistantMsg.info.id)
-    parts = storedParts.map((p) => ({
-      type: p.type === "tool" ? "tool_use" : p.type,
-      id: "callID" in p ? (p as { callID?: string }).callID : p.id,
-      name: "tool" in p ? (p as { tool?: string }).tool : undefined,
-      input: "state" in p ? (p as { state?: { input?: Record<string, unknown> } }).state?.input : undefined,
-    }))
+  const messageID = failedAssistantMsg.info?.id
+  if (!messageID) {
+    return false
   }
-  const toolUseIds = extractToolUseIds(parts)
+
+  const storedParts = readParts(messageID)
+  const toolUseIds = extractToolUseIds(storedParts)
 
   if (toolUseIds.length === 0) {
     return false
   }
 
-  const toolResultParts = toolUseIds.map((id) => ({
-    type: "tool_result" as const,
-    tool_use_id: id,
-    content: "Operation cancelled by user (ESC pressed)",
-  }))
-
-  try {
-    await client.session.prompt({
-      path: { id: sessionID },
-      // @ts-expect-error - SDK types may not include tool_result parts
-      body: { parts: toolResultParts },
-    })
-
-    return true
-  } catch {
-    return false
-  }
+  return removeToolUseParts(messageID)
 }
 
 async function recoverThinkingBlockOrder(
@@ -373,7 +361,7 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
         thinking_disabled_violation: "Thinking Strip Recovery",
       }
       const toastMessages: Record<RecoveryErrorType & string, string> = {
-        tool_result_missing: "Injecting cancelled tool results...",
+        tool_result_missing: "Removing unpaired tool blocks...",
         thinking_block_order: "Fixing message structure...",
         thinking_disabled_violation: "Stripping thinking blocks...",
       }
@@ -393,6 +381,11 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
 
       if (errorType === "tool_result_missing") {
         success = await recoverToolResultMissing(ctx.client, sessionID, failedMsg)
+        if (success && experimental?.auto_resume) {
+          const lastUser = findLastUserMessage(msgs ?? [])
+          const resumeConfig = extractResumeConfig(lastUser, sessionID)
+          await resumeSession(ctx.client, resumeConfig)
+        }
       } else if (errorType === "thinking_block_order") {
         success = await recoverThinkingBlockOrder(ctx.client, sessionID, failedMsg, ctx.directory, info.error)
         if (success && experimental?.auto_resume) {

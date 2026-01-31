@@ -111,6 +111,32 @@ describe("detectErrorType", () => {
       // #then should return tool_result_missing
       expect(result).toBe("tool_result_missing")
     })
+
+    it("should detect tool_use without tool_result in next message", () => {
+      // #given an error about tool_use ids found without tool_result blocks
+      const error = {
+        message: "messages.3: `tool_use` ids were found without `tool_result` blocks immediately after: _functions_todoread_0. Each `tool_use` block must have a corresponding `tool_result` block in the next message.",
+      }
+
+      // #when detectErrorType is called
+      const result = detectErrorType(error)
+
+      // #then should return tool_result_missing
+      expect(result).toBe("tool_result_missing")
+    })
+
+    it("should detect tool_use without corresponding tool_result", () => {
+      // #given an error about tool_use without corresponding tool_result
+      const error = {
+        message: "Each `tool_use` block must have a corresponding `tool_result` block",
+      }
+
+      // #when detectErrorType is called
+      const result = detectErrorType(error)
+
+      // #then should return tool_result_missing
+      expect(result).toBe("tool_result_missing")
+    })
   })
 
   describe("thinking_disabled_violation errors", () => {

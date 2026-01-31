@@ -318,6 +318,29 @@ export function stripThinkingParts(messageID: string): boolean {
   return anyRemoved
 }
 
+export function removeToolUseParts(messageID: string): boolean {
+  const partDir = join(PART_STORAGE, messageID)
+  if (!existsSync(partDir)) return false
+
+  let anyRemoved = false
+  for (const file of readdirSync(partDir)) {
+    if (!file.endsWith(".json")) continue
+    try {
+      const filePath = join(partDir, file)
+      const content = readFileSync(filePath, "utf-8")
+      const part = JSON.parse(content) as StoredPart
+      if (part.type === "tool" || part.type === "tool_use") {
+        unlinkSync(filePath)
+        anyRemoved = true
+      }
+    } catch {
+      continue
+    }
+  }
+
+  return anyRemoved
+}
+
 export function replaceEmptyTextParts(messageID: string, replacementText: string): boolean {
   const partDir = join(PART_STORAGE, messageID)
   if (!existsSync(partDir)) return false
