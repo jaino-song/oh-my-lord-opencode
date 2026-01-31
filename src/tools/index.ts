@@ -45,7 +45,7 @@ type OpencodeClient = PluginInput["client"]
 
 export { createCallPaulAgent } from "./call-paul-agent"
 export { createLookAt } from "./look-at"
-export { createDelegateTask, type DelegateTaskToolOptions, DEFAULT_CATEGORIES, CATEGORY_PROMPT_APPENDS } from "./delegate-task"
+export { createDelegateTask, type DelegateTaskToolOptions } from "./delegate-task"
 
 export function createBackgroundTools(manager: BackgroundManager, client: OpencodeClient): Record<string, ToolDefinition> {
   return {

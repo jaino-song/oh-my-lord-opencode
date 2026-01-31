@@ -3,13 +3,13 @@ import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import type { BackgroundManager } from "../../features/background-agent"
 import type { DelegateTaskArgs } from "./types"
-import type { CategoryConfig, CategoriesConfig, GitMasterConfig } from "../../config/schema"
-import { DELEGATE_TASK_DESCRIPTION, DEFAULT_CATEGORIES, CATEGORY_PROMPT_APPENDS } from "./constants"
+import type { GitMasterConfig } from "../../config/schema"
+import { DELEGATE_TASK_DESCRIPTION } from "./constants"
 import { findNearestMessageWithFields, findFirstMessageWithAgent, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { resolveMultipleSkillsAsync } from "../../features/opencode-skill-loader/skill-content"
 import { discoverSkills } from "../../features/opencode-skill-loader"
 import { getTaskToastManager } from "../../features/task-toast-manager"
-import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
+
 import { getsessiontokenusage } from "../../features/task-toast-manager/token-utils"
 import { subagentSessions, getSessionAgent } from "../../features/claude-code-session-state"
 import { log, getAgentToolRestrictions } from "../../shared"
@@ -19,10 +19,10 @@ import { AGENT_FALLBACK_MODELS, MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS, PAUL_JUNIOR_
 
 type OpencodeClient = PluginInput["client"]
 
-const PAUL_JUNIOR_AGENT = "Paul-Junior"
-const CATEGORY_EXAMPLES = Object.keys(DEFAULT_CATEGORIES).map(k => `'${k}'`).join(", ")
+
 const DEFAULT_OUTPUT_SUMMARY_TOKENS = 300
 const SKILL_SUMMARY_TOKENS = 300
+const NO_OUTPUT_TIMEOUT_MS = 60 * 1000  // 60 seconds
 
 function parseModelString(model: string): { providerID: string; modelID: string } | undefined {
   const parts = model.split("/")
@@ -65,7 +65,8 @@ function isRetryableError(error: unknown): boolean {
     message.includes("unresponsive") ||
     message.includes("503") ||
     message.includes("429") ||
-    message.includes("overloaded")
+    message.includes("overloaded") ||
+    message.includes("no output")
 }
 
 function getFallbackModel(agentName: string): string | undefined {
@@ -78,7 +79,6 @@ interface ErrorContext {
   args?: DelegateTaskArgs
   sessionID?: string
   agent?: string
-  category?: string
 }
 
 function formatDetailedError(error: unknown, ctx: ErrorContext): string {
@@ -96,13 +96,12 @@ function formatDetailedError(error: unknown, ctx: ErrorContext): string {
   }
 
   if (ctx.agent) {
-    lines.push(`**Agent**: ${ctx.agent}${ctx.category ? ` (category: ${ctx.category})` : ""}`)
+    lines.push(`**Agent**: ${ctx.agent}`)
   }
 
   if (ctx.args) {
     lines.push("", "**Arguments**:")
     lines.push(`- description: "${ctx.args.description}"`)
-    lines.push(`- category: ${ctx.args.category ?? "(none)"}`)
     lines.push(`- subagent_type: ${ctx.args.subagent_type ?? "(none)"}`)
     lines.push(`- run_in_background: ${ctx.args.run_in_background}`)
     lines.push(`- skills: [${ctx.args.skills?.join(", ") ?? ""}]`)
@@ -143,77 +142,26 @@ type ToolContextWithMetadata = {
   metadata?: (input: { title?: string; metadata?: Record<string, unknown> }) => void
 }
 
-function resolveCategoryConfig(
-  categoryName: string,
-  options: {
-    userCategories?: CategoriesConfig
-    parentModelString?: string
-    systemDefaultModel?: string
-  }
-): { config: CategoryConfig; promptAppend: string; model: string | undefined } | null {
-  const { userCategories, parentModelString, systemDefaultModel } = options
-  const defaultConfig = DEFAULT_CATEGORIES[categoryName]
-  const userConfig = userCategories?.[categoryName]
-  const defaultPromptAppend = CATEGORY_PROMPT_APPENDS[categoryName] ?? ""
-
-  if (!defaultConfig && !userConfig) {
-    return null
-  }
-
-  // Model priority: user override > category default > parent model (fallback) > system default
-  const model = userConfig?.model ?? defaultConfig?.model ?? parentModelString ?? systemDefaultModel
-  const config: CategoryConfig = {
-    ...defaultConfig,
-    ...userConfig,
-    model,
-  }
-
-  let promptAppend = defaultPromptAppend
-  if (userConfig?.prompt_append) {
-    promptAppend = defaultPromptAppend
-      ? defaultPromptAppend + "\n\n" + userConfig.prompt_append
-      : userConfig.prompt_append
-  }
-
-  return { config, promptAppend, model }
-}
-
 export interface DelegateTaskToolOptions {
   manager: BackgroundManager
   client: OpencodeClient
   directory: string
-  userCategories?: CategoriesConfig
   gitMasterConfig?: GitMasterConfig
 }
 
-export interface BuildSystemContentInput {
-  skillContent?: string
-  categoryPromptAppend?: string
-}
-
-export function buildSystemContent(input: BuildSystemContentInput): string | undefined {
-  const { skillContent, categoryPromptAppend } = input
-
-  if (!skillContent && !categoryPromptAppend) {
-    return undefined
-  }
-
-  if (skillContent && categoryPromptAppend) {
-    return `${skillContent}\n\n${categoryPromptAppend}`
-  }
-
-  return skillContent || categoryPromptAppend
+export function buildSystemContent(skillContent?: string): string | undefined {
+  return skillContent
 }
 
 export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefinition {
-  const { manager, client, directory, userCategories, gitMasterConfig } = options
+  const { manager, client, directory, gitMasterConfig } = options
 
   return tool({
     description: DELEGATE_TASK_DESCRIPTION,
     args: {
       description: tool.schema.string().describe("Short task description"),
       prompt: tool.schema.string().describe("Full detailed prompt for the agent"),
-      category: tool.schema.string().optional().describe(`Category name (e.g., ${CATEGORY_EXAMPLES}). Mutually exclusive with subagent_type.`),
+
       subagent_type: tool.schema.string().optional().describe("Agent name directly (e.g., 'oracle', 'explore'). Mutually exclusive with category."),
       run_in_background: tool.schema.boolean().describe("Run in background. MUST be explicitly set. Use false for task delegation, true only for parallel exploration."),
       resume: tool.schema.string().optional().describe("Session ID to resume - continues previous agent session with full context"),
@@ -470,86 +418,11 @@ session id: ${args.resume}
 ${formattedOutput}`
       }
 
-      if (args.category && args.subagent_type) {
-        return `❌ Invalid arguments: Provide EITHER category OR subagent_type, not both.`
+      if (!args.subagent_type?.trim()) {
+        return `❌ Agent name cannot be empty. Provide subagent_type parameter (e.g., 'explore', 'librarian', 'paul-junior').`
       }
-
-      if (!args.category && !args.subagent_type) {
-        return `❌ Invalid arguments: Must provide either category or subagent_type.`
-      }
-
-      // Fetch OpenCode config at boundary to get system default model
-      let systemDefaultModel: string | undefined
-      try {
-        const openCodeConfig = await client.config.get()
-        systemDefaultModel = (openCodeConfig as { model?: string })?.model
-      } catch {
-        // Config fetch failed, proceed without system default
-        systemDefaultModel = undefined
-      }
-
-      let agentToUse: string
-      let categoryModel: { providerID: string; modelID: string; variant?: string } | undefined
-      let categoryPromptAppend: string | undefined
-
-      const parentModelString = parentModel
-        ? `${parentModel.providerID}/${parentModel.modelID}`
-        : undefined
-
-      let modelInfo: ModelFallbackInfo | undefined
-
-      if (args.category) {
-        const resolved = resolveCategoryConfig(args.category, {
-          userCategories,
-          parentModelString,
-          systemDefaultModel,
-        })
-        if (!resolved) {
-          return `❌ Unknown category: "${args.category}". Available: ${Object.keys({ ...DEFAULT_CATEGORIES, ...userCategories }).join(", ")}`
-        }
-
-        // Determine model source by comparing against the actual resolved model
-        const actualModel = resolved.model
-        const userDefinedModel = userCategories?.[args.category]?.model
-        const categoryDefaultModel = DEFAULT_CATEGORIES[args.category]?.model
-
-        if (!actualModel) {
-          return `❌ No model configured. Set a model in your OpenCode config, plugin config, or use a category with a default model.`
-        }
-
-        if (!parseModelString(actualModel)) {
-          return `❌ Invalid model format "${actualModel}". Expected "provider/model" format (e.g., "anthropic/claude-sonnet-4-5").`
-        }
-
-        switch (actualModel) {
-          case userDefinedModel:
-            modelInfo = { model: actualModel, type: "user-defined" }
-            break
-          case parentModelString:
-            modelInfo = { model: actualModel, type: "inherited" }
-            break
-          case categoryDefaultModel:
-            modelInfo = { model: actualModel, type: "category-default" }
-            break
-          case systemDefaultModel:
-            modelInfo = { model: actualModel, type: "system-default" }
-            break
-        }
-
-        agentToUse = PAUL_JUNIOR_AGENT
-        const parsedModel = parseModelString(actualModel)
-        categoryModel = parsedModel
-          ? (resolved.config.variant
-            ? { ...parsedModel, variant: resolved.config.variant }
-            : parsedModel)
-          : undefined
-        categoryPromptAppend = resolved.promptAppend || undefined
-      } else {
-        if (!args.subagent_type?.trim()) {
-          return `❌ Agent name cannot be empty.`
-        }
-        const agentName = args.subagent_type.trim()
-        agentToUse = agentName
+      const agentName = args.subagent_type.trim()
+      const agentToUse = agentName
 
         // Validate agent exists and is callable (not a primary agent)
         try {
@@ -574,9 +447,8 @@ ${formattedOutput}`
         } catch {
           // If we can't fetch agents, proceed anyway - the session.prompt will fail with a clearer error
         }
-      }
 
-      const systemContent = buildSystemContent({ skillContent, categoryPromptAppend })
+      const systemContent = buildSystemContent(skillContent)
 
       if (runInBackground) {
         try {
@@ -588,14 +460,13 @@ ${formattedOutput}`
             parentMessageID: ctx.messageID,
             parentModel,
             parentAgent,
-            model: categoryModel,
             skills: args.skills ?? undefined,
             skillContent: systemContent,
           })
 
           ctx.metadata?.({
             title: args.description,
-            metadata: { sessionId: task.sessionID, category: args.category },
+            metadata: { sessionId: task.sessionID },
           })
 
           return `${parentAgentName} → ${task.agent}
@@ -611,7 +482,6 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
             operation: "Launch background task",
             args,
             agent: agentToUse,
-            category: args.category,
           })
         }
       }
@@ -653,18 +523,22 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
             agent: agentToUse,
             isBackground: false,
             skills: args.skills ?? undefined,
-            modelInfo,
           })
         }
 
         ctx.metadata?.({
           title: args.description,
-          metadata: { sessionId: sessionID, category: args.category, sync: true },
+          metadata: { sessionId: sessionID, sync: true },
         })
 
-        let currentModel = categoryModel
+        let currentModel = parentModel
         let currentAgent = agentToUse
         let lastError: unknown = null
+
+        const POLL_INTERVAL_MS = 500
+        const MAX_POLL_TIME_MS = 10 * 60 * 1000
+        const MIN_STABILITY_TIME_MS = 10000
+        const STABILITY_POLLS_REQUIRED = 3
 
         for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
           try {
@@ -672,7 +546,10 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
               model: currentModel ? `${currentModel.providerID}/${currentModel.modelID}` : "default",
             })
 
-            await client.session.prompt({
+            // Fire-and-forget prompt (don't await) - polling loop handles completion detection
+            // This prevents blocking when API is rate-limited
+            let promptError: Error | null = null
+            client.session.prompt({
               path: { id: sessionID },
               body: {
                 agent: currentAgent,
@@ -685,7 +562,110 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
                 parts: [{ type: "text", text: args.prompt }],
                 ...(currentModel ? { model: currentModel } : {}),
               },
+            }).catch((error) => {
+              log("[delegate_task] Prompt error (fire-and-forget):", error)
+              promptError = error instanceof Error ? error : new Error(String(error))
             })
+
+            const pollStart = Date.now()
+            let lastMsgCount = 0
+            let stablePolls = 0
+            let noOutputIdleCount = 0
+            let pollCount = 0
+
+            log("[delegate_task] Starting poll loop", { sessionID, agentToUse })
+
+            while (Date.now() - pollStart < MAX_POLL_TIME_MS) {
+              if (ctx.abort?.aborted) {
+                log("[delegate_task] Aborted by user", { sessionID })
+                if (toastManager && taskId) toastManager.removeTask(taskId)
+                return `Task aborted.\n\nSession ID: ${sessionID}`
+              }
+
+              if (promptError) {
+                throw promptError
+              }
+
+              await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS))
+              pollCount++
+
+              const statusResult = await client.session.status()
+              const allStatuses = (statusResult.data ?? {}) as Record<string, { type: string }>
+              const sessionStatus = allStatuses[sessionID]
+
+              if (pollCount % 10 === 0) {
+                log("[delegate_task] Poll status", {
+                  sessionID,
+                  pollCount,
+                  elapsed: Math.floor((Date.now() - pollStart) / 1000) + "s",
+                  sessionStatus: sessionStatus?.type ?? "not_in_status",
+                  stablePolls,
+                  lastMsgCount,
+                })
+              }
+
+              const messagesCheck = await client.session.messages({ path: { id: sessionID } })
+              const msgs = ((messagesCheck as { data?: unknown }).data ?? messagesCheck) as Array<{info?: {role?: string}}>
+              const currentMsgCount = msgs.length
+              const assistantMsgs = msgs.filter((m: any) => m.info?.role === "assistant")
+
+              // debug: log message state every 10 polls
+              if (pollCount % 10 === 0) {
+                log("[delegate_task] message check", { 
+                  sessionID, 
+                  totalMsgs: currentMsgCount, 
+                  assistantMsgs: assistantMsgs.length,
+                  noOutputIdleCount,
+                  status: sessionStatus?.type ?? "unknown",
+                  msgRoles: msgs.map((m: any) => m.info?.role).filter(Boolean)
+                })
+              }
+
+              if (assistantMsgs.length === 0) {
+                noOutputIdleCount++
+                const elapsedNoOutput = noOutputIdleCount * POLL_INTERVAL_MS
+                
+                log("[delegate_task] No output yet", { sessionID, elapsedNoOutput, noOutputIdleCount, status: sessionStatus?.type ?? "unknown" })
+                
+                if (elapsedNoOutput >= NO_OUTPUT_TIMEOUT_MS) {
+                  log("[delegate_task] No output timeout - triggering retry", { sessionID })
+                  throw new Error("No output received after 60s - possible rate limiting or API error")
+                }
+                
+                if (sessionStatus && sessionStatus.type !== "idle") {
+                  continue
+                }
+              } else {
+                noOutputIdleCount = 0
+              }
+
+              if (sessionStatus && sessionStatus.type !== "idle") {
+                stablePolls = 0
+                lastMsgCount = 0
+                continue
+              }
+
+              const elapsed = Date.now() - pollStart
+              if (elapsed < MIN_STABILITY_TIME_MS) {
+                continue
+              }
+
+              if (currentMsgCount === lastMsgCount) {
+                stablePolls++
+                if (stablePolls >= STABILITY_POLLS_REQUIRED) {
+                  log("[delegate_task] Poll complete - messages stable", { sessionID, pollCount, currentMsgCount })
+                  break
+                }
+              } else {
+                stablePolls = 0
+                lastMsgCount = currentMsgCount
+              }
+            }
+
+            if (Date.now() - pollStart >= MAX_POLL_TIME_MS) {
+              log("[delegate_task] Poll timeout reached", { sessionID, pollCount, lastMsgCount, stablePolls })
+            }
+
             lastError = null
             break
           } catch (promptError) {
@@ -701,7 +681,6 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
                 args,
                 sessionID,
                 agent: currentAgent,
-                category: args.category,
               })
             }
 
@@ -737,81 +716,11 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
             toastManager.removeTask(taskId)
           }
           return formatDetailedError(lastError, {
-            operation: "Send prompt",
+            operation: "Execute task",
             args,
             sessionID,
             agent: currentAgent,
-            category: args.category,
           })
-        }
-
-        // Poll for session completion with stability detection
-        // The session may show as "idle" before messages appear, so we also check message stability
-        const POLL_INTERVAL_MS = 500
-        const MAX_POLL_TIME_MS = 10 * 60 * 1000
-        const MIN_STABILITY_TIME_MS = 10000  // Minimum 10s before accepting completion
-        const STABILITY_POLLS_REQUIRED = 3
-        const pollStart = Date.now()
-        let lastMsgCount = 0
-        let stablePolls = 0
-        let pollCount = 0
-
-        log("[delegate_task] Starting poll loop", { sessionID, agentToUse })
-
-        while (Date.now() - pollStart < MAX_POLL_TIME_MS) {
-          if (ctx.abort?.aborted) {
-            log("[delegate_task] Aborted by user", { sessionID })
-            if (toastManager && taskId) toastManager.removeTask(taskId)
-            return `Task aborted.\n\nSession ID: ${sessionID}`
-          }
-
-          await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS))
-          pollCount++
-
-          const statusResult = await client.session.status()
-          const allStatuses = (statusResult.data ?? {}) as Record<string, { type: string }>
-          const sessionStatus = allStatuses[sessionID]
-
-          if (pollCount % 10 === 0) {
-            log("[delegate_task] Poll status", {
-              sessionID,
-              pollCount,
-              elapsed: Math.floor((Date.now() - pollStart) / 1000) + "s",
-              sessionStatus: sessionStatus?.type ?? "not_in_status",
-              stablePolls,
-              lastMsgCount,
-            })
-          }
-
-          if (sessionStatus && sessionStatus.type !== "idle") {
-            stablePolls = 0
-            lastMsgCount = 0
-            continue
-          }
-
-          const elapsed = Date.now() - pollStart
-          if (elapsed < MIN_STABILITY_TIME_MS) {
-            continue
-          }
-
-          const messagesCheck = await client.session.messages({ path: { id: sessionID } })
-          const msgs = ((messagesCheck as { data?: unknown }).data ?? messagesCheck) as Array<unknown>
-          const currentMsgCount = msgs.length
-
-          if (currentMsgCount === lastMsgCount) {
-            stablePolls++
-            if (stablePolls >= STABILITY_POLLS_REQUIRED) {
-              log("[delegate_task] Poll complete - messages stable", { sessionID, pollCount, currentMsgCount })
-              break
-            }
-          } else {
-            stablePolls = 0
-            lastMsgCount = currentMsgCount
-          }
-        }
-
-        if (Date.now() - pollStart >= MAX_POLL_TIME_MS) {
-          log("[delegate_task] Poll timeout reached", { sessionID, pollCount, lastMsgCount, stablePolls })
         }
 
         const messagesResult = await client.session.messages({
@@ -888,7 +797,6 @@ ${formattedOutput}`
           args,
           sessionID: syncSessionID,
           agent: agentToUse,
-          category: args.category,
         })
       }
     },
