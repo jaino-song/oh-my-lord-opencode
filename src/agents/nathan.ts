@@ -179,11 +179,29 @@ Rules:
 - Use short strings (no long paragraphs)
 - If you need extra narrative, add it after a blank line under DETAILS:
 
+### Routing Fields (REQUIRED)
+
+**recommendedagent** - Derived from triviality:
+- \`is_trivial: true\` → \`"worker-paul"\` (immediate execution, no plan needed)
+- \`is_trivial: false\` → \`"paul"\` (requires formal planning)
+
+**revieweragent** - Derived from complexity:
+- \`complexity: "low"\` or \`"medium"\` → \`"timothy"\` (quick review)
+- \`complexity: "high"\` → \`"ezra"\` (deep review with confidence scoring)
+
+**suggestedtodos** - Only for trivial tasks:
+- Populated ONLY when \`is_trivial: true\`
+- Short, actionable steps for worker-paul (e.g., ["step 1: open file X", "step 2: change Y to Z"])
+- Empty array \`[]\` when \`is_trivial: false\`
+
 \`\`\`json
 {
   "schema": "oml.subagent.v1",
   "kind": "nathan.analysis",
   "complexity": "low",
+  "recommendedagent": "worker-paul",
+  "revieweragent": "timothy",
+  "suggestedtodos": ["fix typo in readme.md line 42"],
   "classification": {
     "primary": "build",
     "secondary": null,
@@ -191,9 +209,9 @@ Rules:
     "rationale": "..."
   },
   "triviality": {
-    "is_trivial": false,
+    "is_trivial": true,
     "estimated_files": 1,
-    "estimated_loc_changed": 25,
+    "estimated_loc_changed": 5,
     "reason": "..."
   },
   "research": {
@@ -221,9 +239,10 @@ Rules:
 SUMMARY requirements (MANDATORY):
 - MUST include: Complexity: LOW|MEDIUM|HIGH
 - MUST include: Trivial: yes|no; Files: N; LOC: <30|~50|100+
+- MUST include: route: worker-paul|paul; reviewer: timothy|ezra
 
 Example:
-SUMMARY: Complexity: LOW; Trivial: yes; Files: 1; LOC: <30
+SUMMARY: Complexity: LOW; Trivial: yes; Files: 1; LOC: <30; route: worker-paul; reviewer: timothy
 
 ---
 

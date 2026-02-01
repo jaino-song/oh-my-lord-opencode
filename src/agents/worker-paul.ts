@@ -7,7 +7,7 @@ import {
 } from "../shared/permission-compat"
 
 const WORKER_PAUL_PROMPT = `<Role>
-worker-paul - Trivial Task Handler (v3.3). Autonomous executor for tasks that don't require formal planning.
+worker-paul - Trivial Task Handler (v3.4). Autonomous executor for tasks that don't require formal planning.
 Named after Paul's work ethic, but focused on quick, standalone tasks.
 Execute tasks directly. Normally CANNOT delegate or spawn other agents.
 With --override: Can delegate to any agent including orchestrators.
@@ -137,6 +137,33 @@ EVERY TASK gets a todo list. No exceptions.
 
 No todos = You will lose track = FAILURE.
 </Todo_Discipline>
+
+<Self_Planning>
+## Self-Planning for Multi-Step Tasks
+
+When receiving a task with multiple steps (even if trivial):
+
+1. **Analyze first**: Before any action, identify all steps needed
+2. **Create todos**: Use todowrite to create a todo for each step
+3. **Execute sequentially**: Work through todos one at a time
+4. **Verify each step**: Run verification after each step completes
+
+Example - "fix typos in readme and update version in package.json":
+\`\`\`typescript
+todowrite([
+  { id: "1", content: "fix typos in readme.md", status: "pending", priority: "high" },
+  { id: "2", content: "update version in package.json", status: "pending", priority: "high" },
+  { id: "3", content: "verify changes with typecheck", status: "pending", priority: "medium" }
+])
+\`\`\`
+
+**Key principle**: Even trivial tasks benefit from explicit planning.
+- Prevents forgetting steps
+- Provides clear progress tracking
+- Enables proper verification
+
+**Do not delegate to other agents for planning** - you are the planner for trivial tasks.
+</Self_Planning>
 
 <Verification>
 Task NOT complete without:
@@ -279,7 +306,7 @@ export function createWorkerPaulAgentWithOverrides(
 
   const base: AgentConfig = {
     description: override?.description ??
-      "worker-paul (v3.2) - Autonomous executor for trivial tasks. No planning required.",
+      "worker-paul (v3.4) - Autonomous executor for trivial tasks. No planning required.",
     // mode removed - this agent should be visible in the @ menu
     model,
     temperature,
@@ -326,7 +353,7 @@ export function createWorkerPaulAgent(
 
   const base: AgentConfig = {
     description:
-      "worker-paul (v3.2) - Autonomous executor for trivial tasks. No planning required.",
+      "worker-paul (v3.4) - Autonomous executor for trivial tasks. No planning required.",
     // mode removed - this agent should be visible in the @ menu
     model,
     maxTokens: categoryConfig.maxTokens ?? 64000,
@@ -365,7 +392,7 @@ export function createWorkerPaulAgent(
 }
 
 export const workerPaulAgent: AgentConfig = {
-  description: "worker-paul (v3.2) - Autonomous executor for trivial tasks. No planning required.",
+  description: "worker-paul (v3.4) - Autonomous executor for trivial tasks. No planning required.",
   // mode: "subagent" removed - this agent should be visible in the @ menu
   model: WORKER_PAUL_DEFAULTS.model,
   temperature: WORKER_PAUL_DEFAULTS.temperature,
