@@ -1,6 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin"
-import { HOOK_NAME, PACKAGE_MANAGERS, BANNED_PM_COMMANDS, COMMIT_REGEX, FILE_NAMING_REGEX, FRONTEND_FILE_NAMING_REGEX, FRONTEND_DIR_PATTERNS, REACT_HOOK_PATTERNS, REACT_COMPONENT_PATTERNS, EXCLUDED_FILES } from "./constants"
-import { basename } from "node:path"
+import { HOOK_NAME, PACKAGE_MANAGERS, BANNED_PM_COMMANDS, COMMIT_REGEX } from "./constants"
 
 export * from "./constants"
 
@@ -10,33 +9,6 @@ function isBannedPackageCommand(command: string): boolean {
   if (!pm) return false
 
   return BANNED_PM_COMMANDS.some(cmd => trimmed.includes(` ${cmd}`) || trimmed.includes(` ${cmd} `))
-}
-
-function isValidFilename(filePath: string): boolean {
-  const filename = basename(filePath)
-  if (EXCLUDED_FILES.includes(filename)) return true
-  
-  if (filename.startsWith(".")) return true
-
-  if (FILE_NAMING_REGEX.test(filename)) return true
-
-  if (isFrontendFile(filePath)) return true
-
-  return false
-}
-
-function isFrontendFile(filePath: string): boolean {
-  const filename = basename(filePath)
-  const normalizedPath = filePath.replace(/\\/g, "/")
-
-  const isInFrontendDir = FRONTEND_DIR_PATTERNS.some(pattern => 
-    normalizedPath.includes(pattern)
-  )
-
-  const isReactHook = REACT_HOOK_PATTERNS.some(pattern => pattern.test(filename))
-  const isReactComponent = REACT_COMPONENT_PATTERNS.some(pattern => pattern.test(filename))
-
-  return isInFrontendDir || isReactHook || isReactComponent
 }
 
 function isValidCommitMessage(message: string): boolean {
@@ -78,17 +50,7 @@ export function createStrictWorkflowHook(ctx: PluginInput) {
         }
       }
 
-      if (tool === "write" || tool === "edit") {
-        const filePath = (output.args.filePath ?? output.args.path ?? output.args.file) as string | undefined
-        if (filePath && !isValidFilename(filePath)) {
-          throw new Error(
-            `[${HOOK_NAME}] BLOCKED: Filename '${basename(filePath)}' violates strict naming convention.\n` +
-            `Rule: Files must be kebab-case (lowercase, hyphens only).\n` +
-            `Exceptions: Frontend files (components, hooks) can use camelCase/PascalCase.\n` +
-            `Allowed: README.md, LICENSE, Dockerfile, etc.`
-          )
-        }
-      }
+
     },
 
     "tool.execute.after": async (
