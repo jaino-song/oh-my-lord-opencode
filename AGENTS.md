@@ -14,6 +14,27 @@ bun test <pattern>       # Run single test: bun test todo-continuation
 bun test --watch         # Watch mode
 ```
 
+## DOCS SYNC CONTRACT (REQUIRED)
+
+If you change the system structure (agents/hooks/tools/features/config), you MUST update the canonical docs.
+
+What counts as a “structure change”:
+- Agent registry/visibility/prompt wiring: `src/agents/*`, `src/agents/utils.ts`
+- Hook inventory/ordering/enforcement: `src/hooks/*`, `src/index.ts`
+- Tool inventory/registration: `src/tools/*`, `src/index.ts`
+- Config schema/behavior: `src/config/schema.ts`, `src/plugin-config.ts`, `src/plugin-handlers/config-handler.ts`
+- Skills/commands/MCP loaders: `src/features/*`, `src/mcp/*`
+- CLI commands/behavior: `src/cli/*`
+
+Docs that must stay correct:
+- `docs/*.md` (canonical)
+- `llms.txt` (LLM-friendly index; must include all `docs/*.md`)
+- `structure.md` (pointer only; keep minimal to avoid drift)
+
+Verification (must pass):
+- `bun test docs-sync`
+
+
 ## DEVELOPMENT SETUP
 
 ### Prerequisites
@@ -146,11 +167,12 @@ describe("feature-name", () => {
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
-| Paul | anthropic/claude-sonnet-4-5 | **Strict Plan Executor** - Executes formal plans only (requires `.paul/plans/*.md`) |
-| planner-paul | anthropic/claude-opus-4-5 | **Plan Creator** - Requirements analysis, architecture, test specs (CANNOT execute) |
+| Paul | anthropic/claude-sonnet-4-5 | **Strict Plan Executor** - Executes formal plans only (requires `.paul/plans/*.md`) *(internal only - called by planner-paul)* |
+| planner-paul | anthropic/claude-opus-4-5 | **Plan Creator & Router** - Requirements analysis, architecture, test specs. Routes to worker-paul (trivial) or Paul (complex) |
 | worker-paul | anthropic/claude-sonnet-4-5 | **Trivial Task Handler** - Autonomous execution for small tasks (< 50 lines, single file, low risk) |
 | Solomon | openai/gpt-5.2-codex | TDD test planning (called by planner-paul) |
-| Timothy | google/gemini-3-pro-high | Implementation plan reviewer (called by planner-paul) |
+| Timothy | google/gemini-3-pro-high | Quick plan reviewer (simple plans, <30s) |
+| Ezra | google/gemini-3-pro-high | Deep plan reviewer (complex plans, confidence scoring) |
 | Nathan | openai/gpt-5.2-high | Request analyst (called by planner-paul) |
 | Joshua | openai/gpt-5.2 | Test runner (called by Paul) |
 | Peter | openai/gpt-5.2-codex | Unit test writer (called by Solomon or Paul) |
@@ -171,17 +193,19 @@ describe("feature-name", () => {
 
 | Domain | Agent | Use When | Cannot Do |
 |--------|-------|----------|-----------|
-| **PLANNING** | `@planner-paul` | Complex task needs architecture/test specs | Execute code, delegate to implementation agents |
-| **EXECUTION** | `@Paul` | Formal plan exists in `.paul/plans/*.md` | Create plans, execute without plan |
-| **TRIVIAL** | `@worker-paul` | Single file, < 50 lines, low risk (typo, comment, config) | Delegate to other agents, handle complex tasks |
+| **PLANNING & ROUTING** | `@planner-paul` | Complex task needs architecture/test specs | Execute code directly (delegates to Paul or worker-paul) |
+| **EXECUTION** | `Paul` *(internal)* | Called by planner-paul for complex plans | Create plans, execute without plan, be called directly by user |
+| **TRIVIAL** | `worker-paul` *(internal)* | Called by planner-paul for trivial tasks | Delegate to other agents, handle complex tasks |
 
 **Workflow:**
 
-1. **Complex Tasks**: User → `@planner-paul` (creates plan) → User manually switches → `@Paul` (executes plan)
-2. **Trivial Tasks**: User → `@worker-paul` (executes immediately)
+1. **All Tasks**: User → `@planner-paul` (analyzes via Nathan) → Routes automatically:
+   - **Complex**: planner-paul creates plan → delegates to `Paul` (executes plan)
+   - **Trivial**: planner-paul delegates to `worker-paul` (executes immediately)
+2. **Direct Access** (discouraged): User can still call `@Paul` or `@worker-paul` directly if needed
 
 **Key Rules (Enforcement Types):**
-- **Cross-Domain Calls** (HARD BLOCK): `planner-paul` cannot call `Paul`, `Paul` cannot call `worker-paul`, etc.
+- **Cross-Domain Calls** (HARD BLOCK): `Paul` cannot call `planner-paul`, `worker-paul` cannot call `Paul`, etc. (planner-paul CAN call Paul/worker-paul as the router)
 - **Paul Requires Plan** (HARD BLOCK): If no plan exists in `.paul/plans/*.md`, Paul will **BLOCK** and tell you to switch to `@planner-paul`.
 - **Category Required** (HARD BLOCK): All delegations MUST specify `category` parameter (e.g., `category="unit-testing"`).
 - **TDD Mandatory** (HARD BLOCK): HARD BLOCKS if you try to write code before tests (not warnings - actual errors).
@@ -196,7 +220,7 @@ The system uses two types of enforcement:
 
 ### HARD BLOCKS (Errors - Prevent Execution)
 These violations **throw errors** and stop execution:
-1. Cross-domain calls (planner-paul → Paul, Paul → planner-paul, worker-paul → Paul)
+1. Cross-domain calls (Paul → planner-paul, worker-paul → Paul, etc. - but planner-paul CAN call Paul/worker-paul)
 2. Missing category parameter in delegations
 3. Code written without tests first (TDD violation)
 4. Orchestrators writing code directly (must delegate)
@@ -217,6 +241,27 @@ These violations **inject warnings** but allow proceeding:
 - Allows Paul to make informed decisions
 - Prevents infinite loops on stuck tasks
 - Still provides guidance without being overly restrictive
+
+## CLARIFICATION FEATURE
+
+Subagents (paul-junior, frontend-ui-ux-engineer) can request clarification from orchestrators when they encounter ambiguity.
+
+**Format**:
+```
+[needs_clarification]
+question: <question>
+options:
+a) <option 1>
+b) <option 2>
+context: <context>
+recommendation: <a or b>
+[/needs_clarification]
+```
+
+**Rules**:
+- Max 3 clarification rounds per delegation
+- Background tasks skip clarification (warning logged)
+- Orchestrator answers from context first, escalates to user if needed
 
 ## ANTI-PATTERNS
 
