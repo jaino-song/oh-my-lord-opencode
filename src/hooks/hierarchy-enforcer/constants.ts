@@ -10,7 +10,10 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
     "Thomas (TDD Plan Consultant)",
     "explore",
     "librarian",
-    "background-agent"
+    "background-agent",
+    "worker-paul",
+    "paul",
+    "ezra (plan reviewer)"
   ],
 
   "Timothy (Implementation Plan Reviewer)": [],
@@ -36,7 +39,6 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
     "Solomon (TDD Planner)",
     "Peter (Test Writer)",
     "John (E2E Test Writer)",
-    "planner-paul",
     "Timothy (Implementation Plan Reviewer)",
     "Nathan (Request Analyst)",
     "Thomas (TDD Plan Consultant)"
@@ -44,7 +46,7 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
 
    "Joshua (Test Runner)": [],
     "Paul-Junior": ["explore", "librarian"],
-    "frontend-ui-ux-engineer": [],
+    "frontend-ui-ux-engineer": ["explore", "librarian"],
     "worker-paul": ["explore", "librarian", "git-master", "document-writer"],
 }
 
@@ -60,14 +62,3 @@ export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {
 }
 
 export const BYPASS_AGENTS: string[] = []
-
-// All categories spawn Paul-Junior (per delegate-task/constants.ts line 243)
-export const CATEGORY_TO_AGENT: Record<string, string> = {
-  "quick": "Paul-Junior",
-  "visual-engineering": "Paul-Junior",
-  "ultrabrain": "Paul-Junior",
-  "artistry": "Paul-Junior",
-  "most-capable": "Paul-Junior",
-  "writing": "Paul-Junior",
-  "general": "Paul-Junior",
-}

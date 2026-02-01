@@ -134,6 +134,92 @@ describe("hierarchy-enforcer", () => {
     })
   })
 
+  describe("agent name matching", () => {
+    test("should allow delegating to 'timothy' when 'Timothy (Implementation Plan Reviewer)' is in allowed list", async () => {
+      // #given - set session agent to planner-paul (has Timothy in allowed list)
+      setSessionAgent(TEST_SESSION_ID, "planner-paul")
+
+      const { createHierarchyEnforcerHook } = await import("./index")
+      const hook = createHierarchyEnforcerHook(mockCtx as any)
+
+      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "test-call" }
+      const output = {
+        args: {
+          subagent_type: "timothy",
+          prompt: "review this implementation plan"
+        }
+      }
+
+      // #when / #then - should NOT throw (short name should match full name)
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
+    test("should allow delegating to 'ezra' when 'ezra (plan reviewer)' is in allowed list", async () => {
+      // #given - set session agent to planner-paul (has ezra in allowed list)
+      setSessionAgent(TEST_SESSION_ID, "planner-paul")
+
+      const { createHierarchyEnforcerHook } = await import("./index")
+      const hook = createHierarchyEnforcerHook(mockCtx as any)
+
+      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "test-call" }
+      const output = {
+        args: {
+          subagent_type: "ezra",
+          prompt: "review this plan"
+        }
+      }
+
+      // #when / #then - should NOT throw (short name should match full name)
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
+    test("should block delegating to unauthorized agent", async () => {
+      // #given - set session agent to planner-paul
+      setSessionAgent(TEST_SESSION_ID, "planner-paul")
+
+      const { createHierarchyEnforcerHook } = await import("./index")
+      const hook = createHierarchyEnforcerHook(mockCtx as any)
+
+      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "test-call" }
+      const output = {
+        args: {
+          subagent_type: "ultrabrain",
+          prompt: "implement this feature"
+        }
+      }
+
+      // #when / #then - should throw (ultrabrain not in planner-paul's allowed list)
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).rejects.toThrow("HIERARCHY VIOLATION")
+    })
+
+    test("should NOT allow 'paul-junior' to match 'paul' in allowed list (substring false positive)", async () => {
+      // #given - set session agent to planner-paul (has 'paul' but NOT 'paul-junior')
+      setSessionAgent(TEST_SESSION_ID, "planner-paul")
+
+      const { createHierarchyEnforcerHook } = await import("./index")
+      const hook = createHierarchyEnforcerHook(mockCtx as any)
+
+      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "test-call" }
+      const output = {
+        args: {
+          subagent_type: "Paul-Junior",
+          prompt: "implement this feature"
+        }
+      }
+
+      // #when / #then - should throw (paul-junior should NOT match 'paul')
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).rejects.toThrow("HIERARCHY VIOLATION")
+    })
+  })
+
   describe("todo notification deduplication", () => {
     test("should notify once for the same completed todo across repeated calls", async () => {
       // #given - hook with spies and repeated completed todo

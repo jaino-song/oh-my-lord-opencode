@@ -3,7 +3,7 @@ import { getParentAgentName } from "../../features/agent-context"
 import { findNearestMessageWithFields, MESSAGE_STORAGE, type StoredMessage } from "../../features/hook-message-injector"
 import { existsSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS, CATEGORY_TO_AGENT } from "./constants"
+import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS } from "./constants"
 import { hasRecentApproval, recordApproval, getApprovalPath } from "./approval-state"
 import { log } from "../../shared/logger"
 import type { TokenAnalyticsManager } from "../../features/token-analytics"
@@ -191,10 +191,7 @@ export function createHierarchyEnforcerHook(
         const description = (output.args.description as string) || ""
 
         if (!targetAgent && category) {
-          targetAgent = CATEGORY_TO_AGENT[category]
-          if (!targetAgent) {
-            log(`[hierarchy-enforcer] Unknown category: ${category}, skipping competency check`)
-          }
+          log(`[hierarchy-enforcer] No target agent specified for category: ${category}, skipping competency check`)
         }
 
         const rawPrompt = output.args.prompt as string || ""
@@ -211,8 +208,9 @@ export function createHierarchyEnforcerHook(
           const isAllowed = allowedTargets.some(allowed => {
             const normalizedAllowed = normalizeAgentName(allowed)
             return normalizedAllowed === normalizedTarget || 
-                   normalizedAllowed?.includes(normalizedTarget!) ||
-                   normalizedTarget?.includes(normalizedAllowed!)
+                   normalizedAllowed?.startsWith(normalizedTarget + " ") ||
+                   normalizedAllowed?.startsWith(normalizedTarget + "(") ||
+                   normalizedAllowed?.startsWith(normalizedTarget!)
           })
 
           if (!isAllowed) {
