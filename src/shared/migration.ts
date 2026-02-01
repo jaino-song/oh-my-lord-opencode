@@ -1,5 +1,6 @@
 import * as fs from "fs"
 import { log } from "./logger"
+import { DEFAULT_CATEGORIES } from "../config/default-categories"
 
 // Migration map: old keys → new keys (for backward compatibility)
 export const AGENT_NAME_MAP: Record<string, string> = {
@@ -111,7 +112,6 @@ export function shouldDeleteAgentConfig(
   config: Record<string, unknown>,
   category: string
 ): boolean {
-  const { DEFAULT_CATEGORIES } = require("../tools/delegate-task/constants")
   const defaults = DEFAULT_CATEGORIES[category]
   if (!defaults) return false
 

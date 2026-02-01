@@ -281,7 +281,7 @@ export function createNathanAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "xhigh", textVerbosity: "high" } as AgentConfig
+    return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "enabled", budgetTokens: 32000 } } as AgentConfig

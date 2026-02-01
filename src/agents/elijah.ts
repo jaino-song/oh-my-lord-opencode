@@ -25,7 +25,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Replaces: Oracle (deprecated)
  */
 
-const DEFAULT_MODEL = "openai/gpt-5.2-high"
+const DEFAULT_MODEL = "openai/gpt-5.2-codex"
 
 export const ELIJAH_SYSTEM_PROMPT = `# Elijah - Deep Reasoning Advisor
 
@@ -377,7 +377,7 @@ export function createElijahAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "xhigh", textVerbosity: "high" } as AgentConfig
+    return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
   }
 
   // Double the thinking budget for Elijah (64k vs Oracle's 32k)

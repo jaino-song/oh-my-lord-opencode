@@ -1,6 +1,12 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
-import type { BuiltinAgentName, AgentOverrideConfig, AgentOverrides, AgentFactory, AgentPromptMetadata } from "./types"
-import type { CategoriesConfig, CategoryConfig, GitMasterConfig } from "../config/schema"
+import type {
+  BuiltinAgentName,
+  AgentOverrideConfig,
+  AgentOverrides,
+  AgentFactory,
+  AgentPromptMetadata,
+} from "./types"
+import type { CategoriesConfig, GitMasterConfig } from "../config/schema"
 // @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
 import { createOracleAgent, ORACLE_PROMPT_METADATA } from "./oracle"
 import { createLibrarianAgent, LIBRARIAN_PROMPT_METADATA } from "./librarian"
@@ -31,6 +37,7 @@ import type { AvailableAgent } from "./paul-prompt-builder"
 import { deepMerge } from "../shared"
 
 import { resolveMultipleSkills } from "../features/opencode-skill-loader/skill-content"
+import { DEFAULT_CATEGORIES } from "../config/default-categories"
 
 type AgentSource = AgentFactory | AgentConfig
 
@@ -105,9 +112,63 @@ function isFactory(source: AgentSource): source is AgentFactory {
 export function buildAgent(
   source: AgentSource,
   model?: string,
-  gitMasterConfig?: GitMasterConfig
+  categories?: CategoriesConfig,
+  gitMasterConfig?: GitMasterConfig,
+  override?: AgentOverrideConfig
 ): AgentConfig {
-  const base = isFactory(source) ? source(model) : source
+  let base = isFactory(source) ? source(model) : source
+
+  if (override) {
+    base = mergeAgentConfig(base, override)
+  }
+
+  // Apply category preset (defaults + user overrides)
+  const categoryName = (base as AgentConfig & { category?: string }).category
+  if (typeof categoryName === "string") {
+    const categoryConfig = categories?.[categoryName] ?? DEFAULT_CATEGORIES[categoryName]
+    if (categoryConfig) {
+      // Only fill missing fields; explicit agent fields win.
+      if (base.model === undefined) {
+        base.model = categoryConfig.model
+      }
+
+      const baseAny = base as AgentConfig & { variant?: string }
+      if (baseAny.variant === undefined && categoryConfig.variant !== undefined) {
+        baseAny.variant = categoryConfig.variant
+      }
+
+      if (base.temperature === undefined && categoryConfig.temperature !== undefined) {
+        base.temperature = categoryConfig.temperature
+      }
+      if (base.top_p === undefined && categoryConfig.top_p !== undefined) {
+        base.top_p = categoryConfig.top_p
+      }
+      if (base.maxTokens === undefined && categoryConfig.maxTokens !== undefined) {
+        base.maxTokens = categoryConfig.maxTokens
+      }
+
+      const baseWithReasoning = base as AgentConfig & {
+        thinking?: unknown
+        reasoningEffort?: string
+        textVerbosity?: string
+      }
+
+      if (baseWithReasoning.thinking === undefined && baseWithReasoning.reasoningEffort === undefined) {
+        if (categoryConfig.thinking !== undefined) {
+          baseWithReasoning.thinking = categoryConfig.thinking
+        } else if (categoryConfig.reasoningEffort !== undefined) {
+          baseWithReasoning.reasoningEffort = categoryConfig.reasoningEffort
+          if (categoryConfig.textVerbosity !== undefined) {
+            baseWithReasoning.textVerbosity = categoryConfig.textVerbosity
+          }
+        }
+      }
+
+      if (typeof categoryConfig.prompt_append === "string" && categoryConfig.prompt_append.length > 0) {
+        base.prompt = (base.prompt ? base.prompt + "\n" : "") + categoryConfig.prompt_append
+      }
+    }
+  }
 
   const agentWithSkills = base as AgentConfig & { skills?: string[] }
   if (agentWithSkills.skills?.length) {
@@ -166,10 +227,13 @@ export function createBuiltinAgents(
   agentOverrides: AgentOverrides = {},
   directory?: string,
   systemDefaultModel?: string,
-  gitMasterConfig?: GitMasterConfig
+  gitMasterConfig?: GitMasterConfig,
+  categories?: CategoriesConfig
 ): Record<string, AgentConfig> {
   const result: Record<string, AgentConfig> = {}
   const availableAgents: AvailableAgent[] = []
+
+  const mergedCategories = deepMerge(DEFAULT_CATEGORIES, categories)
 
     for (const [name, source] of Object.entries(agentSources)) {
       const agentName = name as BuiltinAgentName
@@ -179,16 +243,14 @@ export function createBuiltinAgents(
     const override = agentOverrides[agentName]
     const model = override?.model
 
-    let config = buildAgent(source, model, gitMasterConfig)
+    let config = buildAgent(source, model, mergedCategories, gitMasterConfig, override)
 
     if (agentName === "librarian" && directory && config.prompt) {
       const envContext = createEnvContext()
       config = { ...config, prompt: config.prompt + envContext }
     }
 
-    if (override) {
-      config = mergeAgentConfig(config, override)
-    }
+    // (category + skills already applied in buildAgent)
 
     if (!USER_SELECTABLE_AGENTS.includes(agentName)) {
       config = { ...config, hidden: true }
@@ -214,9 +276,12 @@ export function createBuiltinAgents(
        availableAgents,
      })
 
-    if (paulOverride) {
+     if (paulOverride) {
       paulConfig = mergeAgentConfig(paulConfig, paulOverride)
-    }
+     }
+
+     // Apply category + skills from overrides
+     paulConfig = buildAgent(paulConfig, undefined, mergedCategories, gitMasterConfig)
 
     result["Paul"] = paulConfig
   }
@@ -225,11 +290,14 @@ export function createBuiltinAgents(
       const plannerOverride = agentOverrides["planner-paul"]
       const plannerModel = plannerOverride?.model ?? systemDefaultModel
 
-      let plannerConfig = createPlannerPaulAgent(plannerModel)
+       let plannerConfig = createPlannerPaulAgent(plannerModel)
 
-      if (plannerOverride) {
-          plannerConfig = mergeAgentConfig(plannerConfig, plannerOverride)
-      }
+       if (plannerOverride) {
+           plannerConfig = mergeAgentConfig(plannerConfig, plannerOverride)
+       }
+
+       // Apply category + skills from overrides
+       plannerConfig = buildAgent(plannerConfig, undefined, mergedCategories, gitMasterConfig)
 
       result["planner-paul"] = plannerConfig
   }
@@ -237,11 +305,14 @@ export function createBuiltinAgents(
   if (!disabledAgents.includes("worker-paul")) {
       const workerOverride = agentOverrides["worker-paul"]
 
-      let workerConfig = createWorkerPaulAgentWithOverrides(workerOverride, systemDefaultModel)
+       let workerConfig = createWorkerPaulAgentWithOverrides(workerOverride, systemDefaultModel)
 
-      if (workerOverride) {
-          workerConfig = mergeAgentConfig(workerConfig, workerOverride)
-      }
+       if (workerOverride) {
+           workerConfig = mergeAgentConfig(workerConfig, workerOverride)
+       }
+
+       // Apply category + skills from overrides
+       workerConfig = buildAgent(workerConfig, undefined, mergedCategories, gitMasterConfig)
 
       result["worker-paul"] = workerConfig
   }
@@ -255,19 +326,25 @@ export function createBuiltinAgents(
            juniorConfig = mergeAgentConfig(juniorConfig, juniorOverride)
        }
 
+       // Apply category + skills from overrides
+       juniorConfig = buildAgent(juniorConfig, undefined, mergedCategories, gitMasterConfig)
+
        result["Paul-Junior"] = juniorConfig
    }
 
   if (!disabledAgents.includes("Saul")) {
       const saulOverride = agentOverrides["Saul"]
 
-      let saulConfig = createSaulAgentWithOverrides(saulOverride, systemDefaultModel)
+       let saulConfig = createSaulAgentWithOverrides(saulOverride, systemDefaultModel)
 
-      if (saulOverride) {
-          saulConfig = mergeAgentConfig(saulConfig, saulOverride)
-      }
+       if (saulOverride) {
+           saulConfig = mergeAgentConfig(saulConfig, saulOverride)
+       }
 
-      result["Saul"] = saulConfig
+       // Apply category + skills from overrides
+       saulConfig = buildAgent(saulConfig, undefined, mergedCategories, gitMasterConfig)
+
+    result["Saul"] = saulConfig
   }
 
    return result
