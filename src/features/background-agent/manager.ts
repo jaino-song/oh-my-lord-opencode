@@ -5,7 +5,7 @@ import type {
   LaunchInput,
   ResumeInput,
 } from "./types"
-import { log, getAgentToolRestrictions } from "../../shared"
+import { log, getAgentToolRestrictions, validateSessionHasOutput } from "../../shared"
 import { ConcurrencyManager } from "./concurrency"
 import type { BackgroundTaskConfig } from "../../config/schema"
 
@@ -497,7 +497,7 @@ export class BackgroundManager {
       }
 
       // Edge guard: Verify session has actual assistant output before completing
-      this.validateSessionHasOutput(sessionID).then(async (hasValidOutput) => {
+      validateSessionHasOutput(sessionID, this.client).then(async (hasValidOutput) => {
         // Re-check status after async operation (could have been completed by polling)
         if (task.status !== "running") {
           log("[background-agent] Task status changed during validation, skipping:", { taskId: task.id, status: task.status })
@@ -570,65 +570,6 @@ export class BackgroundManager {
     this.notifications.delete(sessionID)
   }
 
-  /**
-   * Validates that a session has actual assistant/tool output before marking complete.
-   * Prevents premature completion when session.idle fires before agent responds.
-   */
-  private async validateSessionHasOutput(sessionID: string): Promise<boolean> {
-    try {
-      const response = await this.client.session.messages({
-        path: { id: sessionID },
-      })
-
-      const messages = response.data ?? []
-      
-      // Check for at least one assistant or tool message
-      const hasAssistantOrToolMessage = messages.some(
-        (m: { info?: { role?: string } }) => 
-          m.info?.role === "assistant" || m.info?.role === "tool"
-      )
-
-      if (!hasAssistantOrToolMessage) {
-        log("[background-agent] No assistant/tool messages found in session:", sessionID)
-        return false
-      }
-
-      // Additionally check that at least one message has content (not just empty)
-      // OpenCode API uses different part types than Anthropic's API:
-      // - "reasoning" with .text property (thinking/reasoning content)
-      // - "tool" with .state.output property (tool call results)
-      // - "text" with .text property (final text output)
-      // - "step-start"/"step-finish" (metadata, no content)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const hasContent = messages.some((m: any) => {
-        if (m.info?.role !== "assistant" && m.info?.role !== "tool") return false
-        const parts = m.parts ?? []
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return parts.some((p: any) => 
-        // Text content (final output)
-        (p.type === "text" && p.text && p.text.trim().length > 0) ||
-        // Reasoning content (thinking blocks)
-        (p.type === "reasoning" && p.text && p.text.trim().length > 0) ||
-        // Tool calls (indicates work was done)
-        p.type === "tool" ||
-        // Tool results (output from executed tools) - important for tool-only tasks
-        (p.type === "tool_result" && p.content && 
-          (typeof p.content === "string" ? p.content.trim().length > 0 : p.content.length > 0))
-      )
-      })
-
-      if (!hasContent) {
-        log("[background-agent] Messages exist but no content found in session:", sessionID)
-        return false
-      }
-
-      return true
-    } catch (error) {
-      log("[background-agent] Error validating session output:", error)
-      // On error, allow completion to proceed (don't block indefinitely)
-      return true
-    }
-  }
 
   private clearNotificationsForTask(taskId: string): void {
     for (const [sessionID, tasks] of this.notifications.entries()) {
@@ -983,7 +924,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve result.
         
         // Don't skip if session not in status - fall through to message-based detection
         if (sessionStatus?.type === "idle") {
-          const hasValidOutput = await this.validateSessionHasOutput(task.sessionID)
+          const hasValidOutput = await validateSessionHasOutput(task.sessionID, this.client)
           if (!hasValidOutput) {
             task.noOutputIdleCount = (task.noOutputIdleCount ?? 0) + 1
             const elapsedNoOutput = task.noOutputIdleCount * 2000
@@ -1105,7 +1046,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve result.
               task.stablePolls = (task.stablePolls ?? 0) + 1
               if (task.stablePolls >= 3) {
                 // Edge guard: Validate session has actual output before completing
-                const hasValidOutput = await this.validateSessionHasOutput(task.sessionID)
+                const hasValidOutput = await validateSessionHasOutput(task.sessionID, this.client)
                 if (!hasValidOutput) {
                   log("[background-agent] Stability reached but no valid output, waiting:", task.id)
                   continue

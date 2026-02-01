@@ -12,10 +12,10 @@ import { getTaskToastManager } from "../../features/task-toast-manager"
 
 import { getsessiontokenusage } from "../../features/task-toast-manager/token-utils"
 import { subagentSessions, getSessionAgent } from "../../features/claude-code-session-state"
-import { log, getAgentToolRestrictions } from "../../shared"
+import { log, getAgentToolRestrictions, hasValidOutputFromMessages } from "../../shared"
 import { truncateToTokenLimit } from "../../shared/dynamic-truncator"
 import { getParentAgentName } from "../../features/agent-context"
-import { AGENT_FALLBACK_MODELS, MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS, PAUL_JUNIOR_SUBSTITUTE } from "../../config/fallback-models"
+import { AGENT_FALLBACK_MODELS, MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS } from "../../config/fallback-models"
 
 type OpencodeClient = PluginInput["client"]
 
@@ -458,7 +458,6 @@ ${formattedOutput}`
             agent: agentToUse,
             parentSessionID: ctx.sessionID,
             parentMessageID: ctx.messageID,
-            parentModel,
             parentAgent,
             skills: args.skills ?? undefined,
             skillContent: systemContent,
@@ -531,7 +530,10 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
           metadata: { sessionId: sessionID, sync: true },
         })
 
-        let currentModel = parentModel
+        // don't inherit parent's model - let subagent use its dedicated model
+        // parent model override was causing all subagents to use parent's model (e.g., opus)
+        // instead of their configured models (e.g., haiku for explore, gemini for ui agents)
+        let currentModel: { providerID: string; modelID: string } | undefined = undefined
         let currentAgent = agentToUse
         let lastError: unknown = null
 
@@ -621,45 +623,46 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
                 })
               }
 
-              if (assistantMsgs.length === 0) {
+              // validate output using pure function (no extra api call)
+              const hasValidOutput = hasValidOutputFromMessages(msgs as any)
+
+              // step 1: handle no-output timeout (only when session is idle)
+              if (sessionStatus?.type === "idle" && !hasValidOutput) {
                 noOutputIdleCount++
                 const elapsedNoOutput = noOutputIdleCount * POLL_INTERVAL_MS
                 
-                log("[delegate_task] No output yet", { sessionID, elapsedNoOutput, noOutputIdleCount, status: sessionStatus?.type ?? "unknown" })
+                log("[delegate_task] Session idle, no valid output", { 
+                  sessionID, elapsedNoOutput, noOutputIdleCount 
+                })
                 
                 if (elapsedNoOutput >= NO_OUTPUT_TIMEOUT_MS) {
                   log("[delegate_task] No output timeout - triggering retry", { sessionID })
                   throw new Error("No output received after 60s - possible rate limiting or API error")
                 }
-                
-                if (sessionStatus && sessionStatus.type !== "idle") {
-                  continue
-                }
-              } else {
+                // don't continue here - still run stability detection below
+              }
+
+              // step 2: reset timeout counter when we have output
+              if (hasValidOutput) {
                 noOutputIdleCount = 0
               }
 
-              if (sessionStatus && sessionStatus.type !== "idle") {
-                stablePolls = 0
-                lastMsgCount = 0
-                continue
-              }
-
+              // step 3: stability detection (always runs, regardless of status)
               const elapsed = Date.now() - pollStart
-              if (elapsed < MIN_STABILITY_TIME_MS) {
-                continue
-              }
-
-              if (currentMsgCount === lastMsgCount) {
-                stablePolls++
-                if (stablePolls >= STABILITY_POLLS_REQUIRED) {
-                  log("[delegate_task] Poll complete - messages stable", { sessionID, pollCount, currentMsgCount })
-                  break
+              if (elapsed >= MIN_STABILITY_TIME_MS) {
+                if (currentMsgCount === lastMsgCount) {
+                  stablePolls++
+                  if (stablePolls >= STABILITY_POLLS_REQUIRED && hasValidOutput) {
+                    log("[delegate_task] Poll complete - stable with output", { 
+                      sessionID, pollCount, currentMsgCount 
+                    })
+                    break  // success
+                  }
+                } else {
+                  stablePolls = 0
                 }
-              } else {
-                stablePolls = 0
-                lastMsgCount = currentMsgCount
               }
+              lastMsgCount = currentMsgCount
             }
 
             if (Date.now() - pollStart >= MAX_POLL_TIME_MS) {
@@ -695,16 +698,11 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
                 currentModel = parsed
                 log(`[delegate_task] Retrying with fallback model: ${fallbackModelStr}`)
               }
-            } else if (currentAgent !== PAUL_JUNIOR_SUBSTITUTE) {
-              currentAgent = PAUL_JUNIOR_SUBSTITUTE
-              const paulJuniorFallback = AGENT_FALLBACK_MODELS[PAUL_JUNIOR_SUBSTITUTE]
-              if (paulJuniorFallback) {
-                const parsed = parseModelString(paulJuniorFallback.main)
-                if (parsed) {
-                  currentModel = parsed
-                }
-              }
-              log(`[delegate_task] Substituting with ${PAUL_JUNIOR_SUBSTITUTE}`)
+            } else {
+              // Don't silently substitute agents - return error instead
+              // Silent substitution caused wrong agent to handle tasks (e.g., UI tasks to backend agent)
+              log(`[delegate_task] No fallback model for ${currentAgent}, failing`)
+              break // Exit retry loop, let error handling take over
             }
 
             await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS))
@@ -802,5 +800,4 @@ ${formattedOutput}`
     },
   })
 }
-
 
