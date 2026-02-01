@@ -26,7 +26,7 @@ export const AGENT_FALLBACK_MODELS: Record<string, FallbackModelConfig> = {
   },
   "Paul-Junior": {
     main: "zai-coding-plan/glm-4.7",
-    fallback: "openai/gpt-5.2-codex-xhigh",
+    fallback: "openai/gpt-5.2-xhigh",
   },
 }
 
