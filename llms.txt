@@ -1,0 +1,34 @@
+# oh-my-lord-opencode (LLMs)
+
+This file is an LLM-friendly index of the most important docs and entry points.
+
+Start here (overview and how to navigate):
+- README.md
+- docs/README.md
+- docs/ARCHITECTURE.md
+- docs/PLUGIN_LIFECYCLE.md
+- docs/REPO_MAP.md
+
+Core reference docs:
+- docs/AGENTS.md
+- docs/HOOKS.md
+- docs/TOOLS.md
+- docs/FEATURES.md
+- docs/MCP.md
+- docs/CONFIGURATION.md
+- docs/CLI.md
+- docs/WORKFLOWS.md
+
+Project structure pointers:
+- structure.md
+- AGENTS.md
+
+Code entry points (when you need to confirm reality in code):
+- src/index.ts
+- src/plugin-handlers/config-handler.ts
+- src/plugin-config.ts
+- src/config/schema.ts
+- src/agents/utils.ts
+- src/agents/index.ts
+- src/hooks/index.ts
+- src/tools/index.ts
