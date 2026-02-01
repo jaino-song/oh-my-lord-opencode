@@ -36,7 +36,6 @@ import {
   createStrictWorkflowHook,
   createHierarchyEnforcerHook,
   createParallelSafetyEnforcerHook,
-  createWorkerPaulUltraworkHook,
 } from "./hooks";
 import { TokenAnalyticsManager, createTokenAnalyticsHook, createTokenReportTool } from "./features/token-analytics";
 import {
@@ -226,15 +225,11 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
      ? createStrictWorkflowHook(ctx)
      : null;
 
-   const parallelSafetyEnforcer = isHookEnabled("parallel-safety-enforcer")
-     ? createParallelSafetyEnforcerHook(ctx)
-     : null;
+    const parallelSafetyEnforcer = isHookEnabled("parallel-safety-enforcer")
+      ? createParallelSafetyEnforcerHook(ctx)
+      : null;
 
-   const workerPaulUltrawork = isHookEnabled("worker-paul-ultrawork")
-     ? createWorkerPaulUltraworkHook(ctx, contextCollector)
-     : null;
-
-   const taskResumeInfo = createTaskResumeInfoHook();
+    const taskResumeInfo = createTaskResumeInfoHook();
 
    const backgroundManager = new BackgroundManager(ctx);
 
@@ -362,7 +357,6 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await claudeCodeHooks["chat.message"]?.(input, output);
       await autoSlashCommand?.["chat.message"]?.(input, output);
       await hitIt?.["chat.message"]?.(input, output);
-      await workerPaulUltrawork?.["chat.message"]?.(input, output);
 
       if (ralphLoop) {
         const parts = (

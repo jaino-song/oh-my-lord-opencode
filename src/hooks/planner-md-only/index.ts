@@ -99,10 +99,20 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
         const normalizedTarget = normalizeAgentName(targetAgent)
         
         if (normalizedTarget) {
-          const isAllowed = ALLOWED_DELEGATE_TARGETS.some(allowed => 
-            normalizeAgentName(allowed) === normalizedTarget || 
-            normalizedTarget.includes(normalizeAgentName(allowed)!)
-          )
+          const isAllowed = ALLOWED_DELEGATE_TARGETS.some(allowed => {
+            const normalizedAllowed = normalizeAgentName(allowed)
+            // Check exact match or substring match
+            if (normalizedAllowed === normalizedTarget || normalizedTarget.includes(normalizedAllowed!)) {
+              return true
+            }
+            // Check if target matches the base name (before parenthetical)
+            // e.g., "nathan" should match "Nathan (Request Analyst)"
+            const baseName = allowed.toLowerCase().split(/\s*\(/)[0].trim()
+            if (baseName === normalizedTarget) {
+              return true
+            }
+            return false
+          })
 
           if (!isAllowed) {
             log(`[${HOOK_NAME}] Blocked: Planner attempted to delegate to '${targetAgent}' (not in whitelist)`, {

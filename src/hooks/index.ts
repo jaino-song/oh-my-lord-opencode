@@ -36,4 +36,3 @@ export { createTddEnforcementHook } from "./tdd-enforcement";
 export { createStrictWorkflowHook } from "./strict-workflow";
 export { createHierarchyEnforcerHook } from "./hierarchy-enforcer";
 export { createParallelSafetyEnforcerHook } from "./parallel-safety-enforcer";
-export { createWorkerPaulUltraworkHook } from "./worker-paul-ultrawork";
