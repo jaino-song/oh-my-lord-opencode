@@ -32,6 +32,7 @@ export const BuiltinAgentNameSchema = z.enum([
    "Joshua (Test Runner)",
    "Thomas (TDD Plan Consultant)",
    "planner-paul",
+   "worker-paul",
 ])
 
 export const BuiltinSkillNameSchema = z.enum([
@@ -319,6 +320,11 @@ export const GitMasterConfigSchema = z.object({
    include_co_authored_by: z.boolean().default(true),
 })
 
+export const FeaturesConfigSchema = z.object({
+  /** Enable clarification handler for subagent-orchestrator conversation (default: true) */
+  clarificationHandler: z.boolean().default(true),
+})
+
 export const OhMyOpenCodeConfigSchema = z.object({
    $schema: z.string().optional(),
    disabled_mcps: z.array(AnyMcpNameSchema).optional(),
@@ -338,6 +344,7 @@ export const OhMyOpenCodeConfigSchema = z.object({
    background_task: BackgroundTaskConfigSchema.optional(),
    notification: NotificationConfigSchema.optional(),
    git_master: GitMasterConfigSchema.optional(),
+   features: FeaturesConfigSchema.optional(),
 })
 
 export type OhMyOpenCodeConfig = z.infer<typeof OhMyOpenCodeConfigSchema>
@@ -360,5 +367,6 @@ export type CategoryConfig = z.infer<typeof CategoryConfigSchema>
 export type CategoriesConfig = z.infer<typeof CategoriesConfigSchema>
 export type BuiltinCategoryName = z.infer<typeof BuiltinCategoryNameSchema>
 export type GitMasterConfig = z.infer<typeof GitMasterConfigSchema>
+export type FeaturesConfig = z.infer<typeof FeaturesConfigSchema>
 
 export { AnyMcpNameSchema, type AnyMcpName, McpNameSchema, type McpName } from "../mcp/types"

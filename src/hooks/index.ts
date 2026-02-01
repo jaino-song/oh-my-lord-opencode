@@ -31,8 +31,23 @@ export { createPlannerMdOnlyHook, createPrometheusMdOnlyHook } from "./planner-m
 export { createTaskResumeInfoHook } from "./task-resume-info";
 export { createHitItHook } from "./hit-it";
 export { createPaulOrchestratorHook } from "./paul-orchestrator";
+export { createClarificationHandlerHook } from "./clarification-handler";
 export { createDelegateTaskRetryHook } from "./delegate-task-retry";
 export { createTddEnforcementHook } from "./tdd-enforcement";
 export { createStrictWorkflowHook } from "./strict-workflow";
 export { createHierarchyEnforcerHook } from "./hierarchy-enforcer";
 export { createParallelSafetyEnforcerHook } from "./parallel-safety-enforcer";
+
+/**
+ * Sorts hooks by priority in descending order (highest priority first).
+ * Uses stable sort to maintain original order for equal priorities.
+ * Hooks without priority field default to 0.
+ * Does not mutate the original array.
+ */
+export function sortHooksByPriority<T extends { priority?: number }>(hooks: T[]): T[] {
+  return [...hooks].sort((a, b) => {
+    const priorityA = a.priority ?? 0
+    const priorityB = b.priority ?? 0
+    return priorityB - priorityA
+  })
+}

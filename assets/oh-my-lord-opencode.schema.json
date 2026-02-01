@@ -34,7 +34,8 @@
           "John (E2E Test Writer)",
           "Joshua (Test Runner)",
           "Thomas (TDD Plan Consultant)",
-          "planner-paul"
+          "planner-paul",
+          "worker-paul"
         ]
       }
     },
@@ -3057,6 +3058,15 @@
           "type": "boolean"
         },
         "include_co_authored_by": {
+          "default": true,
+          "type": "boolean"
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "properties": {
+        "clarificationHandler": {
           "default": true,
           "type": "boolean"
         }
