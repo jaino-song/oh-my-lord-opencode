@@ -13,15 +13,15 @@ export const AGENT_FALLBACK_MODELS: Record<string, FallbackModelConfig> = {
     fallback: "anthropic/claude-sonnet-4-5",
   },
   "Nathan (Request Analyst)": {
-    main: "openai/gpt-5.2-high",
+    main: "openai/gpt-5.2",
     fallback: "anthropic/claude-sonnet-4.5",
   },
   "Elijah (Deep Reasoning Advisor)": {
-    main: "openai/gpt-5.2-high",
+    main: "openai/gpt-5.2-codex",
     fallback: "zai-coding-plan/glm-4.7",
   },
   "Thomas (TDD Plan Consultant)": {
-    main: "openai/gpt-5.2-high",
+    main: "openai/gpt-5.2",
     fallback: "zai-coding-plan/glm-4.7",
   },
   "Paul-Junior": {

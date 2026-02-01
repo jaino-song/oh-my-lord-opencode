@@ -281,7 +281,7 @@ const thomasRestrictions = createAgentToolRestrictions([
   "delegate_task",
 ])
 
-const DEFAULT_MODEL = "openai/gpt-5.2-high"
+const DEFAULT_MODEL = "openai/gpt-5.2"
 
 export function createThomasAgent(model: string = DEFAULT_MODEL): AgentConfig {
   const base = {
@@ -295,7 +295,7 @@ export function createThomasAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "high" } as AgentConfig
+    return { ...base, reasoningEffort: "xhigh" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "enabled", budgetTokens: 16000 } } as AgentConfig

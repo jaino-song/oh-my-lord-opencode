@@ -377,8 +377,7 @@ export function createElijahAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    // Maximum reasoning effort for Elijah (upgraded from Oracle's "medium")
-    return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
+    return { ...base, reasoningEffort: "xhigh", textVerbosity: "high" } as AgentConfig
   }
 
   // Double the thinking budget for Elijah (64k vs Oracle's 32k)
