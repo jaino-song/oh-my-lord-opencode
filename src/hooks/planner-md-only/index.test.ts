@@ -224,6 +224,29 @@ describe("prometheus-md-only", () => {
       expect(output.args.prompt).toContain("DO NOT modify any files")
     })
 
+    test("should not block Prometheus delegations (authorization handled by hierarchy-enforcer)", async () => {
+      // #given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "delegate_task",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-1",
+      }
+      const output = {
+        args: {
+          subagent_type: "Paul",
+          prompt: "Please implement X",
+        },
+      }
+
+      // #when
+      return expect(hook["tool.execute.before"](input, output)).resolves.toBeUndefined()
+
+      // #then
+      expect(output.args.prompt).toContain(SYSTEM_DIRECTIVE_PREFIX)
+      expect(output.args.prompt).toContain("DO NOT modify any files")
+    })
+
     test("should inject read-only warning when Prometheus calls task", async () => {
       // #given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())

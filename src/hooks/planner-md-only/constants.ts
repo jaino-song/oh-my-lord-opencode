@@ -8,23 +8,6 @@ export const PLANNER_AGENTS = [
   "planner-paul",
 ]
 
-// Whitelist of allowed delegate targets
-export const ALLOWED_DELEGATE_TARGETS = [
-  // Analysis & Research
-  "Nathan (Request Analyst)",
-  "explore",
-  "librarian",
-  
-  // Deep Reasoning & Consultation
-  "Elijah (Deep Reasoning Advisor)",
-  
-  // Planning & Review
-  "Timothy (Implementation Plan Reviewer)",
-  "Solomon (TDD Planner)",
-  "Thomas (TDD Plan Consultant)",
-  "Ezra (Plan Reviewer)",
-]
-
 export const ALLOWED_EXTENSIONS = [".md"]
 
 export const PLAN_TRIGGER_PHRASES = [

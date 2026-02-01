@@ -1,7 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { existsSync, readdirSync } from "node:fs"
 import { join, resolve, relative, isAbsolute } from "node:path"
-import { HOOK_NAME, PLANNER_AGENTS, ALLOWED_EXTENSIONS, BLOCKED_TOOLS, BASH_TOOLS, DANGEROUS_BASH_PATTERNS, SAFE_BASH_PATTERNS, PLANNING_CONSULT_WARNING, ALLOWED_DELEGATE_TARGETS, DRAFT_PATH_PATTERN, PLAN_PATH_PATTERN } from "./constants"
+import { HOOK_NAME, PLANNER_AGENTS, ALLOWED_EXTENSIONS, BLOCKED_TOOLS, BASH_TOOLS, DANGEROUS_BASH_PATTERNS, SAFE_BASH_PATTERNS, PLANNING_CONSULT_WARNING, DRAFT_PATH_PATTERN, PLAN_PATH_PATTERN } from "./constants"
 import { findNearestMessageWithFields, findFirstMessageWithAgent, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { getSessionAgent } from "../../features/claude-code-session-state"
 import { log } from "../../shared/logger"
@@ -74,11 +74,6 @@ function getAgentFromSession(sessionID: string): string | undefined {
   return getSessionAgent(sessionID) ?? getAgentFromMessageFiles(sessionID)
 }
 
-function normalizeAgentName(agentArg: string | undefined): string | null {
-  if (!agentArg) return null
-  return agentArg.toLowerCase().trim()
-}
-
 export function createPlannerMdOnlyHook(ctx: PluginInput) {
   return {
     "tool.execute.before": async (
@@ -94,40 +89,13 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
       const toolName = input.tool
 
       if (TASK_TOOLS.includes(toolName)) {
-        // ENFORCEMENT: Check if the delegated agent is allowed
-        const targetAgent = (output.args.agent || output.args.subagent_type || output.args.name) as string | undefined
-        const normalizedTarget = normalizeAgentName(targetAgent)
-        
-        if (normalizedTarget) {
-          const isAllowed = ALLOWED_DELEGATE_TARGETS.some(allowed => {
-            const normalizedAllowed = normalizeAgentName(allowed)
-            // Check exact match or substring match
-            if (normalizedAllowed === normalizedTarget || normalizedTarget.includes(normalizedAllowed!)) {
-              return true
-            }
-            // Check if target matches the base name (before parenthetical)
-            // e.g., "nathan" should match "Nathan (Request Analyst)"
-            const baseName = allowed.toLowerCase().split(/\s*\(/)[0].trim()
-            if (baseName === normalizedTarget) {
-              return true
-            }
-            return false
-          })
-
-          if (!isAllowed) {
-            log(`[${HOOK_NAME}] Blocked: Planner attempted to delegate to '${targetAgent}' (not in whitelist)`, {
-              sessionID: input.sessionID,
-              tool: toolName,
-              targetAgent,
-              plannerAgent: agentName,
-            })
-            
-            throw new Error(
-              `[${HOOK_NAME}] DELEGATION BLOCKED: Planner agent '${agentName}' attempted to delegate implementation to '${targetAgent}'.\n\n` +
-              `Planners are STRICTLY FORBIDDEN from delegating to implementation agents (Paul, etc.).\n` +
-              `Planners may ONLY delegate to: ${ALLOWED_DELEGATE_TARGETS.join(", ")}.\n\n` +
-              `ACTION REQUIRED: If you need to implement something, STOP planning and ask the user to switch to Paul.`
-            )
+        // planner-paul delegates execution to Paul/worker-paul.
+        // Do NOT contaminate execution agents with the planner read-only directive.
+        if (toolName.toLowerCase() === "delegate_task") {
+          const targetAgent = (output.args.agent || output.args.subagent_type || output.args.name) as string | undefined
+          const normalizedTarget = targetAgent?.trim().toLowerCase()
+          if (normalizedTarget === "paul" || normalizedTarget === "worker-paul") {
+            return
           }
         }
 
