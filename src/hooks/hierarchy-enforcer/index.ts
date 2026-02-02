@@ -346,6 +346,11 @@ export function createHierarchyEnforcerHook(
             const scope = scopeMatch ? scopeMatch[1].trim().slice(0, 40) : null
             const summary = complexity ? `Complexity: ${complexity}` : (scope ? scope : "Analysis complete")
             await showToast(client, "🔍 Nathan Analysis", summary, "info", 5000)
+            await injectNotification(client, input.sessionID, "delegation_complete", { 
+              fromAgent: currentAgent, 
+              toAgent: "Nathan", 
+              task: "Analysis" 
+            }, currentAgent, currentModel)
           }
           
           else if (normalizedAgent.includes("timothy")) {
@@ -360,6 +365,11 @@ export function createHierarchyEnforcerHook(
             } else {
               await showToast(client, "📋 Timothy Review", "Plan review complete", "info", 5000)
             }
+            await injectNotification(client, input.sessionID, "delegation_complete", { 
+              fromAgent: currentAgent, 
+              toAgent: "Timothy", 
+              task: "Plan Review" 
+            }, currentAgent, currentModel)
           }
           
           else if (normalizedAgent.includes("solomon")) {
@@ -367,6 +377,11 @@ export function createHierarchyEnforcerHook(
             const testCount = testCountMatch ? testCountMatch[1] : null
             const summary = testCount ? `${testCount} test cases planned` : "TDD spec complete"
             await showToast(client, "🧪 Solomon TDD", summary, "info", 5000)
+            await injectNotification(client, input.sessionID, "delegation_complete", { 
+              fromAgent: currentAgent, 
+              toAgent: "Solomon", 
+              task: "TDD Spec" 
+            }, currentAgent, currentModel)
           }
           
           else if (normalizedAgent.includes("thomas")) {
@@ -377,6 +392,11 @@ export function createHierarchyEnforcerHook(
             } else {
               await showToast(client, "📄 Thomas Review", "Spec review complete", "info", 5000)
             }
+            await injectNotification(client, input.sessionID, "delegation_complete", { 
+              fromAgent: currentAgent, 
+              toAgent: "Thomas", 
+              task: "Spec Review" 
+            }, currentAgent, currentModel)
           }
           
            else if (normalizedAgent.includes("joshua")) {
@@ -455,6 +475,11 @@ export function createHierarchyEnforcerHook(
               } else {
                 await showToast(client, "🔧 Git Operation", "Complete", "info", 5000)
               }
+              await injectNotification(client, input.sessionID, "delegation_complete", { 
+                fromAgent: currentAgent, 
+                toAgent: "Git-Master", 
+                task: "Git Operation" 
+              }, currentAgent, currentModel)
             }
           
            else if (normalizedAgent.includes("explore") || normalizedAgent.includes("librarian")) {
