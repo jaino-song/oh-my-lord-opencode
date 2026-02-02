@@ -44,7 +44,6 @@ export const gitMasterAgent: AgentConfig = {
 }
 
 export const GIT_MASTER_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "specialist",
   cost: "FREE",
   promptAlias: "git-master",
   triggers: [

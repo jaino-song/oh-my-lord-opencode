@@ -151,7 +151,6 @@ export function createTimothyAgent(model?: string): AgentConfig {
 export const timothyAgent = createTimothyAgent()
 
 export const timothyPromptMetadata: AgentPromptMetadata = {
-  category: "advisor",
   cost: "CHEAP",
   promptAlias: "Timothy",
   triggers: [

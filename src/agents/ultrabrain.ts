@@ -36,7 +36,6 @@ export const ultrabrainAgent: AgentConfig = {
 }
 
 export const ULTRABRAIN_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "specialist",
   cost: "EXPENSIVE",
   promptAlias: "ultrabrain",
   triggers: [

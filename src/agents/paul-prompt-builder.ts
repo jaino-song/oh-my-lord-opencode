@@ -131,7 +131,6 @@ export function buildToolSelectionTable(
 
   const costOrder = { FREE: 0, CHEAP: 1, EXPENSIVE: 2 }
   const sortedAgents = [...agents]
-    .filter((a) => a.metadata.category !== "utility")
     .sort((a, b) => costOrder[a.metadata.cost] - costOrder[b.metadata.cost])
 
   for (const agent of sortedAgents) {

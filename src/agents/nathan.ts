@@ -25,7 +25,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Replaces: Metis (deprecated)
  */
 
-const DEFAULT_MODEL = "openai/gpt-5.2"
+const DEFAULT_MODEL = "openai/gpt-5.2-codex"
 
 export const NATHAN_SYSTEM_PROMPT = `# Nathan - Request Analyst
 
@@ -290,7 +290,6 @@ export function createNathanAgent(model: string = DEFAULT_MODEL): AgentConfig {
 export const nathanAgent = createNathanAgent()
 
 export const NATHAN_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "advisor",
   cost: "CHEAP",
   promptAlias: "Nathan",
   triggers: [

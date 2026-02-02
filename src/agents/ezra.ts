@@ -430,7 +430,6 @@ export function createEzraAgent(model: string = DEFAULT_MODEL): AgentConfig {
 export const ezraAgent = createEzraAgent()
 
 export const EZRA_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "advisor",
   cost: "CHEAP",
   promptAlias: "Ezra",
   triggers: [

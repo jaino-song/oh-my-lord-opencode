@@ -18,7 +18,6 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
 const DEFAULT_MODEL = "openai/gpt-5.2"
 
 export const ORACLE_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "advisor",
   cost: "EXPENSIVE",
   promptAlias: "Oracle",
   triggers: [

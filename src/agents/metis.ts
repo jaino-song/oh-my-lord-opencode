@@ -312,7 +312,6 @@ export function createMetisAgent(model: string = DEFAULT_MODEL): AgentConfig {
 export const metisAgent: AgentConfig = createMetisAgent()
 
 export const metisPromptMetadata: AgentPromptMetadata = {
-  category: "advisor",
   cost: "EXPENSIVE",
   triggers: [
     {

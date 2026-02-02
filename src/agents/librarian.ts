@@ -5,7 +5,6 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
 const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
 
 export const LIBRARIAN_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "exploration",
   cost: "CHEAP",
   promptAlias: "Librarian",
   keyTrigger: "External library/source mentioned → fire `librarian` background",

@@ -622,7 +622,6 @@ Run with: bun test src/services/__tests__/auth.test.ts
 `
 
 export const PETER_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "specialist",
   cost: "CHEAP",
   triggers: [
     {

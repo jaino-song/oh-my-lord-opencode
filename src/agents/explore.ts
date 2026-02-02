@@ -5,7 +5,6 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
 const DEFAULT_MODEL = "anthropic/claude-haiku-4-5"
 
 export const EXPLORE_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "exploration",
   cost: "FREE",
   promptAlias: "Explore",
   keyTrigger: "2+ modules involved → fire `explore` background",

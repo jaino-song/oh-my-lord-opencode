@@ -383,7 +383,6 @@ export function createMomusAgent(model: string = DEFAULT_MODEL): AgentConfig {
 export const momusAgent = createMomusAgent()
 
 export const momusPromptMetadata: AgentPromptMetadata = {
-  category: "advisor",
   cost: "EXPENSIVE",
   promptAlias: "Momus",
   triggers: [

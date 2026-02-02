@@ -710,7 +710,6 @@ write(
 `
 
 export const JOSHUA_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "utility",
   cost: "CHEAP",
   triggers: [
     {

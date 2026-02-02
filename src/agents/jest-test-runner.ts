@@ -5,7 +5,6 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
 const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
 
 export const JEST_TEST_RUNNER_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "utility",
   cost: "CHEAP",
   promptAlias: "Jest Test Runner",
   triggers: [

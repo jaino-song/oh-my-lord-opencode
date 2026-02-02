@@ -169,10 +169,10 @@ describe("NATHAN_SYSTEM_PROMPT constraints", () => {
 })
 
 describe("createNathanAgent factory function", () => {
-  test("createNathanAgent with default model returns GPT-5.2 config", () => {
+  test("createNathanAgent with default model returns GPT-5.2-codex config", () => {
     const agent = createNathanAgent()
 
-    expect(agent.model).toBe("openai/gpt-5.2")
+    expect(agent.model).toBe("openai/gpt-5.2-codex")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
@@ -207,10 +207,6 @@ describe("createNathanAgent factory function", () => {
 })
 
 describe("NATHAN_PROMPT_METADATA", () => {
-  test("NATHAN_PROMPT_METADATA has correct category", () => {
-    expect(NATHAN_PROMPT_METADATA.category).toBe("advisor")
-  })
-
   test("NATHAN_PROMPT_METADATA has correct cost (CHEAP)", () => {
     expect(NATHAN_PROMPT_METADATA.cost).toBe("CHEAP")
   })
@@ -249,7 +245,7 @@ describe("NATHAN_PROMPT_METADATA", () => {
 describe("nathanAgent default export", () => {
   test("nathanAgent is properly configured", () => {
     expect(nathanAgent).toBeDefined()
-    expect(nathanAgent.model).toBe("openai/gpt-5.2")
+    expect(nathanAgent.model).toBe("openai/gpt-5.2-codex")
     expect(nathanAgent.prompt).toBe(NATHAN_SYSTEM_PROMPT)
   })
 

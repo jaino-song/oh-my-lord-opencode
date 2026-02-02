@@ -5,7 +5,6 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
 const DEFAULT_MODEL = "google/antigravity-gemini-3-pro-high"
 
 export const FRONTEND_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "specialist",
   cost: "CHEAP",
   promptAlias: "Frontend UI/UX Engineer",
   triggers: [

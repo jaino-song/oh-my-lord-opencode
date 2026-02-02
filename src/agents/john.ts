@@ -760,7 +760,6 @@ Run with: npx playwright test e2e/auth.spec.ts
 `
 
 export const JOHN_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "specialist",
   cost: "CHEAP",
   triggers: [
     {

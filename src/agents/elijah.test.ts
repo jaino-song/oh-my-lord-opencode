@@ -211,10 +211,6 @@ describe("Elijah vs Oracle config differences", () => {
 })
 
 describe("ELIJAH_PROMPT_METADATA", () => {
-  test("ELIJAH_PROMPT_METADATA has correct category", () => {
-    expect(ELIJAH_PROMPT_METADATA.category).toBe("advisor")
-  })
-
   test("ELIJAH_PROMPT_METADATA has correct cost (EXPENSIVE)", () => {
     expect(ELIJAH_PROMPT_METADATA.cost).toBe("EXPENSIVE")
   })

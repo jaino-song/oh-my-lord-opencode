@@ -387,7 +387,6 @@ export function createElijahAgent(model: string = DEFAULT_MODEL): AgentConfig {
 export const elijahAgent = createElijahAgent()
 
 export const ELIJAH_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "advisor",
   cost: "EXPENSIVE",
   promptAlias: "Elijah",
   triggers: [

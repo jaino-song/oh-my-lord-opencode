@@ -3,11 +3,6 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 export type AgentFactory = (model?: string) => AgentConfig
 
 /**
- * Agent category for grouping in Paul prompt sections
- */
-export type AgentCategory = "exploration" | "specialist" | "advisor" | "utility"
-
-/**
  * Cost classification for Tool Selection table
  */
 export type AgentCost = "FREE" | "CHEAP" | "EXPENSIVE"
@@ -27,9 +22,6 @@ export interface DelegationTrigger {
  * This allows adding/removing agents without manually updating the Paul prompt
  */
 export interface AgentPromptMetadata {
-  /** Category for grouping in prompt sections */
-  category: AgentCategory
-
   /** Cost classification for Tool Selection table */
   cost: AgentCost
 

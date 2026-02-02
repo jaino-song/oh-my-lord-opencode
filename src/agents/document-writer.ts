@@ -5,7 +5,6 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
 const DEFAULT_MODEL = "google/antigravity-gemini-3-flash"
 
 export const DOCUMENT_WRITER_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "specialist",
   cost: "CHEAP",
   promptAlias: "Document Writer",
   triggers: [

@@ -227,10 +227,6 @@ describe("createEzraAgent factory function", () => {
 })
 
 describe("EZRA_PROMPT_METADATA", () => {
-  test("EZRA_PROMPT_METADATA has correct category", () => {
-    expect(EZRA_PROMPT_METADATA.category).toBe("advisor")
-  })
-
   test("EZRA_PROMPT_METADATA has correct cost", () => {
     expect(EZRA_PROMPT_METADATA.cost).toBe("CHEAP")
   })

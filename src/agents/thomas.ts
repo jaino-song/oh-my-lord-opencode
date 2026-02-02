@@ -295,7 +295,7 @@ export function createThomasAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "xhigh" } as AgentConfig
+    return { ...base, reasoningEffort: "high" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "enabled", budgetTokens: 16000 } } as AgentConfig
@@ -304,7 +304,6 @@ export function createThomasAgent(model: string = DEFAULT_MODEL): AgentConfig {
 export const thomasAgent: AgentConfig = createThomasAgent()
 
 export const THOMAS_PROMPT_METADATA: AgentPromptMetadata = {
-  category: "advisor",
   cost: "CHEAP",
   triggers: [
     {

@@ -34,71 +34,8 @@ describe("createBuiltinAgents with model overrides", () => {
 
 })
 
-describe("buildAgent with category and skills", () => {
+describe("buildAgent with skills", () => {
   const { buildAgent } = require("./utils")
-
-  test("agent with category inherits category settings", () => {
-    // #given
-    const source = {
-      "test-agent": () =>
-        ({
-          description: "Test agent",
-          category: "visual-engineering",
-        }) as AgentConfig,
-    }
-
-    // #when
-    const agent = buildAgent(source["test-agent"])
-
-    // #then
-    expect(agent.model).toBe("openai/gpt-5.2")
-    expect(agent.temperature).toBe(0.7)
-    expect(agent.reasoningEffort).toBe("high")
-  })
-
-  test("agent with category and existing model keeps existing model", () => {
-    // #given
-    const source = {
-      "test-agent": () =>
-        ({
-          description: "Test agent",
-          category: "visual-engineering",
-          model: "custom/model",
-        }) as AgentConfig,
-    }
-
-    // #when
-    const agent = buildAgent(source["test-agent"])
-
-    // #then
-    expect(agent.model).toBe("custom/model")
-    expect(agent.temperature).toBe(0.7)
-  })
-
-  test("agent with category inherits variant", () => {
-    // #given
-    const source = {
-      "test-agent": () =>
-        ({
-          description: "Test agent",
-          category: "custom-category",
-        }) as AgentConfig,
-    }
-
-    const categories = {
-      "custom-category": {
-        model: "openai/gpt-5.2",
-        variant: "xhigh",
-      },
-    }
-
-    // #when
-    const agent = buildAgent(source["test-agent"], undefined, categories)
-
-    // #then
-    expect(agent.model).toBe("openai/gpt-5.2")
-    expect(agent.variant).toBe("xhigh")
-  })
 
   test("agent with skills has content prepended to prompt", () => {
     // #given
@@ -139,7 +76,7 @@ describe("buildAgent with category and skills", () => {
     expect(agent.prompt).toContain("Agent prompt")
   })
 
-  test("agent without category or skills works as before", () => {
+  test("agent without skills works as before", () => {
     // #given
     const source = {
       "test-agent": () =>
@@ -157,47 +94,6 @@ describe("buildAgent with category and skills", () => {
     // #then
     expect(agent.model).toBe("custom/model")
     expect(agent.temperature).toBe(0.5)
-    expect(agent.prompt).toBe("Base prompt")
-  })
-
-  test("agent with category and skills applies both", () => {
-    // #given
-    const source = {
-      "test-agent": () =>
-        ({
-          description: "Test agent",
-          category: "ultrabrain",
-          skills: ["frontend-ui-ux"],
-          prompt: "Task description",
-        }) as AgentConfig,
-    }
-
-    // #when
-    const agent = buildAgent(source["test-agent"])
-
-    // #then
-    expect(agent.model).toBe("openai/gpt-5.2")
-    expect(agent.temperature).toBe(0.1)
-    expect(agent.prompt).toContain("Role: Designer-Turned-Developer")
-    expect(agent.prompt).toContain("Task description")
-  })
-
-  test("agent with non-existent category has no effect", () => {
-    // #given
-    const source = {
-      "test-agent": () =>
-        ({
-          description: "Test agent",
-          category: "non-existent",
-          prompt: "Base prompt",
-        }) as AgentConfig,
-    }
-
-    // #when
-    const agent = buildAgent(source["test-agent"])
-
-    // #then
-    expect(agent.model).toBeUndefined()
     expect(agent.prompt).toBe("Base prompt")
   })
 
