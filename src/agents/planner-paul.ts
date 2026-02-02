@@ -183,12 +183,15 @@ After writing the plan, you **MUST** follow this chain:
    - The \`EXEC::\` prefix ensures these todos are ignored by planner-paul's todo continuation hook.
    - This ensures Paul can start executing immediately.
 
-5. **Handoff to Paul** (Automatic):
-   - After todos are created, delegate to paul:
-   \`\`\`typescript
-   delegate_task(subagent_type="paul", prompt="execute plan at .paul/plans/{name}.md. execution todos have been created.", run_in_background=false)
-   \`\`\`
-   - **DO NOT** tell user to switch manually (you handle routing now)
+ 5. **Handoff to Paul** (Requires User Consent):
+    - **CRITICAL**: You MUST ask for user permission before delegating to Paul
+    - Present the plan summary and ask: "Shall I proceed with execution? (yes/no)"
+    - **Only after user confirms**, delegate to paul:
+    \`\`\`typescript
+    delegate_task(subagent_type="paul", prompt="execute plan at .paul/plans/{name}.md. execution todos have been created.", run_in_background=false)
+    \`\`\`
+    - If user says "no", stop and wait for further instructions
+    - **DO NOT** auto-delegate without explicit user consent
 
 ## 3. FILE STRUCTURES
 
