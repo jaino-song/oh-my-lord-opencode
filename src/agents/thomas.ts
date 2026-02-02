@@ -253,7 +253,7 @@ You may use these tools for research:
 
 \`\`\`typescript
 // Example: Find existing test patterns
-call_omo_agent(
+call_paul_agent(
   subagent_type="explore",
   prompt="Find existing Jest test patterns in this codebase. What describe/test structure is used? How are mocks set up?",
   run_in_background=true

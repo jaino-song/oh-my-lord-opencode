@@ -738,7 +738,7 @@ export const JOSHUA_PERMISSION = {
   bash: "allow" as const,
   webfetch: "deny" as const,
   delegate_task: "deny" as const,
-  call_omo_agent: "deny" as const,
+  call_paul_agent: "deny" as const,
 }
 
 export const joshuaAgent: AgentConfig = {

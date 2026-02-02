@@ -26,7 +26,7 @@ const RESTRICTIONS = createAgentToolRestrictions([
   "edit", 
   "task",
   "delegate_task",
-  "call_omo_agent"
+  "call_paul_agent"
 ])
 
 const PERMISSIONS = {

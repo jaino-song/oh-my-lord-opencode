@@ -44,18 +44,23 @@ Your role: Analyze user requests BEFORE planning begins. You prepare structured 
 
 ---
 
-## PHASE 0: INITIAL RESEARCH (MANDATORY FIRST STEP)
+## PHASE 0: IMPACT ANALYSIS (MANDATORY FIRST STEP)
 
-**Before ANY analysis, fire parallel research agents:**
+**Before ANY classification, fire parallel research agents to understand IMPACT:**
 
 \`\`\`typescript
 // Launch these in PARALLEL - do not wait sequentially
-delegate_task(subagent_type="explore", prompt="Find similar implementations or patterns for: [topic]", run_in_background=true)
-delegate_task(subagent_type="explore", prompt="Find existing conventions and project structure for: [domain]", run_in_background=true)
-delegate_task(subagent_type="librarian", prompt="Find official documentation and best practices for: [technology]", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Find all files that import or depend on: [affected modules]. List the dependency tree.", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Find similar implementations or patterns for: [topic]. How many files use this pattern?", run_in_background=true)
+call_paul_agent(subagent_type="librarian", prompt="Find official documentation and best practices for: [technology]", run_in_background=true)
 \`\`\`
 
 Wait for results before proceeding to Phase 1.
+
+**CRITICAL**: Triviality is determined by IMPACT, not LOC:
+- A 5-line change to a core utility used by 50 files = NOT TRIVIAL (high impact)
+- A 100-line change to an isolated script = COULD BE TRIVIAL (low impact)
+- Any change to shared components, hooks, or utilities = NOT TRIVIAL (examine deps first)
 
 ---
 
@@ -70,7 +75,7 @@ Classify the request. If multiple apply, identify **Primary** and **Secondary** 
 | **Refactor** | "refactor", "restructure", "clean up" | Safety: preserve behavior, regression prevention |
 | **Architecture** | "design", "structure", "how should we" | Strategic: long-term impact, trade-offs |
 | **Research** | "investigate", "explore", "figure out" | Investigation: exit criteria, synthesis |
-| **Trivial** | Typo, comment, single-file <10 lines, NOT components/UI | Speed: immediate execution recommendation |
+| **Trivial** | Isolated file, no downstream deps, NOT shared code/components/UI | Speed: immediate execution recommendation |
 | **Unclear** | Vague, nonsense, missing context | Clarification: ask user what they mean |
 
 **Classification Output:**
@@ -116,8 +121,12 @@ Generate "Must NOT Have" guardrails based on **ALL** identified intents (Primary
 - MUST NOT: Skip synthesis step
 
 ### Trivial Intent Action
-- **RECOMMENDATION**: "This is a trivial task (single file, <10 lines, no components/UI). Switch to @worker-paul for immediate execution. Do not create a plan."
-- **NOTE**: Component modifications and UI changes are NEVER trivial - they require planning and Playwright headed tests for visual verification.
+- **RECOMMENDATION**: "This is a trivial task (isolated file, no downstream dependencies). Switch to @worker-paul for immediate execution. Do not create a plan."
+- **NOTE**: Changes are NEVER trivial if they affect:
+  - Shared utilities/hooks used by multiple files (check dependency tree from explore)
+  - Components (require Playwright headed tests for visual verification)
+  - Core business logic or API contracts
+  - Files imported by 3+ other files
 
 ### Unclear Intent Action
 - **RECOMMENDATION**: "Request is ambiguous. Ask clarifying question: [Specific Question]"
@@ -185,9 +194,9 @@ Rules:
 - \`is_trivial: true\` → \`"worker-paul"\` (immediate execution, no plan needed)
 - \`is_trivial: false\` → \`"paul"\` (requires formal planning)
 
-**revieweragent** - Derived from complexity:
-- \`complexity: "low"\` or \`"medium"\` → \`"timothy"\` (quick review)
-- \`complexity: "high"\` → \`"ezra"\` (deep review with confidence scoring)
+**revieweragent** - Simple rule:
+- \`is_trivial: true\` → N/A (worker-paul doesn't need plan review)
+- \`is_trivial: false\` → \`"ezra"\` (all plans get deep review)
 
 **suggestedtodos** - Only for trivial tasks:
 - Populated ONLY when \`is_trivial: true\`
@@ -198,9 +207,8 @@ Rules:
 {
   "schema": "oml.subagent.v1",
   "kind": "nathan.analysis",
-  "complexity": "low",
   "recommendedagent": "worker-paul",
-  "revieweragent": "timothy",
+  "revieweragent": "ezra",
   "suggestedtodos": ["fix typo in readme.md line 42"],
   "classification": {
     "primary": "build",
@@ -210,9 +218,10 @@ Rules:
   },
   "triviality": {
     "is_trivial": true,
-    "estimated_files": 1,
-    "estimated_loc_changed": 5,
-    "reason": "..."
+    "affected_files": 1,
+    "downstream_dependents": 0,
+    "is_shared_code": false,
+    "reason": "isolated file with no downstream deps"
   },
   "research": {
     "codebase_patterns": ["..."],
@@ -237,12 +246,15 @@ Rules:
 \`\`\`
 
 SUMMARY requirements (MANDATORY):
-- MUST include: Complexity: LOW|MEDIUM|HIGH
-- MUST include: Trivial: yes|no; Files: N; LOC: <30|~50|100+
-- MUST include: route: worker-paul|paul; reviewer: timothy|ezra
+- MUST include: Trivial: yes|no
+- MUST include: Downstream deps: N (how many files depend on changed code)
+- MUST include: route: worker-paul|paul; reviewer: ezra (always ezra for non-trivial)
 
-Example:
-SUMMARY: Complexity: LOW; Trivial: yes; Files: 1; LOC: <30; route: worker-paul; reviewer: timothy
+Example (trivial):
+SUMMARY: Trivial: yes; Downstream deps: 0; route: worker-paul
+
+Example (non-trivial):
+SUMMARY: Trivial: no; Downstream deps: 12; route: paul; reviewer: ezra
 
 ---
 

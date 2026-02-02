@@ -1,53 +1,69 @@
 export const HOOK_NAME = "hierarchy-enforcer"
 
 export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
-  "User": ["Paul", "planner-paul"], 
+  "User": ["Paul", "paul", "planner-paul"], 
 
    "planner-paul": [
-    "Nathan (Request Analyst)",
-    "Timothy (Implementation Plan Reviewer)",
-    "Solomon (TDD Planner)",
-    "Thomas (TDD Plan Consultant)",
+    "Nathan (Request Analyst)", "nathan",
+    "Solomon (TDD Planner)", "solomon",
+    "Thomas (TDD Plan Consultant)", "thomas",
+    "Ezra (Plan Reviewer)", "ezra",
     "explore",
     "librarian",
-    "background-agent",
-    "worker-paul",
-    "paul",
-    "ezra (plan reviewer)"
+    "background-agent"
   ],
 
   "Timothy (Implementation Plan Reviewer)": [],
+  "timothy": [],
 
-  "Solomon (TDD Planner)": [
-    "explore",
-    "librarian"
-  ],
+  "Solomon (TDD Planner)": ["explore", "librarian"],
+  "solomon": ["explore", "librarian"],
 
   "Thomas (TDD Plan Consultant)": [],
+  "thomas": [],
+  
   "Nathan (Request Analyst)": ["explore", "librarian"],
+  "nathan": ["explore", "librarian"],
 
   "Paul": [
-    "Joshua (Test Runner)",
+    "Joshua (Test Runner)", "joshua",
     "Paul-Junior",
     "frontend-ui-ux-engineer",
     "ultrabrain",
     "git-master",
     "explore",
     "librarian",
-    "Elijah (Deep Reasoning Advisor)",
-    
-    "Solomon (TDD Planner)",
-    "Peter (Test Writer)",
-    "John (E2E Test Writer)",
-    "Timothy (Implementation Plan Reviewer)",
-    "Nathan (Request Analyst)",
-    "Thomas (TDD Plan Consultant)"
+    "Elijah (Deep Reasoning Advisor)", "elijah",
+    "Solomon (TDD Planner)", "solomon",
+    "Peter (Test Writer)", "peter",
+    "John (E2E Test Writer)", "john",
+    "Timothy (Implementation Plan Reviewer)", "timothy",
+    "Nathan (Request Analyst)", "nathan",
+    "Thomas (TDD Plan Consultant)", "thomas"
+  ],
+  "paul": [
+    "Joshua (Test Runner)", "joshua",
+    "Paul-Junior",
+    "frontend-ui-ux-engineer",
+    "ultrabrain",
+    "git-master",
+    "explore",
+    "librarian",
+    "Elijah (Deep Reasoning Advisor)", "elijah",
+    "Solomon (TDD Planner)", "solomon",
+    "Peter (Test Writer)", "peter",
+    "John (E2E Test Writer)", "john",
+    "Timothy (Implementation Plan Reviewer)", "timothy",
+    "Nathan (Request Analyst)", "nathan",
+    "Thomas (TDD Plan Consultant)", "thomas"
   ],
 
-   "Joshua (Test Runner)": [],
-    "Paul-Junior": ["explore", "librarian"],
-    "frontend-ui-ux-engineer": ["explore", "librarian"],
-    "worker-paul": ["explore", "librarian", "git-master", "document-writer", "Paul", "planner-paul", "Paul-Junior", "frontend-ui-ux-engineer"],
+  "Joshua (Test Runner)": [],
+  "joshua": [],
+  
+  "Paul-Junior": ["explore", "librarian"],
+  "frontend-ui-ux-engineer": ["explore", "librarian"],
+  "worker-paul": ["explore", "librarian", "git-master", "document-writer", "Paul", "paul", "planner-paul", "Paul-Junior", "frontend-ui-ux-engineer"],
 }
 
 export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {
@@ -57,7 +73,7 @@ export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {
   
   "visual": ["frontend-ui-ux-engineer"],
   
-  "plan review": ["Timothy (Implementation Plan Reviewer)"],
+  "plan review": ["Ezra (Plan Reviewer)"],
   "spec review": ["Thomas (TDD Plan Consultant)"]
 }
 
@@ -65,6 +81,4 @@ export const BYPASS_AGENTS: string[] = []
 
 // Enforce sync delegation for critical orchestrators
 // These agents MUST use run_in_background=false to prevent race conditions
-export const SYNC_DELEGATION_REQUIRED: Record<string, string[]> = {
-  "planner-paul": ["paul", "worker-paul"],
-}
+export const SYNC_DELEGATION_REQUIRED: Record<string, string[]> = {}

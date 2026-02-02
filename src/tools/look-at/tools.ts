@@ -123,7 +123,7 @@ If the requested information is not found, clearly state what is missing.`
           agent: MULTIMODAL_LOOKER_AGENT,
           tools: {
             task: false,
-            call_omo_agent: false,
+            call_paul_agent: false,
             look_at: false,
             read: false,
           },

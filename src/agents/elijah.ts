@@ -362,7 +362,7 @@ const elijahRestrictions = createAgentToolRestrictions([
   "edit",
   "task",
   "delegate_task",
-  "call_omo_agent",
+  "call_paul_agent",
 ])
 
 export function createElijahAgent(model: string = DEFAULT_MODEL): AgentConfig {

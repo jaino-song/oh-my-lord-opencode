@@ -786,7 +786,7 @@ export const JOHN_PERMISSION = {
   bash: "allow" as const,
   webfetch: "deny" as const,
   delegate_task: "allow" as const, // For research (restricted by hierarchy-enforcer)
-  call_omo_agent: "deny" as const,
+  call_paul_agent: "deny" as const,
 }
 
 export const johnAgent: AgentConfig = {

@@ -29,7 +29,7 @@ export function createExploreAgent(model: string = DEFAULT_MODEL): AgentConfig {
     "edit",
     "task",
     "delegate_task",
-    "call_omo_agent",
+    "call_paul_agent",
   ])
 
   return {

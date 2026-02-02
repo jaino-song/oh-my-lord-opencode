@@ -89,8 +89,8 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
       const toolName = input.tool
 
       if (TASK_TOOLS.includes(toolName)) {
-        // planner-paul delegates execution to Paul/worker-paul.
-        // Do NOT contaminate execution agents with the planner read-only directive.
+        // planner-paul no longer delegates to Paul/worker-paul (user switches manually).
+        // This check remains for backward compatibility if delegation is re-enabled.
         if (toolName.toLowerCase() === "delegate_task") {
           const targetAgent = (output.args.agent || output.args.subagent_type || output.args.name) as string | undefined
           const normalizedTarget = targetAgent?.trim().toLowerCase()

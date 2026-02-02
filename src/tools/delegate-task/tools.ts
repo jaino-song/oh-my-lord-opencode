@@ -19,6 +19,7 @@ import { AGENT_FALLBACK_MODELS, MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS } from "../..
 
 type OpencodeClient = PluginInput["client"]
 
+const ORCHESTRATOR_AGENTS = ["Paul", "planner-paul", "Sisyphus"]
 
 const DEFAULT_OUTPUT_SUMMARY_TOKENS = 300
 const SKILL_SUMMARY_TOKENS = 300
@@ -318,8 +319,8 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
               tools: {
                 ...(resumeAgent ? getAgentToolRestrictions(resumeAgent) : {}),
                 task: false,
-                delegate_task: false,
-                call_omo_agent: true,
+                delegate_task: resumeAgent ? ORCHESTRATOR_AGENTS.includes(resumeAgent) : false,
+                call_paul_agent: true,
               },
               parts: [{ type: "text", text: args.prompt }],
             },
@@ -440,27 +441,37 @@ ${formattedOutput}`
         return `❌ Agent name cannot be empty. Provide subagent_type parameter (e.g., 'explore', 'librarian', 'paul-junior').`
       }
       const agentName = args.subagent_type.trim()
-      const agentToUse = agentName
+      let agentToUse = agentName
 
-        // Validate agent exists and is callable (not a primary agent)
         try {
           const agentsResult = await client.app.agents()
           type AgentInfo = { name: string; mode?: "subagent" | "primary" | "all" }
           const agents = (agentsResult as { data?: AgentInfo[] }).data ?? agentsResult as unknown as AgentInfo[]
 
           const callableAgents = agents.filter((a) => a.mode !== "primary")
-          const callableNames = callableAgents.map((a) => a.name)
-
-          if (!callableNames.includes(agentToUse)) {
-            const isPrimaryAgent = agents.some((a) => a.name === agentToUse && a.mode === "primary")
+          
+          const exactMatch = callableAgents.find((a) => a.name === agentName)
+          const caseInsensitiveMatch = callableAgents.find(
+            (a) => a.name.toLowerCase() === agentName.toLowerCase()
+          )
+          
+          if (exactMatch) {
+            agentToUse = exactMatch.name
+          } else if (caseInsensitiveMatch) {
+            agentToUse = caseInsensitiveMatch.name
+          } else {
+            const isPrimaryAgent = agents.some(
+              (a) => a.name.toLowerCase() === agentName.toLowerCase() && a.mode === "primary"
+            )
             if (isPrimaryAgent) {
-              return `❌ Cannot call primary agent "${agentToUse}" via delegate_task. Primary agents are top-level orchestrators.`
+              return `❌ Cannot call primary agent "${agentName}" via delegate_task. Primary agents are top-level orchestrators.`
             }
 
-            const availableAgents = callableNames
+            const availableAgents = callableAgents
+              .map((a) => a.name)
               .sort()
               .join(", ")
-            return `❌ Unknown agent: "${agentToUse}". Available agents: ${availableAgents}`
+            return `❌ Unknown agent: "${agentName}". Available agents: ${availableAgents}`
           }
         } catch {
           // If we can't fetch agents, proceed anyway - the session.prompt will fail with a clearer error
@@ -577,8 +588,8 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
                 system: systemContent,
                 tools: {
                   task: false,
-                  delegate_task: false,
-                  call_omo_agent: true,
+                  delegate_task: ORCHESTRATOR_AGENTS.includes(agentToUse),
+                  call_paul_agent: true,
                 },
                 parts: [{ type: "text", text: args.prompt }],
                 ...(currentModel ? { model: currentModel } : {}),

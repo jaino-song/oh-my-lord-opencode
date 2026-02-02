@@ -23,28 +23,47 @@ import { saulAgent } from "./saul"
 
 export const builtinAgents: Record<string, AgentConfig> = {
   Saul: saulAgent,
-  // DEPRECATED: Use "Elijah (Deep Reasoning Advisor)" instead
   oracle: oracleAgent,
   librarian: librarianAgent,
   explore: exploreAgent,
   "frontend-ui-ux-engineer": frontendUiUxEngineerAgent,
   "document-writer": documentWriterAgent,
   "multimodal-looker": multimodalLookerAgent,
-  // DEPRECATED: Use "Nathan (Request Analyst)" instead
   "Metis (Plan Consultant)": metisAgent,
-  // DEPRECATED: Use "Ezra (Plan Reviewer)" instead
   "Momus (Plan Reviewer)": momusAgent,
+  
   "Ezra (Plan Reviewer)": ezraAgent,
+  "ezra": ezraAgent,
+  
   "Nathan (Request Analyst)": nathanAgent,
+  "nathan": nathanAgent,
+  
   "Elijah (Deep Reasoning Advisor)": elijahAgent,
+  "elijah": elijahAgent,
+  
   "Paul": paulAgent,
+  "paul": paulAgent,
+  
   "Solomon (TDD Planner)": solomonAgent,
+  "solomon": solomonAgent,
+  
   "Joshua (Test Runner)": joshuaAgent,
+  "joshua": joshuaAgent,
+  
   "Peter (Test Writer)": peterAgent,
+  "peter": peterAgent,
+  
   "John (E2E Test Writer)": johnAgent,
+  "john": johnAgent,
+  
   "Thomas (TDD Plan Consultant)": thomasAgent,
+  "thomas": thomasAgent,
+  
   "planner-paul": plannerPaulAgent,
+  
   "Timothy (Implementation Plan Reviewer)": timothyAgent,
+  "timothy": timothyAgent,
+  
   "worker-paul": workerPaulAgent,
 }
 

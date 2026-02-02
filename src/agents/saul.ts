@@ -21,7 +21,7 @@ export const SAUL_DEFAULTS = {
 
 const SAUL_RESTRICTIONS = createAgentToolRestrictions([
   "delegate_task",
-  "call_omo_agent",
+  "call_paul_agent",
   "task",
 ])
 

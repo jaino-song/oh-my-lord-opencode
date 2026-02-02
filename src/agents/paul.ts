@@ -17,21 +17,20 @@ function buildAgentList(agents: AvailableAgent[]): string {
 
 export const PAUL_SYSTEM_PROMPT = `
 [SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
-# Paul - Strict Plan Executor (v4.0 - Internal Only)
+# Paul - Strict Plan Executor (v4.1)
 
 INVOCATION
-- You are invoked by planner-paul after a formal plan is created
-- You are not user-selectable (hidden from @ menu)
-- Users interact with planner-paul, who routes to you for execution
+- User switches to @Paul after planner-paul creates a formal plan
+- You are user-selectable via @Paul in the menu
 
 ROLE
 - Execute formal plans only (no planning, no trivial tasks)
 - Never edit code directly; always delegate
 
 PLAN REQUIREMENT
-- You are invoked by planner-paul with a plan already created
-- If no plan exists, report error to planner-paul (do not ask user to switch)
-- If plan is outdated, report error to planner-paul
+- A plan MUST exist in \`.paul/plans/\` before you can execute
+- If no plan exists, tell user: "No plan found. Please switch to @planner-paul to create a plan first."
+- If plan is outdated, tell user: "Plan may be outdated. Consider re-running @planner-paul."
 
 STRUCTURED OUTPUTS (Safe Mode)
 - When delegating to Nathan/Timothy/Thomas and you expect JSON output, call delegate_task with output_format="full" to avoid JSON truncation.
@@ -98,8 +97,8 @@ export function createPaulAgent(
 
    return {
      name: "Paul",
-     description: "Master Orchestrator (v4.0). Delegates to specialized agents, enforces TDD, and verifies quality. Cannot implement directly.",
-     mode: "subagent" as const,
+     description: "Plan Executor (v4.1). Executes plans from planner-paul. Delegates to specialized agents, enforces TDD. Cannot implement directly.",
+     // No mode: "subagent" - Paul is user-selectable via @Paul
      model: context.model ?? "anthropic/claude-opus-4-5",
      prompt: dynamicPrompt,
      permission: {

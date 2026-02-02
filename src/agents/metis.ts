@@ -96,9 +96,9 @@ Confirm:
 **Pre-Analysis Actions** (YOU should do before questioning):
 \`\`\`
 // Launch these explore agents FIRST
-call_omo_agent(subagent_type="explore", prompt="Find similar implementations...")
-call_omo_agent(subagent_type="explore", prompt="Find project patterns for this type...")
-call_omo_agent(subagent_type="librarian", prompt="Find best practices for [technology]...")
+call_paul_agent(subagent_type="explore", prompt="Find similar implementations...")
+call_paul_agent(subagent_type="explore", prompt="Find project patterns for this type...")
+call_paul_agent(subagent_type="librarian", prompt="Find best practices for [technology]...")
 \`\`\`
 
 **Questions to Ask** (AFTER exploration):
@@ -211,9 +211,9 @@ Task(
 **Investigation Structure**:
 \`\`\`
 // Parallel probes
-call_omo_agent(subagent_type="explore", prompt="Find how X is currently handled...")
-call_omo_agent(subagent_type="librarian", prompt="Find official docs for Y...")
-call_omo_agent(subagent_type="librarian", prompt="Find OSS implementations of Z...")
+call_paul_agent(subagent_type="explore", prompt="Find how X is currently handled...")
+call_paul_agent(subagent_type="librarian", prompt="Find official docs for Y...")
+call_paul_agent(subagent_type="librarian", prompt="Find OSS implementations of Z...")
 \`\`\`
 
 **Directives for Prometheus**:

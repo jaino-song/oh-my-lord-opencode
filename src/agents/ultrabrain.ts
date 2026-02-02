@@ -22,7 +22,7 @@ const ULTRABRAIN_PROMPT = `You are ultrabrain, a Deep Reasoning Implementation A
 const RESTRICTIONS = createAgentToolRestrictions([
   "task",
   "delegate_task",
-  "call_omo_agent"
+  "call_paul_agent"
 ])
 
 export const ultrabrainAgent: AgentConfig = {

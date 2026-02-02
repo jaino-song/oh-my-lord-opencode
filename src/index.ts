@@ -1,6 +1,7 @@
 import type { Plugin } from "@opencode-ai/plugin";
 import {
   createTodoContinuationEnforcer,
+  type TodoContinuationEnforcer,
   createContextWindowMonitorHook,
   createSessionRecoveryHook,
   createSessionNotification,
@@ -243,9 +244,11 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
      ? createHierarchyEnforcerHook(ctx, { tokenAnalytics: tokenAnalyticsManager })
      : null;
 
-  const todoContinuationEnforcer = isHookEnabled("todo-continuation-enforcer")
-    ? createTodoContinuationEnforcer(ctx, { backgroundManager })
-    : null;
+  // TEMPORARILY DISABLED - re-enable by uncommenting below
+  // const todoContinuationEnforcer = isHookEnabled("todo-continuation-enforcer")
+  //   ? createTodoContinuationEnforcer(ctx, { backgroundManager })
+  //   : null;
+  const todoContinuationEnforcer = null as TodoContinuationEnforcer | null;
 
   if (sessionRecovery && todoContinuationEnforcer) {
     sessionRecovery.setOnAbortCallback(todoContinuationEnforcer.markRecovering);

@@ -136,8 +136,8 @@ describe("hierarchy-enforcer", () => {
 
   describe("agent name matching", () => {
     test("should allow delegating to 'timothy' when 'Timothy (Implementation Plan Reviewer)' is in allowed list", async () => {
-      // #given - set session agent to planner-paul (has Timothy in allowed list)
-      setSessionAgent(TEST_SESSION_ID, "planner-paul")
+      // #given - set session agent to Paul (has Timothy in allowed list)
+      setSessionAgent(TEST_SESSION_ID, "Paul")
 
       const { createHierarchyEnforcerHook } = await import("./index")
       const hook = createHierarchyEnforcerHook(mockCtx as any)
