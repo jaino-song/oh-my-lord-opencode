@@ -189,7 +189,7 @@ ${availableSkillsList}${allSkills.length > 15 ? `\n  ... and ${allSkills.length 
 
 If you believe no skills are needed, you MUST explicitly explain why to the user before using skills=null.`
       }
-      const runInBackground = args.run_in_background === true
+      let runInBackground = args.run_in_background === true
       const outputFormat = args.output_format ?? "summary"
 
       let skillContent: string | undefined
@@ -226,21 +226,25 @@ If you believe no skills are needed, you MUST explicitly explain why to the user
       if (args.resume) {
         if (runInBackground) {
           try {
-            const task = await manager.resume({
-              sessionId: args.resume,
-              prompt: args.prompt,
-              parentSessionID: ctx.sessionID,
-              parentMessageID: ctx.messageID,
-              parentModel,
-              parentAgent,
-            })
+            const existingTask = manager.findBySession(args.resume)
+            if (!existingTask) {
+              runInBackground = false
+            } else {
+              const task = await manager.resume({
+                sessionId: args.resume,
+                prompt: args.prompt,
+                parentSessionID: ctx.sessionID,
+                parentMessageID: ctx.messageID,
+                parentModel,
+                parentAgent,
+              })
 
-            ctx.metadata?.({
-              title: `Resume: ${task.description}`,
-              metadata: { sessionId: task.sessionID },
-            })
+              ctx.metadata?.({
+                title: `Resume: ${task.description}`,
+                metadata: { sessionId: task.sessionID },
+              })
 
-            return `Background task resumed.
+              return `Background task resumed.
 
 Task ID: ${task.id}
 Session ID: ${task.sessionID}
@@ -250,6 +254,7 @@ Status: ${task.status}
 
 Agent continues with full previous context preserved.
 Use \`background_output\` with task_id="${task.id}" to check progress.`
+            }
           } catch (error) {
             return formatDetailedError(error, {
               operation: "Resume background task",
