@@ -19,8 +19,10 @@ import { join } from "node:path"
 const TASK_TTL_MS = 30 * 60 * 1000
 const MIN_STABILITY_TIME_MS = 10 * 1000
 const PROGRESS_TOAST_INTERVAL_MS = 10000
-const NO_OUTPUT_TIMEOUT_MS = 60 * 1000
 const WORKING_TOAST_INTERVAL_MS = 15 * 1000
+const NO_PROGRESS_TIMEOUT_MS = 90 * 1000
+
+const capitalizeAgent = (s: string) => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-')
 
 type ProcessCleanupEvent = NodeJS.Signals | "beforeExit" | "exit"
 
@@ -505,11 +507,9 @@ export class BackgroundManager {
         }
 
         if (!hasValidOutput) {
-          task.noOutputIdleCount = (task.noOutputIdleCount ?? 0) + 1
-          log("[background-agent] Session.idle but no valid output yet, waiting:", { taskId: task.id, noOutputIdleCount: task.noOutputIdleCount })
+          log("[background-agent] Session.idle but no valid output yet, waiting:", { taskId: task.id })
           return
         }
-        task.noOutputIdleCount = 0
 
         const hasIncompleteTodos = await this.checkSessionTodos(sessionID)
 
@@ -772,16 +772,16 @@ Use \`background_output(task_id="<id>")\` to retrieve each result.
       const tokens = await getsessiontokenusage(this.client as any, task.sessionID)
       const total = tokens ? tokens.input + tokens.output : 0
       const tokenLine = tokens 
-        ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
+        ? `TOKENS: ${tokens.input} in / ${tokens.output} out / ${total} total`
         : ""
       
-      const parentAgentName = task.parentAgent || "agent"
+      const parentAgentName = task.parentAgent || "Agent"
       notification = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
-⚡ ${parentAgentName} → ${task.agent}
-task: ${task.description}
+⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(task.agent)}
+TASK: ${task.description}
 ${tokenLine}
-duration: ${duration}
-${statusText === "COMPLETED" ? "✅ task complete" : `❌ task ${statusText.toLowerCase()}`}${errorInfo}
+DURATION: ${duration}
+${statusText === "COMPLETED" ? "✅ DELEGATION COMPLETE" : `❌ DELEGATION ${statusText}`}${errorInfo}
 
 ${remainingCount > 0 ? `${remainingCount} task${remainingCount === 1 ? "" : "s"} still running.` : ""}
 
@@ -922,30 +922,13 @@ Use \`background_output(task_id="${task.id}")\` to retrieve result.
       try {
         const sessionStatus = allStatuses[task.sessionID]
         
-        // Don't skip if session not in status - fall through to message-based detection
+        // Handle idle sessions - check for completion
         if (sessionStatus?.type === "idle") {
           const hasValidOutput = await validateSessionHasOutput(task.sessionID, this.client)
           if (!hasValidOutput) {
-            task.noOutputIdleCount = (task.noOutputIdleCount ?? 0) + 1
-            const elapsedNoOutput = task.noOutputIdleCount * 2000
-            
-            if (elapsedNoOutput >= NO_OUTPUT_TIMEOUT_MS) {
-              log("[background-agent] No output timeout - possible rate limiting:", { taskId: task.id })
-              task.status = "error"
-              task.error = "No output received after 60s - possible rate limiting or API error"
-              task.completedAt = new Date()
-              if (task.concurrencyKey) {
-                this.concurrencyManager.release(task.concurrencyKey)
-                task.concurrencyKey = undefined
-              }
-              await this.notifyParentSession(task)
-              continue
-            }
-            
-            log("[background-agent] Polling idle but no valid output yet, waiting:", { taskId: task.id, elapsedNoOutput })
+            log("[background-agent] Polling idle but no valid output yet, waiting:", { taskId: task.id })
             continue
           }
-          task.noOutputIdleCount = 0
 
           // Re-check status after async operation
           if (task.status !== "running") continue
@@ -1040,6 +1023,31 @@ Use \`background_output(task_id="${task.id}")\` to retrieve result.
            // Stability detection: complete when message count unchanged for 3 polls
           const currentMsgCount = messages.length
           const elapsedMs = Date.now() - task.startedAt.getTime()
+
+          // No-progress timeout: detect rate limiting regardless of session status
+          if (task.lastMsgCount !== currentMsgCount) {
+            task.lastMsgChangeTime = new Date()
+            task.stablePolls = 0
+          } else if (task.lastMsgChangeTime) {
+            const timeSinceLastProgress = Date.now() - task.lastMsgChangeTime.getTime()
+            const hasValidOutput = await validateSessionHasOutput(task.sessionID, this.client)
+            if (!hasValidOutput && timeSinceLastProgress >= NO_PROGRESS_TIMEOUT_MS) {
+              log("[background-agent] No progress timeout - possible rate limiting:", { taskId: task.id, timeSinceLastProgress })
+              task.status = "error"
+              task.error = "No progress for 90s and no valid output - possible rate limiting or API stall"
+              task.completedAt = new Date()
+              if (task.concurrencyKey) {
+                this.concurrencyManager.release(task.concurrencyKey)
+                task.concurrencyKey = undefined
+              }
+              await this.notifyParentSession(task)
+              continue
+            }
+          }
+          if (!task.lastMsgChangeTime) {
+            task.lastMsgChangeTime = new Date()
+          }
+          task.lastMsgCount = currentMsgCount
 
           if (elapsedMs >= MIN_STABILITY_TIME_MS) {
             if (task.lastMsgCount === currentMsgCount) {

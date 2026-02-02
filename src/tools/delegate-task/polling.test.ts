@@ -3,20 +3,11 @@ import type { SessionMessage } from "../../shared/session-validation"
 
 // Constants matching tools.ts
 const POLL_INTERVAL_MS = 500
-const NO_OUTPUT_TIMEOUT_MS = 60 * 1000
-const MIN_STABILITY_TIME_MS = 10000
-const STABILITY_POLLS_REQUIRED = 3
+const MIN_STABILITY_TIME_MS = 30000
+const STABILITY_POLLS_REQUIRED = 5
+const NO_PROGRESS_TIMEOUT_MS = 90000
 
 describe("delegate_task polling logic", () => {
-  // These tests verify the polling behavior described in the implementation plan
-  // They test the decision table:
-  // | Session Status | Has Valid Output | Action |
-  // |----------------|------------------|--------|
-  // | "idle"         | false            | Increment noOutputIdleCount, timeout after 60s |
-  // | "idle"         | true             | Reset noOutputIdleCount, run stability detection |
-  // | "working"      | false            | Run stability detection only (no timeout accrual) |
-  // | "working"      | true             | Run stability detection only |
-
   describe("hasValidOutputFromMessages integration", () => {
     // Import the pure function for testing
     const { hasValidOutputFromMessages } = require("../../shared/session-validation")
@@ -85,90 +76,66 @@ describe("delegate_task polling logic", () => {
     })
   })
 
-  describe("polling decision table scenarios", () => {
-    // These tests document the expected behavior based on the decision table
-    // They serve as specification tests for the polling logic
-
-    test("idle + no valid output => should accrue timeout", () => {
-      // #given - session is idle with no output
-      const sessionStatus = { type: "idle" }
+  describe("no-progress timeout (rate limit detection)", () => {
+    test("timeout triggers after 90s of no message progress", () => {
+      // #given - 90 seconds elapsed with no new messages
+      const lastMsgChangeTime = Date.now() - NO_PROGRESS_TIMEOUT_MS
       const hasValidOutput = false
-      let noOutputIdleCount = 0
-
-      // #when - polling logic runs (simulated)
-      if (sessionStatus.type === "idle" && !hasValidOutput) {
-        noOutputIdleCount++
-      }
-
-      // #then - timeout counter should increment
-      expect(noOutputIdleCount).toBe(1)
-    })
-
-    test("idle + valid output => should reset timeout and run stability", () => {
-      // #given - session is idle with valid output
-      const sessionStatus = { type: "idle" }
-      const hasValidOutput = true
-      let noOutputIdleCount = 5 // previously accumulated
-
-      // #when - polling logic runs (simulated)
-      if (hasValidOutput) {
-        noOutputIdleCount = 0
-      }
-
-      // #then - timeout counter should reset
-      expect(noOutputIdleCount).toBe(0)
-      expect(sessionStatus.type).toBe("idle")
-    })
-
-    test("working + no output => should NOT accrue timeout", () => {
-      // #given - session is working with no output
-      const sessionStatus = { type: "working" }
-      const hasValidOutput = false
-      let noOutputIdleCount = 0
-
-      // #when - polling logic runs (simulated)
-      // Only accrue timeout when idle
-      if (sessionStatus.type === "idle" && !hasValidOutput) {
-        noOutputIdleCount++
-      }
-
-      // #then - timeout counter should NOT increment
-      expect(noOutputIdleCount).toBe(0)
-    })
-
-    test("undefined status + no output => should NOT accrue timeout", () => {
-      // #given - session status is undefined
-      const sessionStatus = undefined as { type?: string } | undefined
-      const hasValidOutput = false
-      let noOutputIdleCount = 0
-
-      // #when - polling logic runs (simulated)
-      // Only accrue timeout when explicitly idle
-      const shouldAccrueTimeout = (status: { type?: string } | undefined, output: boolean) =>
-        status?.type === "idle" && !output
-      if (shouldAccrueTimeout(sessionStatus, hasValidOutput)) {
-        noOutputIdleCount++
-      }
-
-      // #then - timeout counter should NOT increment
-      expect(noOutputIdleCount).toBe(0)
-    })
-
-    test("timeout triggers after 60s of idle + no output", () => {
-      // #given - 120 polls at 500ms each = 60s
-      const pollsFor60s = NO_OUTPUT_TIMEOUT_MS / POLL_INTERVAL_MS
-      let noOutputIdleCount = pollsFor60s
 
       // #when - check timeout condition
-      const elapsedNoOutput = noOutputIdleCount * POLL_INTERVAL_MS
-      const shouldTimeout = elapsedNoOutput >= NO_OUTPUT_TIMEOUT_MS
+      const timeSinceLastProgress = Date.now() - lastMsgChangeTime
+      const shouldTimeout = !hasValidOutput && timeSinceLastProgress >= NO_PROGRESS_TIMEOUT_MS
 
       // #then - should trigger timeout
       expect(shouldTimeout).toBe(true)
-      expect(elapsedNoOutput).toBe(60000)
     })
 
-    test("stability detection requires MIN_STABILITY_TIME_MS + 3 stable polls", () => {
+    test("no timeout when valid output exists", () => {
+      // #given - 90 seconds elapsed but has valid output
+      const lastMsgChangeTime = Date.now() - NO_PROGRESS_TIMEOUT_MS
+      const hasValidOutput = true
+
+      // #when - check timeout condition
+      const timeSinceLastProgress = Date.now() - lastMsgChangeTime
+      const shouldTimeout = !hasValidOutput && timeSinceLastProgress >= NO_PROGRESS_TIMEOUT_MS
+
+      // #then - should NOT timeout
+      expect(shouldTimeout).toBe(false)
+    })
+
+    test("no timeout when messages are progressing", () => {
+      // #given - recent message change
+      const lastMsgChangeTime = Date.now() - 5000 // 5 seconds ago
+      const hasValidOutput = false
+
+      // #when - check timeout condition
+      const timeSinceLastProgress = Date.now() - lastMsgChangeTime
+      const shouldTimeout = !hasValidOutput && timeSinceLastProgress >= NO_PROGRESS_TIMEOUT_MS
+
+      // #then - should NOT timeout
+      expect(shouldTimeout).toBe(false)
+    })
+
+    test("lastMsgChangeTime resets when message count changes", () => {
+      // #given - message count changed
+      let lastMsgChangeTime = Date.now() - 60000
+      let lastMsgCount = 5
+      const currentMsgCount = 6
+
+      // #when - message count changed
+      if (currentMsgCount !== lastMsgCount) {
+        lastMsgChangeTime = Date.now()
+        lastMsgCount = currentMsgCount
+      }
+
+      // #then - time should be recent
+      expect(Date.now() - lastMsgChangeTime).toBeLessThan(100)
+      expect(lastMsgCount).toBe(6)
+    })
+  })
+
+  describe("stability detection", () => {
+    test("stability detection requires MIN_STABILITY_TIME_MS + stable polls", () => {
       // #given - timing constants
       const minStabilityMs = MIN_STABILITY_TIME_MS
       const stablePollsRequired = STABILITY_POLLS_REQUIRED
@@ -177,24 +144,8 @@ describe("delegate_task polling logic", () => {
       // #when - calculate minimum completion time
       const minCompletionTime = minStabilityMs + (stablePollsRequired * pollIntervalMs)
 
-      // #then - should be 10s + 1.5s = 11.5s
-      expect(minCompletionTime).toBe(11500)
-    })
-  })
-
-  describe("edge cases", () => {
-    test("valid output resets noOutputIdleCount even when previously high", () => {
-      // #given - high idle count from previous polls
-      let noOutputIdleCount = 100
-      const hasValidOutput = true
-
-      // #when - valid output detected
-      if (hasValidOutput) {
-        noOutputIdleCount = 0
-      }
-
-      // #then - counter should reset to 0
-      expect(noOutputIdleCount).toBe(0)
+      // #then - should be 30s + 2.5s = 32.5s
+      expect(minCompletionTime).toBe(32500)
     })
 
     test("stability detection resets when message count changes", () => {

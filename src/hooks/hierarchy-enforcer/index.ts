@@ -30,7 +30,7 @@ async function showToast(
   await client.tui.showToast({ body: { title, message, variant, duration } }).catch(() => {})
 }
 
-type NotificationStatus = "delegated" | "completed" | "failed"
+type NotificationStatus = "delegated" | "completed" | "delegation_complete" | "failed"
 
 interface NotificationOptions {
   fromAgent?: string
@@ -50,33 +50,38 @@ async function injectNotification(
 ): Promise<void> {
   if (!client.session?.prompt) return
   
-  const statusIcon = status === "delegated" ? "🚀" : status === "completed" ? "✅" : "❌"
+  const statusIcon = status === "delegated" ? "🚀" : (status === "completed" || status === "delegation_complete") ? "✅" : "❌"
   const statusText = status === "delegated" 
-    ? "delegated" 
-    : status === "completed" 
-      ? "task complete" 
-      : "task failed"
+    ? "DELEGATED" 
+    : status === "delegation_complete"
+      ? "DELEGATION COMPLETE"
+      : status === "completed" 
+        ? "TASK COMPLETE" 
+        : "TASK FAILED"
   
   const lines: string[] = []
   
   if (options.fromAgent && options.toAgent) {
-    lines.push(`⚡ ${options.fromAgent.toLowerCase()} → ${options.toAgent}`)
+    const capitalize = (s: string) => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-')
+    lines.push(`⚡ ${capitalize(options.fromAgent)} → ${capitalize(options.toAgent)}`)
   }
   if (options.task) {
-    lines.push(`task: ${options.task}`)
+    lines.push(`TASK: ${options.task}`)
   }
   if (options.duration) {
-    lines.push(`duration: ${options.duration}`)
+    lines.push(`DURATION: ${options.duration}`)
   }
   lines.push(`${statusIcon} ${statusText}`)
   if (status === "failed" && options.reason) {
-    lines.push(`error: ${options.reason}`)
+    lines.push(`ERROR: ${options.reason}`)
   }
   
   const notification = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
-${lines.join("\n")}
-[/SYSTEM DIRECTIVE]`
+${lines.join("\n")}`
   
+  // DO NOT DELETE: currentAgent and currentModel MUST be passed to prevent changing the active agent/model.
+  // Without these, the notification injection will reset the session to default agent (e.g., Paul/Opus).
+  // See commits 259d53a and 4258269 for the original bug fixes.
   await client.session.prompt({
     path: { id: sessionID },
     body: { 
@@ -318,7 +323,12 @@ export function createHierarchyEnforcerHook(
     ): Promise<void> => {
       if (input.tool.toLowerCase() === "delegate_task") {
         const result = output.output
-        const targetAgent = (output.args?.agent || output.args?.subagent_type || output.args?.name) as string | undefined
+        // Try to get agent from args first, then parse from output (e.g., "⚡ Worker-Paul → Explore")
+        let targetAgent = (output.args?.agent || output.args?.subagent_type || output.args?.name) as string | undefined
+        if (!targetAgent) {
+          const arrowMatch = result.match(/→\s*([A-Za-z][\w-]*)/i)
+          if (arrowMatch) targetAgent = arrowMatch[1]
+        }
         const normalizedAgent = targetAgent?.toLowerCase() || ""
         const currentAgent = getParentAgentName(input.sessionID, "Paul")
         
@@ -457,7 +467,14 @@ export function createHierarchyEnforcerHook(
               
               if (files) {
                 await showToast(client, `🔎 ${targetAgent}`, `Found ${files} file(s)`, "info", 5000)
+              } else {
+                await showToast(client, `✅ DELEGATED TO ${targetAgent?.toUpperCase() || "AGENT"}`, "DELEGATION COMPLETE", "success", 5000)
               }
+              await injectNotification(client, input.sessionID, "delegation_complete", { 
+                fromAgent: currentAgent, 
+                toAgent: targetAgent || "Agent", 
+                task: "Delegation" 
+              }, currentAgent, currentModel)
             }
           
            else {
@@ -481,7 +498,12 @@ export function createHierarchyEnforcerHook(
                   task: taskName, reason: errorReason 
                 }, currentAgent, currentModel)
               } else if (hasSuccess) {
-                await showToast(client, `✅ ${targetAgent || "task"} complete`, "delegation successful", "success", 5000)
+                await showToast(client, `✅ DELEGATED TO ${targetAgent?.toUpperCase() || "AGENT"}`, "DELEGATION COMPLETE", "success", 5000)
+                await injectNotification(client, input.sessionID, "delegation_complete", { 
+                  fromAgent: currentAgent, 
+                  toAgent: targetAgent || "Agent", 
+                  task: "Delegation" 
+                }, currentAgent, currentModel)
               }
             }
 

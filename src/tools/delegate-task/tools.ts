@@ -22,7 +22,8 @@ type OpencodeClient = PluginInput["client"]
 
 const DEFAULT_OUTPUT_SUMMARY_TOKENS = 300
 const SKILL_SUMMARY_TOKENS = 300
-const NO_OUTPUT_TIMEOUT_MS = 60 * 1000  // 60 seconds
+
+const capitalizeAgent = (s: string) => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-')
 
 function parseModelString(model: string): { providerID: string; modelID: string } | undefined {
   const parts = model.split("/")
@@ -335,26 +336,38 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
         const POLL_INTERVAL_MS = 500
         const MIN_STABILITY_TIME_MS = 15000
         const STABILITY_POLLS_REQUIRED = 4
+        const NO_PROGRESS_TIMEOUT_MS = 90000
         const pollStart = Date.now()
         let lastMsgCount = 0
         let stablePolls = 0
+        let lastMsgChangeTime = Date.now()
 
-        while (Date.now() - pollStart < 60000) {
+        while (Date.now() - pollStart < 120000) {
           await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS))
-          
-          const elapsed = Date.now() - pollStart
-          if (elapsed < MIN_STABILITY_TIME_MS) continue
 
           const messagesCheck = await client.session.messages({ path: { id: args.resume } })
           const msgs = ((messagesCheck as { data?: unknown }).data ?? messagesCheck) as Array<unknown>
           const currentMsgCount = msgs.length
+          const hasValidOutput = hasValidOutputFromMessages(msgs as any)
 
+          if (currentMsgCount !== lastMsgCount) {
+            lastMsgChangeTime = Date.now()
+            stablePolls = 0
+          } else {
+            const timeSinceLastProgress = Date.now() - lastMsgChangeTime
+            if (!hasValidOutput && timeSinceLastProgress >= NO_PROGRESS_TIMEOUT_MS) {
+              log("[delegate_task:resume] No progress timeout", { sessionID: args.resume, timeSinceLastProgress })
+              throw new Error("No progress for 90s and no valid output - possible rate limiting or API stall")
+            }
+          }
+          lastMsgCount = currentMsgCount
+
+          const elapsed = Date.now() - pollStart
+          if (elapsed >= MIN_STABILITY_TIME_MS && currentMsgCount > 0 && stablePolls >= STABILITY_POLLS_REQUIRED && hasValidOutput) {
+            break
+          }
           if (currentMsgCount > 0 && currentMsgCount === lastMsgCount) {
             stablePolls++
-            if (stablePolls >= STABILITY_POLLS_REQUIRED) break
-          } else {
-            stablePolls = 0
-            lastMsgCount = currentMsgCount
           }
         }
 
@@ -407,16 +420,16 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
 
         const total = tokens ? tokens.input + tokens.output : 0
         const tokenline = tokens 
-          ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
+          ? `TOKENS: ${tokens.input} in / ${tokens.output} out / ${total} total`
           : ""
 
-        return `⚡ ${parentAgentName} → ${resumeAgent ?? "agent"}
-task: ${args.description}
+        return `⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(resumeAgent ?? "Agent")}
+TASK: ${args.description}
 ${tokenline}
-duration: ${duration}
-✅ task complete
+DURATION: ${duration}
+✅ DELEGATION COMPLETE
 
-session id: ${args.resume}
+SESSION ID: ${args.resume}
 
 ---
 
@@ -578,9 +591,8 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
             const pollStart = Date.now()
             let lastMsgCount = 0
             let stablePolls = 0
-            let noOutputIdleCount = 0
             let pollCount = 0
-            let lastMsgChangeTime = Date.now()  // Track when message count last changed
+            let lastMsgChangeTime = Date.now()
 
             log("[delegate_task] Starting poll loop", { sessionID, agentToUse })
 
@@ -624,7 +636,6 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
                   sessionID, 
                   totalMsgs: currentMsgCount, 
                   assistantMsgs: assistantMsgs.length,
-                  noOutputIdleCount,
                   status: sessionStatus?.type ?? "unknown",
                   msgRoles: msgs.map((m: any) => m.info?.role).filter(Boolean)
                 })
@@ -633,28 +644,7 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
               // validate output using pure function (no extra api call)
               const hasValidOutput = hasValidOutputFromMessages(msgs as any)
 
-              // step 1: handle no-output timeout (only when session is idle)
-              if (sessionStatus?.type === "idle" && !hasValidOutput) {
-                noOutputIdleCount++
-                const elapsedNoOutput = noOutputIdleCount * POLL_INTERVAL_MS
-                
-                log("[delegate_task] Session idle, no valid output", { 
-                  sessionID, elapsedNoOutput, noOutputIdleCount 
-                })
-                
-                if (elapsedNoOutput >= NO_OUTPUT_TIMEOUT_MS) {
-                  log("[delegate_task] No output timeout - triggering retry", { sessionID })
-                  throw new Error("No output received after 60s - possible rate limiting or API error")
-                }
-                // don't continue here - still run stability detection below
-              }
-
-              // step 2: reset timeout counter when we have output
-              if (hasValidOutput) {
-                noOutputIdleCount = 0
-              }
-
-              // step 3: no-progress timeout (catches rate limiting regardless of session status)
+              // No-progress timeout: catches rate limiting regardless of session status
               if (currentMsgCount !== lastMsgCount) {
                 lastMsgChangeTime = Date.now()
                 stablePolls = 0
@@ -788,16 +778,16 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
 
         const total = tokens ? tokens.input + tokens.output : 0
         const tokenline = tokens 
-          ? `tokens: ${tokens.input} in / ${tokens.output} out / ${total} total`
+          ? `TOKENS: ${tokens.input} in / ${tokens.output} out / ${total} total`
           : ""
 
-        return `⚡ ${parentAgentName} → ${agentToUse}
-task: ${args.description}
+        return `⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(agentToUse)}
+TASK: ${args.description}
 ${tokenline}
-duration: ${duration}
-✅ task complete
+DURATION: ${duration}
+✅ DELEGATION COMPLETE
 
-session id: ${sessionID}
+SESSION ID: ${sessionID}
 
 ---
 
