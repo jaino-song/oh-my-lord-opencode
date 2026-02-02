@@ -1,4 +1,4 @@
-# User Workflows
+# User Workflows (v4.2)
 
 How to use oh-my-lord-opencode for different task types.
 
@@ -6,35 +6,38 @@ How to use oh-my-lord-opencode for different task types.
 
 ## Quick Start
 
-You can explicitly pick an agent via `@agent-name`, or let OpenCode use the plugin’s default.
+Pick an agent via `@agent-name`. Three main agents are user-selectable:
 
-Default agent selection is set by the plugin config handler (`src/plugin-handlers/config-handler.ts`):
-- If `Paul` is enabled: default agent is `Paul`.
-- If `Paul` is disabled: default agent is `planner-paul`.
+| Agent | When to Use |
+|-------|-------------|
+| `@planner-paul` | Complex tasks needing formal plans |
+| `@Paul` | After planner-paul creates a plan |
+| `@worker-paul` | Trivial/small standalone tasks |
 
-Recommended workflows:
-- Planning-first: `@planner-paul <request>`
-- Orchestrator-first: `@Paul <request>`
-- Trivial one-off: `@worker-paul <request>`
-- Minimal prompt: `@Saul <request>`
+**Key Change (v4.2)**: planner-paul no longer auto-delegates. User manually switches agents.
 
 ---
 
-## Workflow 1: Complex Feature
+## Workflow 1: Complex Feature (v4.2)
 
 For features requiring architecture, multiple files, or business logic.
 
 ```
 User: @planner-paul Build user authentication with JWT
 
-planner-paul:
-  1. Invokes Nathan to analyze complexity
-  2. Researches codebase patterns (explore, librarian)
-  3. Asks clarifying questions if needed
-  4. Creates plan in .paul/plans/auth.md
-  5. Gets plan reviewed by Timothy
-  6. Creates test specs via Solomon
-  7. Delegates to Paul
+planner-paul (auto-continues through all phases):
+  Phase 0: Nathan analyzes (uses explore/librarian for impact)
+           → Non-trivial detected → AUTO-CONTINUE
+  Phase 1: Research (parallel explore/librarian)
+  Phase 2: Creates plan in .paul/plans/auth.md
+  Phase 3: Review chain (ALL MANDATORY):
+           1. Ezra deep review (loop until PASS)
+           2. Solomon creates test specs
+           3. Thomas TDD review (loop until approved)
+  Phase 4: Sets up EXEC:: todos
+           → "Plan ready. Switch to @Paul to execute." → STOPS
+
+User: @Paul
 
 Paul:
   1. Reads plan from .paul/plans/
@@ -50,17 +53,19 @@ Paul:
 
 ---
 
-## Workflow 2: Trivial Task
+## Workflow 2: Trivial Task (v4.2)
 
-For small changes: typos, comments, simple configs, single-file edits.
+For small changes: typos, comments, simple configs, isolated file edits.
 
 ```
 User: @planner-paul Fix typo in README.md
 
 planner-paul:
-  1. Invokes Nathan to analyze
-  2. Nathan detects: trivial task
-  3. Delegates to worker-paul
+  Phase 0: Nathan analyzes (checks downstream dependencies)
+           → Trivial detected (isolated file, no deps)
+           → "Switch to @worker-paul for faster execution." → STOPS
+
+User: @worker-paul Fix typo in README.md
 
 worker-paul:
   1. Fixes typo directly
@@ -69,6 +74,8 @@ worker-paul:
 ```
 
 **Duration**: Seconds
+
+**Note (v4.2)**: Triviality is now impact-based, not LOC-based. A 5-line change to a shared utility used by 50 files is NOT trivial.
 
 ---
 
@@ -104,7 +111,7 @@ planner-paul:
 
 ---
 
-## Workflow 5: Resume Interrupted Work
+## Workflow 5: Resume Interrupted Work (v4.2)
 
 If a session was interrupted:
 
@@ -113,31 +120,39 @@ User: @planner-paul continue
 
 planner-paul:
   1. Checks for existing plan in .paul/plans/
-  2. If found: delegates to Paul to continue
+  2. If found: "Plan ready at .paul/plans/X.md. Switch to @Paul to execute."
   3. If not found: asks what you want to do
+
+User: @Paul (to continue execution)
 ```
+
+**Note (v4.2)**: planner-paul does NOT auto-delegate. User must switch to @Paul manually.
 
 ---
 
-## Common Commands
+## Common Commands (v4.2)
 
 | Command | Purpose |
 |---------|---------|
-| `@planner-paul <task>` | Start any task (recommended) |
-| `@worker-paul <task>` | Quick trivial task (escape hatch) |
-| `@planner-paul continue` | Resume interrupted work |
-| `@planner-paul make a plan` | Force plan generation |
+| `@planner-paul <task>` | Start planning for complex task |
+| `@Paul` | Execute existing plan |
+| `@worker-paul <task>` | Quick trivial task (standalone) |
+| `@planner-paul continue` | Check for existing plan |
 
 ---
 
-## Task Complexity Guide
+## Task Complexity Guide (v4.2 - Impact-Based)
 
-| Complexity | Indicators | Route |
+| Complexity | Indicators | Agent |
 |------------|------------|-------|
-| Trivial | Single file, <30 LOC, typos, comments | worker-paul |
-| Simple | 1-2 files, clear requirements | worker-paul or Paul |
-| Medium | Multiple files, some architecture | Paul (with plan) |
-| Complex | New feature, business logic, tests needed | Paul (with plan) |
+| Trivial | Isolated file, no downstream deps, no shared code | `@worker-paul` |
+| Non-Trivial | Any shared code, components, 3+ dependents | `@planner-paul` → `@Paul` |
+
+**Impact indicators** (checked by Nathan via explore/librarian):
+- Files with 3+ downstream dependents = NOT trivial
+- Shared utilities/hooks = NOT trivial
+- Components (require visual verification) = NOT trivial
+- Core business logic = NOT trivial
 
 ---
 
@@ -155,13 +170,14 @@ Note: TDD enforcement is file-pattern-based (see `src/hooks/tdd-enforcement/cons
 
 ---
 
-## Tips
+## Tips (v4.2)
 
-1. **Let planner-paul route** - Don't guess which agent to use
+1. **Start with planner-paul** - Let Nathan analyze impact first
 2. **Be specific** - Clear requirements = better plans
-3. **Trust the process** - TDD enforcement exists for quality
-4. **Use worker-paul for quick fixes** - Skip planning overhead for trivial tasks
-5. **Check .paul/plans/** - Plans are saved for reference
+3. **Trust the review chain** - Ezra + Thomas ensure quality
+4. **Switch agents manually** - planner-paul stops after planning
+5. **Use worker-paul for isolated fixes** - Only for files with no dependents
+6. **Check .paul/plans/** - Plans are saved for reference
 
 ---
 

@@ -4,15 +4,15 @@ Quick reference for all agents in oh-my-lord-opencode.
 
 ---
 
-## User-Selectable Agents
+## User-Selectable Agents (v4.2)
 
 User-selectability is controlled by `src/agents/utils.ts` (`USER_SELECTABLE_AGENTS`).
 
 | Agent | Purpose |
 |-------|---------|
-| Paul | Default orchestrator when enabled (set by config handler) |
-| planner-paul | Planning + routing agent |
-| worker-paul | Trivial executor |
+| planner-paul | **Plan Creator** - Creates formal plans, user switches to Paul after |
+| Paul | **Plan Executor** - Executes plans from planner-paul |
+| worker-paul | **Trivial Executor** - Standalone agent for small tasks |
 | Saul | Bare model (minimal prompt) |
 
 ---
@@ -21,31 +21,31 @@ User-selectability is controlled by `src/agents/utils.ts` (`USER_SELECTABLE_AGEN
 
 Notes:
 - Default models are defined in `src/agents/*.ts` and can be overridden via config.
-- Some agents are “compatibility” entries kept for older workflows.
+- Some agents are "compatibility" entries kept for older workflows.
+- Lowercase aliases (paul, ezra, nathan, etc.) are registered for convenience.
 
-| Agent | Model | Purpose | Visibility |
-|-------|-------|---------|------------|
-| planner-paul | anthropic/claude-opus-4-5 | Planning + routing | User-selectable |
-| Paul | anthropic/claude-opus-4-5 | Orchestrator | User-selectable |
-| worker-paul | anthropic/claude-opus-4-5 | Trivial executor | User-selectable |
-| Saul | anthropic/claude-sonnet-4-5 | Bare model | User-selectable |
+| Agent | Alias | Model | Purpose | Visibility |
+|-------|-------|-------|---------|------------|
+| planner-paul | - | anthropic/claude-opus-4-5 | Planning + routing | User-selectable |
+| Paul | paul | anthropic/claude-opus-4-5 | Orchestrator | User-selectable |
+| worker-paul | - | anthropic/claude-opus-4-5 | Trivial executor | User-selectable |
+| Saul | - | anthropic/claude-sonnet-4-5 | Bare model | User-selectable |
 
 ---
 
 ## Planning Assistants
 
-Called by planner-paul during planning phase.
+Called by planner-paul during planning phase (v4.2: always Ezra + Thomas).
 
-| Agent | Model | Purpose |
-|-------|-------|---------|
-| Nathan (Request Analyst) | openai/gpt-5.2 | Analyzes requests, recommends routing |
-| Timothy (Implementation Plan Reviewer) | openai/gpt-5.2 | Plan review |
-| Ezra (Plan Reviewer) | google/gemini-3-pro-high | Deep plan review |
-| Solomon (TDD Planner) | openai/gpt-5.2-codex | Test planning |
-| Thomas (TDD Plan Consultant) | google/gemini-3-pro-high | TDD plan audit |
-| Metis (Plan Consultant) | anthropic/claude-sonnet-4-5 | Deprecated (kept for compat) |
-| Momus (Plan Reviewer) | anthropic/claude-sonnet-4-5 | Deprecated (kept for compat) |
-| oracle | openai/gpt-5.2 | Deprecated (kept for compat) |
+| Agent | Alias | Model | Purpose |
+|-------|-------|-------|---------|
+| Nathan (Request Analyst) | nathan | openai/gpt-5.2 | Phase 0: Impact-based triviality analysis |
+| Ezra (Plan Reviewer) | ezra | google/gemini-3-pro-high | **Always used** - Deep plan review (confidence scoring) |
+| Solomon (TDD Planner) | solomon | openai/gpt-5.2-codex | Test planning |
+| Thomas (TDD Plan Consultant) | thomas | google/gemini-3-pro-high | **Always used** - TDD plan audit |
+| Timothy (Implementation Plan Reviewer) | timothy | openai/gpt-5.2 | Quick plan review (used by Paul, not planner-paul) |
+| Metis (Plan Consultant) | - | anthropic/claude-sonnet-4-5 | Deprecated (kept for compat) |
+| Momus (Plan Reviewer) | - | anthropic/claude-sonnet-4-5 | Deprecated (kept for compat) |
 
 ---
 
@@ -64,11 +64,11 @@ Called by paul during execution phase.
 
 ## Testing Agents
 
-| Agent | Model | Purpose |
-|-------|-------|---------|
-| Joshua (Test Runner) | zai-coding-plan/glm-4.7 | Runs tests, reports pass/fail |
-| Peter (Test Writer) | zai-coding-plan/glm-4.7 | Writes unit tests (Jest) |
-| John (E2E Test Writer) | zai-coding-plan/glm-4.7 | Writes E2E tests (Playwright) |
+| Agent | Alias | Model | Purpose |
+|-------|-------|-------|---------|
+| Joshua (Test Runner) | joshua | zai-coding-plan/glm-4.7 | Runs tests, reports pass/fail |
+| Peter (Test Writer) | peter | zai-coding-plan/glm-4.7 | Writes unit tests (Jest) |
+| John (E2E Test Writer) | john | zai-coding-plan/glm-4.7 | Writes E2E tests (Playwright) |
 
 ---
 
@@ -76,11 +76,11 @@ Called by paul during execution phase.
 
 Available to multiple agents for research tasks.
 
-| Agent | Model | Purpose |
-|-------|-------|---------|
-| explore | anthropic/claude-haiku-4-5 | Fast codebase search |
-| librarian | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs lookup |
-| Elijah (Deep Reasoning Advisor) | openai/gpt-5.2-codex | Deep debugging, architecture decisions |
+| Agent | Alias | Model | Purpose |
+|-------|-------|-------|---------|
+| explore | - | anthropic/claude-haiku-4-5 | Fast codebase search |
+| librarian | - | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs lookup |
+| Elijah (Deep Reasoning Advisor) | elijah | openai/gpt-5.2-codex | Deep debugging, architecture decisions |
 
 ---
 
@@ -103,7 +103,7 @@ Available to multiple agents for research tasks.
 
 ---
 
-## Call Graph
+## Call Graph (v4.2)
 
 Who can call whom (enforced by `hierarchy-enforcer`):
 
@@ -111,21 +111,21 @@ Note on tool naming:
 - Many prompts/templates mention `call_omo_agent`.
 - The plugin tool exposed is `call_paul_agent` (spawns explore/librarian only).
 
-```
-planner-paul
-├── Nathan, Timothy, Solomon, Thomas, Ezra (planning)
-├── explore, librarian (research)
-├── Paul (complex execution)
-└── worker-paul (trivial execution)
+**Important (v4.2)**: planner-paul does NOT delegate to Paul/worker-paul. User manually switches.
 
-Paul
+```
+planner-paul (planning only)
+├── Nathan, Solomon, Thomas, Ezra (planning assistants)
+└── explore, librarian (research)
+
+Paul (execution)
 ├── Joshua, Peter, John (testing)
 ├── Paul-Junior, frontend-ui-ux-engineer, ultrabrain (implementation)
 ├── git-master (git)
 ├── explore, librarian, Elijah (research)
 └── Nathan, Timothy, Solomon, Thomas (mid-execution analysis)
 
-worker-paul
+worker-paul (standalone)
 └── explore, librarian, git-master, document-writer (support)
 
 Paul-Junior, frontend-ui-ux-engineer

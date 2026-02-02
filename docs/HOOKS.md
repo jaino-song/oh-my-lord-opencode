@@ -56,19 +56,23 @@ This is the set exported by `src/hooks/index.ts`.
 **Purpose**: Enforces the three-domain agent architecture (planning, execution, trivial). Prevents cross-domain calls that violate strict mode.
 
 **Enforcements (HARD BLOCKS - Throws Errors)**:
-- Cross-domain calls (Paul → planner-paul, worker-paul → Paul)
+- Cross-domain calls (Paul → planner-paul, worker-paul → Paul, etc.)
 - Orchestrators writing code directly without delegating
 - Subagents delegating to other subagents
 
 **Warnings (ADVISORY - Allows Proceeding)**:
 - Competency routing: Wrong specialist for task type (e.g., CSS work to non-specialist)
-- TODO continuation: Suggests continuing incomplete tasks
 
 **Features**:
 - Agent call graph validation using call_omo_agent / call_paul_agent
-- Approval state tracking for task completion
+- Approval state tracking for task completion (Ezra for plans, Thomas for TDD)
 - OS notifications for delegation status
 - Toast messages for agent transitions
+
+**v4.2 Changes**:
+- planner-paul can NO longer delegate to Paul/worker-paul (user switches manually)
+- Timothy removed from planner-paul's allowed delegates (always use Ezra)
+- Plan review approval now requires Ezra (not Timothy)
 
 ---
 
@@ -356,7 +360,9 @@ Note: The call has already completed - you are NOT waiting for a response. Proce
 #### `todo-continuation-enforcer`
 **Purpose**: Advises agent to continue incomplete tasks when stopping.
 
-**Behavior**:
+**Status**: ⚠️ **TEMPORARILY DISABLED** (v0.16.0)
+
+**Behavior** (when enabled):
 - Monitors todo list for incomplete items
 - Detects "abort" signals (stopping mid-task)
 - Injects advisory continuation prompt before agent stops

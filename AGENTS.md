@@ -167,9 +167,9 @@ describe("feature-name", () => {
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
-| Paul | anthropic/claude-sonnet-4-5 | **Strict Plan Executor** - Executes formal plans only (requires `.paul/plans/*.md`) *(internal only - called by planner-paul)* |
-| planner-paul | anthropic/claude-opus-4-5 | **Plan Creator & Router** - Requirements analysis, architecture, test specs. Routes to worker-paul (trivial) or Paul (complex) |
-| worker-paul | anthropic/claude-sonnet-4-5 | **Trivial Task Handler** - Autonomous execution for small tasks (< 50 lines, single file, low risk) |
+| Paul | anthropic/claude-opus-4-5 | **Plan Executor** - Executes formal plans only (requires `.paul/plans/*.md`). User-selectable via @Paul. |
+| planner-paul | anthropic/claude-opus-4-5 | **Plan Creator (v4.2)** - Creates formal plans with auto-continue workflow. Always uses Ezra + Thomas. User switches to @Paul after. |
+| worker-paul | anthropic/claude-opus-4-5 | **Trivial Task Handler** - Standalone agent for small tasks. User-selectable via @worker-paul. |
 | Solomon | openai/gpt-5.2-codex | TDD test planning (called by planner-paul) |
 | Timothy | google/gemini-3-pro-high | Quick plan reviewer (simple plans, <30s) |
 | Ezra | google/gemini-3-pro-high | Deep plan reviewer (complex plans, confidence scoring) |
@@ -187,32 +187,53 @@ describe("feature-name", () => {
 | multimodal-looker | google/antigravity-gemini-3-flash | Image/PDF analysis |
 | document-writer | gemini-3-pro-preview | Technical docs |
 
-## THREE-DOMAIN ARCHITECTURE (STRICT MODE)
+## THREE-DOMAIN ARCHITECTURE (v4.2)
 
 **The system enforces strict separation between three agent domains:**
 
-| Domain | Agent | Use When | Cannot Do |
-|--------|-------|----------|-----------|
-| **PLANNING & ROUTING** | `@planner-paul` | Complex task needs architecture/test specs | Execute code directly (delegates to Paul or worker-paul) |
-| **EXECUTION** | `Paul` *(internal)* | Called by planner-paul for complex plans | Create plans, execute without plan, be called directly by user |
-| **TRIVIAL** | `worker-paul` *(internal)* | Called by planner-paul for trivial tasks | Delegate to other agents, handle complex tasks |
+| Domain | Agent | User Selectable | Use When |
+|--------|-------|-----------------|----------|
+| **PLANNING** | `@planner-paul` | ✅ Yes | Complex tasks needing formal plans |
+| **EXECUTION** | `@Paul` | ✅ Yes | After planner-paul creates a plan |
+| **TRIVIAL** | `@worker-paul` | ✅ Yes | Small tasks (isolated files, no deps) |
 
-**Workflow:**
+**Workflow (v4.2 - Auto-Continue):**
 
-1. **All Tasks**: User → `@planner-paul` (analyzes via Nathan) → Routes automatically:
-   - **Complex**: planner-paul creates plan → delegates to `Paul` (executes plan)
-   - **Trivial**: planner-paul delegates to `worker-paul` (executes immediately)
-2. **Direct Access** (discouraged): User can still call `@Paul` or `@worker-paul` directly if needed
+```
+User → @planner-paul
+    ↓
+Phase 0: Nathan analysis (impact-based triviality via explore/librarian)
+    ↓
+    trivial? → "Switch to @worker-paul" → STOP
+    ↓
+    non-trivial? → AUTO-CONTINUE (no user gate)
+    ↓
+Phase 1: Research (parallel explore/librarian)
+    ↓
+Phase 2: Plan Generation → .paul/plans/{name}.md
+    ↓
+Phase 3: Review Chain (ALL MANDATORY):
+    1. Ezra deep review (loop until PASS)
+    2. Solomon test planning → {name}-tests.md
+    3. Thomas TDD review (loop until approved)
+    ↓
+Phase 4: Setup EXEC:: todos
+    ↓
+"Plan ready. Switch to @Paul to execute." → STOP
+```
+
+**Manual Agent Switching:**
+- planner-paul does NOT delegate to Paul/worker-paul
+- User manually switches via `@Paul` or `@worker-paul` after planning
 
 **Key Rules (Enforcement Types):**
-- **Cross-Domain Calls** (HARD BLOCK): `Paul` cannot call `planner-paul`, `worker-paul` cannot call `Paul`, etc. (planner-paul CAN call Paul/worker-paul as the router)
+- **Cross-Domain Calls** (HARD BLOCK): `Paul` cannot call `planner-paul`, `worker-paul` cannot call `Paul`, etc.
 - **Paul Requires Plan** (HARD BLOCK): If no plan exists in `.paul/plans/*.md`, Paul will **BLOCK** and tell you to switch to `@planner-paul`.
 - **Category Required** (HARD BLOCK): All delegations MUST specify `category` parameter (e.g., `category="unit-testing"`).
 - **TDD Mandatory** (HARD BLOCK): HARD BLOCKS if you try to write code before tests (not warnings - actual errors).
 - **No Coding for Orchestrators** (HARD BLOCK): Paul/planner-paul CANNOT write code directly - they MUST delegate.
 - **No Delegation for Subagents** (HARD BLOCK): Sisyphus-Junior cannot delegate to frontend-ui-ux-engineer. Paul must orchestrate.
 - **Competency Routing** (ADVISORY WARNING): Wrong specialist for task triggers warning (not block) - allows proceeding with caution.
-- **TODO Continuation** (ADVISORY SUGGESTION): Suggests continuing incomplete tasks - allows stopping if blocked.
 
 ## ENFORCEMENT MODEL
 
@@ -220,26 +241,22 @@ The system uses two types of enforcement:
 
 ### HARD BLOCKS (Errors - Prevent Execution)
 These violations **throw errors** and stop execution:
-1. Cross-domain calls (Paul → planner-paul, worker-paul → Paul, etc. - but planner-paul CAN call Paul/worker-paul)
+1. Cross-domain calls (Paul → planner-paul, worker-paul → Paul, etc.)
 2. Missing category parameter in delegations
 3. Code written without tests first (TDD violation)
 4. Orchestrators writing code directly (must delegate)
 5. File lock conflicts (parallel delegation on same file)
-6. Task completion without approval (no Joshua/Timothy approval)
+6. Task completion without approval (no Joshua/Ezra approval)
 
 ### ADVISORY WARNINGS (Suggestions - Allow Proceeding)
 These violations **inject warnings** but allow proceeding:
 1. **Competency routing**: Task contains UI keywords but delegated to non-specialist
    - Example: CSS changes delegated to Sisyphus-Junior triggers warning
    - Paul can proceed if there's valid reason (e.g., Sisyphus-Junior → frontend-ui-ux-engineer internally)
-2. **TODO continuation**: Incomplete tasks remain after completing one
-   - Suggests continuing with next task
-   - Paul can stop and report if task is blocked or requires user input
 
 **Why Advisory Warnings?**
 - Prevents deadlocks on edge cases (e.g., "commit UI changes" has both Git + UI keywords)
 - Allows Paul to make informed decisions
-- Prevents infinite loops on stuck tasks
 - Still provides guidance without being overly restrictive
 
 ## CLARIFICATION FEATURE
