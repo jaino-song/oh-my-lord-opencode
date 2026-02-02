@@ -1,6 +1,5 @@
 import * as fs from "fs"
 import { log } from "./logger"
-import { DEFAULT_CATEGORIES } from "../config/default-categories"
 
 // Migration map: old keys → new keys (for backward compatibility)
 export const AGENT_NAME_MAP: Record<string, string> = {
@@ -108,22 +107,14 @@ export function migrateAgentConfigToCategory(config: Record<string, unknown>): {
   }
 }
 
+/**
+ * @deprecated Category system has been removed. This function always returns false.
+ */
 export function shouldDeleteAgentConfig(
   config: Record<string, unknown>,
   category: string
 ): boolean {
-  const defaults = DEFAULT_CATEGORIES[category]
-  if (!defaults) return false
-
-  const keys = Object.keys(config).filter((k) => k !== "category")
-  if (keys.length === 0) return true
-
-  for (const key of keys) {
-    if (config[key] !== (defaults as Record<string, unknown>)[key]) {
-      return false
-    }
-  }
-  return true
+  return false
 }
 
 export function migrateConfigFile(configPath: string, rawConfig: Record<string, unknown>): boolean {

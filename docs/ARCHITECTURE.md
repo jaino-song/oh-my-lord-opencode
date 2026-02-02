@@ -40,27 +40,33 @@ USER REQUEST
 │  planner-paul   │  (planning + routing)
 └────────┬────────┘
          │
-    ┌────┴────┐
-    │         │
-    v         v
-┌────────┐  ┌─────────────┐
-│  Paul  │  │ worker-paul  │
-│ (orch) │  │ (trivial)    │
-└────────┘  └─────────────┘
+    ┌────┴───────────────────────────┐
+    │                              │
+    v                              v
+┌─────────────────┐        ┌─────────────┐
+│  Paul (complex) │        │ worker-paul  │
+│   (orchest)     │        │   (trivial)  │
+└─────────────────┘        └─────────────┘
 ```
+
+**Key Distinction**:
+- **`planner-paul` routes DIRECTLY to specialists** for most tasks
+- **`planner-paul` calls `Paul` ONLY for complex tasks requiring orchestration** (multi-domain coordination, complex refactoring)
+- **`Paul` orchestrates specialists** but does NOT implement directly
+- **`worker-paul` works standalone** for trivial changes (< 50 lines, single file, low risk)
 
 | Domain | Agent | Role |
 |--------|-------|------|
-| Planning/Router | planner-paul | Planning + routing; often writes `.paul/plans/*` |
-| Orchestrator | Paul | Default orchestrator when enabled; delegates to specialists |
-| Trivial Executor | worker-paul | Small, standalone changes; limited delegation |
-| Bare Model | Saul | Minimal prompt; useful for “no framework overhead” testing |
+| Planning/Router | planner-paul | Planning + routing; delegates directly to specialists or Paul for complex tasks |
+| Complex Orchestrator | Paul | Orchestrates multi-domain tasks; delegates to specialists, does NOT implement |
+| Trivial Executor | worker-paul | Small, standalone changes; limited delegation to support agents only |
+| Bare Model | Saul | Minimal prompt; useful for "no framework overhead" testing |
 
 Important: user selectability is controlled in `src/agents/utils.ts` (`USER_SELECTABLE_AGENTS`).
 
 Default agent selection:
-- If `Paul` is enabled, the plugin sets OpenCode `default_agent = "Paul"`.
-- If `Paul` is disabled, the plugin sets OpenCode `default_agent = "planner-paul"`.
+- If `Paul` is enabled, plugin sets OpenCode `default_agent = "Paul"`.
+- If `Paul` is disabled, plugin sets OpenCode `default_agent = "planner-paul"`.
 
 This behavior is implemented in `src/plugin-handlers/config-handler.ts`.
 
@@ -74,9 +80,9 @@ The hook surface is larger than the table below; see `docs/HOOKS.md` for the com
 |------|---------|------|
 | `hierarchy-enforcer` | Delegation authorization + advisory hints | Hard block + advisory |
 | `tdd-enforcement` | Test-first + dirty-file verification enforcement | Hard block |
-| `strict-workflow` | Workflow invariants (todo flow, sequencing) | Hard block |
+| `strict-workflow` | Bun-only package management + Conventional Commits | Hard block |
 | `parallel-safety-enforcer` | Prevent conflicting concurrent edits | Hard block |
-| `paul-orchestrator` | Orchestrator role enforcement + continuation | Hard block |
+| `paul-orchestrator` | Orchestrator role enforcement + continuation | Advisory |
 | `planner-md-only` / `prometheus-md-only` | Restrict planners to `.paul/` files | Hard block |
 
 **HARD BLOCK**: Throws error, prevents action entirely.
@@ -87,10 +93,10 @@ Defined in `src/hooks/hierarchy-enforcer/constants.ts`:
 
 ```
 planner-paul CAN CALL:
-  ├── Nathan, Timothy, Solomon, Thomas, Ezra (planning)
-  ├── explore, librarian (research)
-  ├── Paul (execution routing)
-  └── worker-paul (trivial routing)
+   ├── Nathan, Timothy, Solomon, Thomas, Ezra (planning)
+   ├── explore, librarian (research)
+   ├── Paul (ONLY for complex tasks requiring orchestration)
+   └── worker-paul (trivial tasks)
 
 Paul CAN CALL:
   ├── Joshua, Peter, John (testing)
@@ -152,18 +158,41 @@ The `tdd-enforcement` hook blocks any attempt to write implementation code befor
 - **drafts/**: Incomplete plans still being refined.
 - **notepads/**: Per-agent notes for recording learnings, blockers, patterns.
 
-## Where the Truth Lives
+## Tool Registry
+
+Located in `src/tools/`:
+
+| Category | Tool(s) | Purpose |
+|----------|----------|---------|
+| LSP (6 tools) | lsp_goto_definition, lsp_find_references, lsp_symbols, lsp_diagnostics, lsp_prepare_rename, lsp_rename | IDE-grade code intelligence (jump to def, find refs, list symbols, diagnostics, rename) |
+| AST (2 tools) | ast_grep_search, ast_grep_replace | Structural pattern matching/rewriting with tree-sitter |
+| Search (2 tools) | grep, glob | Timeout-safe content and file pattern search |
+| Session (4 tools) | session_list, session_read, session_search, session_info | History navigation and retrieval |
+| Delegation | delegate_task | Primary tool for spawning subagents with `category` or `subagent_type` |
+| Agent Spawning | call_paul_agent | Spawn explore/librarian agents only (research support) |
+| Analysis | look_at | Multimodal analysis (PDF, images, diagrams) |
+| Execution | slashcommand, skill, skill_mcp | Command execution and skill-based extensibility |
+| Background | background_output, background_cancel | Async task management (parallel agent orchestration) |
+| Terminal | interactive_bash | Tmux session management for TUI apps (vim, pudb, htop) |
+
+**Tool Registration**:
+- `src/tools/index.ts` exports `builtinTools` (core tools) and factory functions
+- Background tools (`background_output`, `background_cancel`) created dynamically via `createBackgroundTools()`
+- Delegation tool (`delegate_task`) created via `createDelegateTask()` with options
+
+## Where Truth Lives
 
 | File | Purpose |
 |------|---------|
 | `src/index.ts` | Plugin wiring: tools + hooks + event pipeline |
-| `src/agents/index.ts` | Built-in agent registry |
-| `src/agents/utils.ts` | Agent visibility, overrides, dynamic prompt wiring |
-| `src/hooks/index.ts` | Hook registry |
-| `src/tools/index.ts` | Base tool registry |
-| `src/plugin-config.ts` | JSONC config loading + merge |
+| `src/agents/index.ts` | Built-in agent registry (`builtinAgents`) |
+| `src/agents/utils.ts` | Agent visibility (`USER_SELECTABLE_AGENTS`), overrides, dynamic prompt wiring |
+| `src/hooks/index.ts` | Hook registry (30+ hooks exported) |
+| `src/tools/index.ts` | Tool registry (`builtinTools`) + factory exports |
+| `src/plugin-config.ts` | JSONC config loading + merge (top-level, not in config/) |
 | `src/plugin-handlers/config-handler.ts` | OpenCode config handler (agent/tool wiring) |
-| `src/config/schema.ts` | Zod config schema |
+| `src/config/index.ts` | Config schema and types exports |
+| `src/config/schema.ts` | Zod config schema (main schema definition) |
 
 Next reads:
 - `docs/PLUGIN_LIFECYCLE.md`
