@@ -37,17 +37,17 @@ agents/
 | **Paul** | anthropic/claude-opus-4-5 | **Strict Plan Executor** (Internal). Executes formal plans only. Strictly delegates. |
 | **planner-paul** | anthropic/claude-opus-4-5 | **Smart Router & Architect**. Analyzes requests, routes to worker-paul (trivial) or creates plans for Paul (complex). |
 | **worker-paul** | anthropic/claude-opus-4-5 | **Trivial Task Handler**. Autonomous executor for small tasks (<50 lines, single file). No plan required. 32k thinking. |
-| Solomon | openai/gpt-5.2-codex | TDD test planning. Plans tests FIRST, then implementation. |
+| Solomon | anthropic/claude-opus-4-5 | TDD test planning. Plans tests FIRST, then implementation. |
 | Sisyphus | anthropic/claude-opus-4-5 | Legacy Orchestrator. |
-| Elijah | openai/gpt-5.2-codex | Deep Reasoning Advisor. 5 modes: --debug, --architecture, --security, --performance, --stuck. High reasoning effort, 64k tokens. |
-| Nathan | openai/gpt-5.2-high | Request Analyst. Intent classification, guardrails, question prioritization before planning. |
+| Elijah | anthropic/claude-opus-4-5 | Deep Reasoning Advisor. 5 modes: --debug, --architecture, --security, --performance, --stuck. 64k thinking tokens. |
+| Nathan | anthropic/claude-opus-4-5 | Request Analyst. Intent classification, guardrails, question prioritization before planning. |
 | librarian | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs research, GitHub examples. |
 | explore | anthropic/claude-haiku-4-5 | Fast contextual grep. Fallbacks: opencode/gpt-5-nano. |
 | frontend-ui-ux | google/gemini-3-pro-preview | Production-grade UI/UX generation and styling. |
 | document-writer | google/gemini-3-pro-preview | Technical writing, guides, API documentation. |
 | Prometheus | anthropic/claude-opus-4-5 | Strategic planner. Interview mode, orchestrates Metis/Momus. |
-| Ezra | anthropic/claude-sonnet-4-5 | Plan Reviewer with confidence scoring, anti-pattern detection, review modes. |
-| Timothy | google/gemini-3-pro-high | Quick Plan Reviewer. |
+| Ezra | anthropic/claude-opus-4-5 | Plan Reviewer with confidence scoring, anti-pattern detection, review modes. |
+| Timothy | anthropic/claude-sonnet-4-5 | Quick Plan Reviewer. |
 | oracle | openai/gpt-5.2 | **DEPRECATED** - Use Elijah instead. |
 | Metis | anthropic/claude-sonnet-4-5 | **DEPRECATED** - Use Nathan instead. |
 | Momus | anthropic/claude-sonnet-4-5 | **DEPRECATED** - Use Ezra instead. |

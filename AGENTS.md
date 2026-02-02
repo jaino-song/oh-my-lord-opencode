@@ -170,14 +170,14 @@ describe("feature-name", () => {
 | Paul | anthropic/claude-opus-4-5 | **Plan Executor** - Executes formal plans only (requires `.paul/plans/*.md`). User-selectable via @Paul. |
 | planner-paul | anthropic/claude-opus-4-5 | **Plan Creator (v4.2)** - Creates formal plans with auto-continue workflow. Always uses Ezra + Thomas. User switches to @Paul after. |
 | worker-paul | anthropic/claude-opus-4-5 | **Trivial Task Handler** - Standalone agent for small tasks. User-selectable via @worker-paul. |
-| Solomon | openai/gpt-5.2-codex | TDD test planning (called by planner-paul) |
-| Timothy | google/gemini-3-pro-high | Quick plan reviewer (simple plans, <30s) |
-| Ezra | google/gemini-3-pro-high | Deep plan reviewer (complex plans, confidence scoring) |
-| Nathan | openai/gpt-5.2-high | Request analyst (called by planner-paul) |
+| Solomon | anthropic/claude-opus-4-5 | TDD test planning (called by planner-paul) |
+| Timothy | anthropic/claude-sonnet-4-5 | Quick plan reviewer (simple plans, <30s) |
+| Ezra | anthropic/claude-opus-4-5 | Deep plan reviewer (complex plans, confidence scoring) |
+| Nathan | anthropic/claude-opus-4-5 | Request analyst (called by planner-paul) |
 | Joshua | openai/gpt-5.2 | Test runner (called by Paul) |
 | Peter | openai/gpt-5.2-codex | Unit test writer (called by Solomon or Paul) |
 | John | openai/gpt-5.2-codex | E2E test writer (called by Solomon or Paul) |
-| Sisyphus-Junior | anthropic/claude-sonnet-4-5 | Backend implementation (called by Paul, NO delegation) |
+| Paul-Junior | anthropic/claude-opus-4-5 | Backend implementation (called by Paul, NO delegation) |
 | frontend-ui-ux-engineer | gemini-3-pro-preview | UI implementation (called by Paul for UI work) |
 | git-master | zai-coding-plan/glm-4.7 | Git operations (called by Paul) |
 | Sisyphus | claude-opus-4-5 | **Legacy escape hatch** - Bypasses all rules (use only if system deadlocks) |

@@ -25,7 +25,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Replaces: Oracle (deprecated)
  */
 
-const DEFAULT_MODEL = "openai/gpt-5.2-codex"
+const DEFAULT_MODEL = "anthropic/claude-opus-4-5"
 
 export const ELIJAH_SYSTEM_PROMPT = `# Elijah - Deep Reasoning Advisor
 

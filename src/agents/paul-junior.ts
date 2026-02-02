@@ -118,7 +118,7 @@ function buildPaulJuniorPrompt(promptAppend?: string): string {
 const BLOCKED_TOOLS = ["task", "delegate_task"]
 
 export const PAUL_JUNIOR_DEFAULTS = {
-  model: "openai/gpt-5.2-codex",
+  model: "anthropic/claude-opus-4-5",
   temperature: 0.1,
 } as const
 
@@ -174,12 +174,12 @@ export function createPaulJuniorAgentWithOverrides(
   }
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium" } as AgentConfig
+    return { ...base, reasoningEffort: "high" } as AgentConfig
   }
 
   return {
     ...base,
-    thinking: { type: "enabled", budgetTokens: 32000 },
+    thinking: { type: "enabled", budgetTokens: 64000 },
   } as AgentConfig
 }
 
@@ -235,11 +235,11 @@ export function createPaulJuniorAgent(
   }
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium" } as AgentConfig
+    return { ...base, reasoningEffort: "high" } as AgentConfig
   }
 
   return {
     ...base,
-    thinking: { type: "enabled", budgetTokens: 32000 },
+    thinking: { type: "enabled", budgetTokens: 64000 },
   } as AgentConfig
 }

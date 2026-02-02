@@ -39,11 +39,11 @@ Called by planner-paul during planning phase (v4.2: always Ezra + Thomas).
 
 | Agent | Alias | Model | Purpose |
 |-------|-------|-------|---------|
-| Nathan (Request Analyst) | nathan | openai/gpt-5.2 | Phase 0: Impact-based triviality analysis |
-| Ezra (Plan Reviewer) | ezra | google/gemini-3-pro-high | **Always used** - Deep plan review (confidence scoring) |
-| Solomon (TDD Planner) | solomon | openai/gpt-5.2-codex | Test planning |
-| Thomas (TDD Plan Consultant) | thomas | google/gemini-3-pro-high | **Always used** - TDD plan audit |
-| Timothy (Implementation Plan Reviewer) | timothy | openai/gpt-5.2 | Quick plan review (used by Paul, not planner-paul) |
+| Nathan (Request Analyst) | nathan | anthropic/claude-opus-4-5 | Phase 0: Impact-based triviality analysis |
+| Ezra (Plan Reviewer) | ezra | anthropic/claude-opus-4-5 | **Always used** - Deep plan review (confidence scoring) |
+| Solomon (TDD Planner) | solomon | anthropic/claude-opus-4-5 | Test planning |
+| Thomas (TDD Plan Consultant) | thomas | anthropic/claude-sonnet-4-5 | **Always used** - TDD plan audit |
+| Timothy (Implementation Plan Reviewer) | timothy | anthropic/claude-sonnet-4-5 | Quick plan review (used by Paul, not planner-paul) |
 | Metis (Plan Consultant) | - | anthropic/claude-sonnet-4-5 | Deprecated (kept for compat) |
 | Momus (Plan Reviewer) | - | anthropic/claude-sonnet-4-5 | Deprecated (kept for compat) |
 
@@ -55,7 +55,7 @@ Called by paul during execution phase.
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
-| Paul-Junior | anthropic/claude-sonnet-4-5 | Implementation agent |
+| Paul-Junior | anthropic/claude-opus-4-5 | Implementation agent |
 | frontend-ui-ux-engineer | google/gemini-3-pro-preview | UI/UX implementation |
 | ultrabrain | openai/o1 | Hard logic + security-critical implementation |
 | git-master | zai-coding-plan/glm-4.7 | Git operations |
@@ -80,7 +80,7 @@ Available to multiple agents for research tasks.
 |-------|-------|-------|---------|
 | explore | - | anthropic/claude-haiku-4-5 | Fast codebase search |
 | librarian | - | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs lookup |
-| Elijah (Deep Reasoning Advisor) | elijah | openai/gpt-5.2-codex | Deep debugging, architecture decisions |
+| Elijah (Deep Reasoning Advisor) | elijah | anthropic/claude-opus-4-5 | Deep debugging, architecture decisions |
 
 ---
 
