@@ -62,3 +62,9 @@ export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {
 }
 
 export const BYPASS_AGENTS: string[] = []
+
+// Enforce sync delegation for critical orchestrators
+// These agents MUST use run_in_background=false to prevent race conditions
+export const SYNC_DELEGATION_REQUIRED: Record<string, string[]> = {
+  "planner-paul": ["paul", "worker-paul"],
+}

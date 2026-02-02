@@ -3,7 +3,7 @@ import { getParentAgentName } from "../../features/agent-context"
 import { findNearestMessageWithFields, MESSAGE_STORAGE, type StoredMessage } from "../../features/hook-message-injector"
 import { existsSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS } from "./constants"
+import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS, SYNC_DELEGATION_REQUIRED } from "./constants"
 import { hasRecentApproval, recordApproval, getApprovalPath } from "./approval-state"
 import { log } from "../../shared/logger"
 import type { TokenAnalyticsManager } from "../../features/token-analytics"
@@ -221,6 +221,21 @@ export function createHierarchyEnforcerHook(
               `Allowed delegates for ${currentAgent}: ${allowedTargets.join(", ") || "None"}.\n` +
               `Please follow the strict chain of command.`
             )
+          }
+
+          // Enforce sync delegation for critical orchestrators
+          const requiresSync = SYNC_DELEGATION_REQUIRED[currentAgent]
+          if (requiresSync && requiresSync.some(agent => targetAgent?.toLowerCase().includes(agent.toLowerCase()))) {
+            const runInBackground = output.args.run_in_background
+            if (runInBackground === true || runInBackground === "true") {
+              log(`[${HOOK_NAME}] BLOCKED: ${currentAgent} tried to delegate to ${targetAgent} with run_in_background=true`, { sessionID: input.sessionID })
+              await showToast(client, `🚫 ${currentAgent}`, `Blocked: Must use run_in_background=false for ${targetAgent}`, "error", 5000)
+              throw new Error(
+                `[${HOOK_NAME}] SYNC DELEGATION REQUIRED: Agent '${currentAgent}' must use run_in_background=false when delegating to '${targetAgent}'.\n` +
+                `Background delegation causes race conditions and multiple agent conflicts.\n` +
+                `Please use: delegate_task(subagent_type="${targetAgent}", run_in_background=false, ...)`
+              )
+            }
           }
 
           if (currentAgent === "Paul") {
