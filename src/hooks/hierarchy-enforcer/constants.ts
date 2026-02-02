@@ -47,7 +47,7 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
    "Joshua (Test Runner)": [],
     "Paul-Junior": ["explore", "librarian"],
     "frontend-ui-ux-engineer": ["explore", "librarian"],
-    "worker-paul": ["explore", "librarian", "git-master", "document-writer"],
+    "worker-paul": ["explore", "librarian", "git-master", "document-writer", "Paul", "planner-paul", "Paul-Junior", "frontend-ui-ux-engineer"],
 }
 
 export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {

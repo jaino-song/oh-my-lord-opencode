@@ -185,7 +185,7 @@ export function createHierarchyEnforcerHook(
       const nearestMsg = messageDir ? findNearestMessageWithFields(messageDir) : null
       const currentModel = nearestMsg?.model
       
-      if (tool === "delegate_task" || tool === "task" || tool === "call_omo_agent") {
+      if (tool === "delegate_task" || tool === "task" || tool === "call_paul_agent") {
         const category = output.args.category as string | undefined
         let targetAgent = (output.args.agent || output.args.subagent_type || output.args.name) as string | undefined
         const description = (output.args.description as string) || ""
@@ -291,14 +291,17 @@ export function createHierarchyEnforcerHook(
           
           for (const todo of todos) {
             const shortTask = todo.content.slice(0, 40) + (todo.content.length > 40 ? "..." : "")
+            const isDelegationTodo = /delegat/i.test(todo.content)
             if (todo.status === "completed") {
               if (!sessionNotified.has(todo.id)) {
                 await showToast(client, "✅ Task Completed", shortTask, "success", 5000)
-                await injectNotification(client, input.sessionID, "completed", { 
-                  fromAgent: todoCurrentAgent, 
-                  toAgent: "todo", 
-                  task: todo.content 
-                }, todoCurrentAgent, currentModel)
+                if (!isDelegationTodo) {
+                  await injectNotification(client, input.sessionID, "completed", { 
+                    fromAgent: todoCurrentAgent, 
+                    toAgent: "todo", 
+                    task: todo.content 
+                  }, todoCurrentAgent, currentModel)
+                }
                 sessionNotified.add(todo.id)
               }
             } else if (todo.status === "in_progress") {
@@ -479,10 +482,6 @@ export function createHierarchyEnforcerHook(
                 }, currentAgent, currentModel)
               } else if (hasSuccess) {
                 await showToast(client, `✅ ${targetAgent || "task"} complete`, "delegation successful", "success", 5000)
-                await injectNotification(client, input.sessionID, "completed", { 
-                  fromAgent: currentAgent, toAgent: targetAgent || "Task", 
-                  task: "delegation" 
-                }, currentAgent, currentModel)
               }
             }
 

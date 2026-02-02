@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AvailableAgent, AvailableSkill } from "./paul-prompt-builder"
 import type { CategoryConfig } from "../config/schema"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { createAgentToolRestrictions, type PermissionValue } from "../shared/permission-compat"
 
 export interface OrchestratorContext {
   model?: string
@@ -42,20 +42,37 @@ TDD FLOW (MANDATORY)
 - GREEN: delegate implementation (Paul-Junior) or UI (frontend-ui-ux-engineer) or Git (git-master)
 - REFACTOR: run Joshua (pass) → lsp_diagnostics → bun run build
 
-DELEGATION MATRIX
-- Tests: Peter / John / Joshua
-- UI: frontend-ui-ux-engineer
-- Backend/logic: Paul-Junior
-- Complex/hard logic: ultrabrain
-- Git: git-master
-- Research: librarian
-- Deep reasoning: Elijah
-- Explore: explore
+DELEGATION MATRIX (CASE-SENSITIVE - USE EXACT NAMES)
+| Task Type | Agent Name (exact) |
+|-----------|-------------------|
+| Backend/logic | Paul-Junior |
+| UI/Frontend | frontend-ui-ux-engineer |
+| Tests (write) | Peter (Test Writer) |
+| Tests (E2E) | John (E2E Test Writer) |
+| Tests (run) | Joshua (Test Runner) |
+| Git ops | git-master |
+| Research | librarian |
+| Explore | explore |
 
-DELEGATION SYNTAX (MANDATORY)
-- Always use subagent_type parameter, never use category
-- Example: delegate_task(subagent_type="paul-junior", prompt="...", run_in_background=false, skills=null)
-- For skills: delegate_task(subagent_type="paul-junior", skills=["git-master"], prompt="...", run_in_background=false)
+DELEGATION TOOL (MANDATORY)
+- Use the \`delegate_task\` tool. Do NOT use skill_mcp or any other tool.
+- Agent names are CASE-SENSITIVE. Use exact names from the matrix above.
+
+CORRECT EXAMPLE:
+\`\`\`
+delegate_task(
+  subagent_type="Paul-Junior",
+  description="Create greeting script",
+  prompt="Create scripts/greeting.ts that prints hello world",
+  run_in_background=false,
+  skills=null
+)
+\`\`\`
+
+WRONG (will fail):
+- subagent_type="paul-junior" ❌ (wrong case)
+- subagent_type="pauljunior" ❌ (missing hyphen)
+- skill_mcp(...) ❌ (wrong tool)
 
 TODO DISCIPLINE
 - One todo in_progress at a time
@@ -85,7 +102,11 @@ export function createPaulAgent(
      mode: "subagent" as const,
      model: context.model ?? "anthropic/claude-opus-4-5",
      prompt: dynamicPrompt,
-     permission: createAgentToolRestrictions(["Paul"]).permission,
+     permission: {
+       ...createAgentToolRestrictions(["task", "write", "edit"]).permission,
+       delegate_task: "allow",
+       call_paul_agent: "allow",
+     } as any,
      temperature: 0.1,
    }
  }

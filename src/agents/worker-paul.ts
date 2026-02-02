@@ -68,8 +68,9 @@ If user's prompt contains the tag "--override":
 - **BYPASS** complexity checks
 - **PROCEED** with the task even if it seems complex
 - **CAN delegate to ANY agent** including orchestrators (Paul, planner-paul, Sisyphus, etc.)
-- Use call_omo_agent for subagents (explore, librarian, git-master, etc.)
+- Use call_paul_agent for subagents (explore, librarian, git-master, etc.)
 - Use delegate_task for orchestrators and complex implementation agents
+- CAN create/write plan files in .paul/plans/ if requested (normally restricted to planner-paul)
 - User takes full responsibility for the decision
 - Still maintain quality standards (tests, verification, todos)
 
@@ -90,7 +91,7 @@ BLOCKED ACTIONS (will fail if attempted):
 - task tool: BLOCKED
 - delegate_task tool: BLOCKED (unless --override is present)
 
-ALLOWED: call_omo_agent - You CAN spawn these agents for research/support:
+ALLOWED: call_paul_agent - You CAN spawn these agents for research/support:
 - explore: Fast codebase exploration
 - librarian: Multi-repo analysis, docs lookup
 - git-master: Git operations (commit, branch, etc.)
@@ -99,7 +100,7 @@ ALLOWED: call_omo_agent - You CAN spawn these agents for research/support:
 DELEGATION RULES:
 - **Without --override**: You work ALONE for implementation. No delegation.
 - **With --override**: CAN use delegate_task for orchestrators (Paul, planner-paul, Sisyphus) and any implementation agent
-- **Always**: CAN use call_omo_agent for research/support agents (explore, librarian, git-master, document-writer)
+- **Always**: CAN use call_paul_agent for research/support agents (explore, librarian, git-master, document-writer)
 </Critical_Constraints>
 
 <Work_Context>
@@ -270,8 +271,8 @@ function buildWorkerPaulPrompt(promptAppend?: string): string {
 }
 
 // Core tools that worker-paul must NEVER have access to
-// Note: call_omo_agent is ALLOWED so subagents can spawn explore/librarian
-const BLOCKED_TOOLS = ["task", "delegate_task"]
+// Note: call_paul_agent is ALLOWED so subagents can spawn explore/librarian
+const BLOCKED_TOOLS = ["task"]
 
 export const WORKER_PAUL_DEFAULTS = {
   model: "anthropic/claude-opus-4-5",
@@ -300,7 +301,8 @@ export function createWorkerPaulAgentWithOverrides(
   for (const tool of BLOCKED_TOOLS) {
     merged[tool] = "deny"
   }
-  merged.call_omo_agent = "allow"
+  merged.call_paul_agent = "allow"
+  merged.delegate_task = "allow"
   merged.question = "allow"
   const toolsConfig = { permission: { ...merged, ...basePermission } }
 

@@ -333,8 +333,8 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
 
         // Wait for message stability after prompt completes
         const POLL_INTERVAL_MS = 500
-        const MIN_STABILITY_TIME_MS = 5000
-        const STABILITY_POLLS_REQUIRED = 3
+        const MIN_STABILITY_TIME_MS = 15000
+        const STABILITY_POLLS_REQUIRED = 4
         const pollStart = Date.now()
         let lastMsgCount = 0
         let stablePolls = 0
@@ -542,10 +542,11 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
         let currentAgent = agentToUse
         let lastError: unknown = null
 
-        const POLL_INTERVAL_MS = 500
-        const MAX_POLL_TIME_MS = 10 * 60 * 1000
-        const MIN_STABILITY_TIME_MS = 10000
-        const STABILITY_POLLS_REQUIRED = 3
+const POLL_INTERVAL_MS = 500
+const MAX_POLL_TIME_MS = 10 * 60 * 1000
+const MIN_STABILITY_TIME_MS = 30000
+const STABILITY_POLLS_REQUIRED = 5
+const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
 
         for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
           try {
@@ -579,6 +580,7 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
             let stablePolls = 0
             let noOutputIdleCount = 0
             let pollCount = 0
+            let lastMsgChangeTime = Date.now()  // Track when message count last changed
 
             log("[delegate_task] Starting poll loop", { sessionID, agentToUse })
 
@@ -652,7 +654,21 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
                 noOutputIdleCount = 0
               }
 
-              // step 3: stability detection (always runs, regardless of status)
+              // step 3: no-progress timeout (catches rate limiting regardless of session status)
+              if (currentMsgCount !== lastMsgCount) {
+                lastMsgChangeTime = Date.now()
+                stablePolls = 0
+              } else {
+                const timeSinceLastProgress = Date.now() - lastMsgChangeTime
+                if (!hasValidOutput && timeSinceLastProgress >= WORKING_NO_PROGRESS_TIMEOUT_MS) {
+                  log("[delegate_task] No progress timeout", { 
+                    sessionID, timeSinceLastProgress, currentMsgCount, status: sessionStatus?.type ?? "undefined", hasValidOutput 
+                  })
+                  throw new Error(`No progress for 90s and no valid output - possible rate limiting or API stall`)
+                }
+              }
+
+              // step 4: stability detection (always runs, regardless of status)
               const elapsed = Date.now() - pollStart
               if (elapsed >= MIN_STABILITY_TIME_MS) {
                 if (currentMsgCount === lastMsgCount) {
@@ -663,8 +679,6 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
                     })
                     break  // success
                   }
-                } else {
-                  stablePolls = 0
                 }
               }
               lastMsgCount = currentMsgCount

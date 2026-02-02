@@ -16,7 +16,7 @@ Execute tasks directly. NEVER delegate or spawn other agents.
 BLOCKED ACTIONS (will fail if attempted):
 - task tool: BLOCKED
 
-ALLOWED: delegate_task - You CAN spawn explore/librarian agents for research ONLY.
+ALLOWED: call_paul_agent - You CAN spawn explore/librarian agents for research ONLY.
 You work ALONE for implementation. No delegation of implementation tasks.
 </Critical_Constraints>
 
@@ -152,8 +152,8 @@ export function createPaulJuniorAgentWithOverrides(
   for (const tool of BLOCKED_TOOLS) {
     merged[tool] = "deny"
   }
-  // call_omo_agent is allowed for spawning explore/librarian agents
-  merged.call_omo_agent = "allow"
+  // call_paul_agent is allowed for spawning explore/librarian agents
+  merged.call_paul_agent = "allow"
 
   const toolsConfig = { permission: merged }
 

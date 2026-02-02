@@ -623,6 +623,36 @@ export function createPaulOrchestratorHook(
         return
       }
 
+      // Check bash commands for file-writing patterns
+      if (input.tool === "bash" || input.tool === "Bash") {
+        const command = output.args.command as string | undefined
+        if (command) {
+          const dangerousPatterns = [
+            />(?!\s*\/dev\/null)/,  // Output redirection
+            />>/,                    // Append redirection
+            /\becho\s+.*>/,          // echo to file
+            /\bprintf\s+.*>/,        // printf to file
+            /\bcat\s+.*>/,           // cat to file
+            /\btee\s+/,              // tee command
+            /<<\s*['"]?EOF/i,        // Here-doc
+            /<<\s*['"]?END/i,        // Here-doc
+          ]
+          
+          const isDangerous = dangerousPatterns.some(p => p.test(command))
+          if (isDangerous) {
+            log(`[${HOOK_NAME}] BLOCKED: Orchestrator attempted file-writing bash command`, {
+              sessionID: input.sessionID,
+              command: command.substring(0, 200),
+            })
+            throw new Error(
+              `[${HOOK_NAME}] VIOLATION BLOCKED: You (Orchestrator) attempted to write files via bash.\n` +
+              `Protocol: You MUST delegate implementation to subagents (Paul-Junior, frontend-ui-ux, etc.).\n` +
+              `Action: Use delegate_task() to assign this work.`
+            )
+          }
+        }
+      }
+
       // Check delegate_task - inject single-task directive
       if (input.tool === "delegate_task") {
         const prompt = output.args.prompt as string | undefined

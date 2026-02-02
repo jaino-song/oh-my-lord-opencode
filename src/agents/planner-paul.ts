@@ -303,6 +303,7 @@ export const PLANNER_PAUL_PERMISSION = {
   bash: "allow" as const,
   webfetch: "allow" as const,
   question: "allow" as const,
+  delegate_task: "allow" as const,
 }
 
 export const plannerPaulAgent: AgentConfig = {

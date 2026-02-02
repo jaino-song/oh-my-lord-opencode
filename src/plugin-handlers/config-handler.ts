@@ -248,11 +248,11 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     }
      if (agentResult["Paul"]) {
        const agent = agentResult["Paul"] as AgentWithPermission;
-       agent.permission = { ...agent.permission, task: "deny", call_omo_agent: "deny", delegate_task: "allow" };
+       agent.permission = { ...agent.permission, task: "deny", call_paul_agent: "deny", delegate_task: "allow" };
      }
     if (agentResult["Prometheus (Planner)"]) {
       const agent = agentResult["Prometheus (Planner)"] as AgentWithPermission;
-      agent.permission = { ...agent.permission, call_omo_agent: "deny", delegate_task: "allow" };
+      agent.permission = { ...agent.permission, call_paul_agent: "deny", delegate_task: "allow" };
     }
     if (agentResult["Paul-Junior"]) {
       const agent = agentResult["Paul-Junior"] as AgentWithPermission;
@@ -260,14 +260,13 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     }
      if (agentResult["planner-paul"]) {
       const agent = agentResult["planner-paul"] as AgentWithPermission;
-      agent.permission = { ...agent.permission, call_omo_agent: "deny", delegate_task: "allow" };
+      agent.permission = { ...agent.permission, call_paul_agent: "deny", delegate_task: "allow" };
     }
 
     config.permission = {
       ...(config.permission as Record<string, unknown>),
       webfetch: "allow",
       external_directory: "allow",
-      delegate_task: "deny",
     };
 
     const mcpResult = (pluginConfig.claude_code?.mcp ?? true)
