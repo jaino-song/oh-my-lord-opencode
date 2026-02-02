@@ -504,13 +504,13 @@ export function createPaulOrchestratorHook(
         }
 
 
-        if (!boulderState) {
+         if (!boulderState) {
           log(`[${HOOK_NAME}] No active boulder`, { sessionID })
           return
         }
 
-         if (!isCallerOrchestrator(sessionID)) {
-           log(`[${HOOK_NAME}] Skipped: last agent is not Paul`, { sessionID })
+         if (!isCallerOrchestrator(sessionID) && !isBoulderSession) {
+           log(`[${HOOK_NAME}] Skipped: not orchestrator or boulder session`, { sessionID })
            return
          }
 

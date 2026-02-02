@@ -832,7 +832,7 @@ describe("paul-orchestrator hook", () => {
       expect(callArgs.body.parts[0].text).toContain("2 remaining")
     })
 
-     test("should not inject when last agent is not orchestrator-paul", async () => {
+     test("should inject continuation for boulder sessions even when last agent is not Paul", async () => {
        // #given - boulder state with incomplete plan, but last agent is NOT Paul
        const planPath = join(TEST_DIR, "test-plan.md")
        writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2")
@@ -845,7 +845,7 @@ describe("paul-orchestrator hook", () => {
        }
        writeBoulderState(TEST_DIR, state)
 
-       // #given - last agent is NOT Paul
+       // #given - last agent is NOT Paul (e.g., Paul-Junior completed the work)
        cleanupMessageStorage(MAIN_SESSION_ID)
        setupMessageStorage(MAIN_SESSION_ID, "Paul-Junior")
 
@@ -860,8 +860,8 @@ describe("paul-orchestrator hook", () => {
          },
        })
 
-       // #then - should NOT call prompt because agent is not Paul
-       expect(mockInput._promptMock).not.toHaveBeenCalled()
+       // #then - SHOULD call prompt because session is part of boulder (not just because agent is Paul)
+       expect(mockInput._promptMock).toHaveBeenCalled()
      })
 
     test("should debounce rapid continuation injections (prevent infinite loop)", async () => {
