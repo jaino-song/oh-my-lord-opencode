@@ -49,33 +49,27 @@ export function isGptModel(model: string): boolean {
 }
 
 export type BuiltinAgentName =
-   | "Saul"
-   | /** @deprecated Use 'librarian' instead */
-   "oracle"
-   | "librarian"
-   | "explore"
-   | "frontend-ui-ux-engineer"
-   | "document-writer"
-   | "multimodal-looker"
-   | /** @deprecated Legacy plan consultant agent */
-   "Metis (Plan Consultant)"
-   | /** @deprecated Legacy plan reviewer agent */
-   "Momus (Plan Reviewer)"
+  | "Saul"
+  | "oracle"
+  | "librarian"
+  | "explore"
+  | "frontend-ui-ux-engineer"
+  | "document-writer"
+  | "multimodal-looker"
   | "Ezra (Plan Reviewer)"
   | "Nathan (Request Analyst)"
-   | "Elijah (Deep Reasoning Advisor)"
-   | "Paul"
-   | "Solomon (TDD Planner)"
+  | "Elijah (Deep Reasoning Advisor)"
+  | "Paul"
+  | "Solomon (TDD Planner)"
   | "Peter (Test Writer)"
   | "John (E2E Test Writer)"
   | "Joshua (Test Runner)"
   | "Thomas (TDD Plan Consultant)"
   | "planner-paul"
   | "Timothy (Implementation Plan Reviewer)"
-   | "worker-paul"
-   | "Paul-Junior"
-   | "git-master"
-  | "ultrabrain"
+  | "worker-paul"
+  | "Paul-Junior"
+  | "git-master"
 
 export type OverridableAgentName =
   | "build"

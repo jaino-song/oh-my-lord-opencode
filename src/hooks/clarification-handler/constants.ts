@@ -7,7 +7,6 @@ export const MAX_ITERATIONS = 3
 export const ENABLED_AGENTS = [
   "paul-junior",
   "frontend-ui-ux-engineer",
-  "ultrabrain",
 ] as const
 
 export const POLL_INTERVAL_MS = 1000

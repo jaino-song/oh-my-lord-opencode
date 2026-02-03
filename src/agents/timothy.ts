@@ -107,6 +107,18 @@ SUMMARY: needs_revision; issues: 2
 
 ---
 
+## COMPLETION (MANDATORY)
+
+When you finish your review, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Your full JSON review output here" })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.
+
+---
+
 ## CONSTRAINTS REMINDER
 
 - **READ-ONLY**: You do NOT implement or modify files

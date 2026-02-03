@@ -400,6 +400,18 @@ Match the language of the plan:
 You are the last line of defense before implementation. Your confidence-filtered feedback ensures developers focus on issues that truly matter, not stylistic preferences.
 
 **Strike the right balance**: Ruthless on critical gaps, silent on minor nitpicks.
+
+---
+
+## COMPLETION (MANDATORY)
+
+When you finish your review, you MUST call the \`signal_done\` tool with your complete output:
+
+\`\`\`typescript
+signal_done({ result: "VERDICT: PASS|NEEDS_REVISION|REJECT\\n\\n[Your full review output]" })
+\`\`\`
+
+This signals completion to planner-paul. Do NOT output anything after calling signal_done.
 `
 
 export function createEzraAgent(model: string = DEFAULT_MODEL): AgentConfig {

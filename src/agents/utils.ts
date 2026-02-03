@@ -7,17 +7,13 @@ import type {
   AgentPromptMetadata,
 } from "./types"
 import type { GitMasterConfig } from "../config/schema"
-// @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
 import { createOracleAgent, ORACLE_PROMPT_METADATA } from "./oracle"
 import { createLibrarianAgent, LIBRARIAN_PROMPT_METADATA } from "./librarian"
 import { createExploreAgent, EXPLORE_PROMPT_METADATA } from "./explore"
 import { createFrontendUiUxEngineerAgent, FRONTEND_PROMPT_METADATA } from "./frontend-ui-ux-engineer"
 import { createDocumentWriterAgent, DOCUMENT_WRITER_PROMPT_METADATA } from "./document-writer"
 import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "./multimodal-looker"
-// @deprecated Use specialized agents (Solomon, Timothy) instead
-import { createMetisAgent } from "./metis"
 import { createPaulAgent, paulAgent } from "./paul"
-import { createMomusAgent } from "./momus"
 import { createEzraAgent, EZRA_PROMPT_METADATA } from "./ezra"
 import { createNathanAgent, NATHAN_PROMPT_METADATA } from "./nathan"
 import { createElijahAgent, ELIJAH_PROMPT_METADATA } from "./elijah"
@@ -32,7 +28,6 @@ import { createWorkerPaulAgentWithOverrides, workerPaulAgent } from "./worker-pa
 import { createPaulJuniorAgentWithOverrides } from "./paul-junior"
 import { createSaulAgentWithOverrides, saulAgent } from "./saul"
 import { createGitMasterAgent, GIT_MASTER_PROMPT_METADATA } from "./git-master"
-import { createUltrabrainAgent, ULTRABRAIN_PROMPT_METADATA } from "./ultrabrain"
 import type { AvailableAgent } from "./paul-prompt-builder"
 import { deepMerge } from "../shared"
 
@@ -52,22 +47,18 @@ const USER_SELECTABLE_AGENTS: BuiltinAgentName[] = [
 ]
 
 const agentSources: Record<BuiltinAgentName, AgentSource> = {
-   Saul: saulAgent,
-   // @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
-   oracle: createOracleAgent,
-   librarian: createLibrarianAgent,
+  Saul: saulAgent,
+  oracle: createOracleAgent,
+  librarian: createLibrarianAgent,
   explore: createExploreAgent,
   "frontend-ui-ux-engineer": createFrontendUiUxEngineerAgent,
   "document-writer": createDocumentWriterAgent,
-   "multimodal-looker": createMultimodalLookerAgent,
-   // @deprecated Use specialized agents (Solomon, Timothy) instead
-   "Metis (Plan Consultant)": createMetisAgent,
-   "Momus (Plan Reviewer)": createMomusAgent,
+  "multimodal-looker": createMultimodalLookerAgent,
   "Ezra (Plan Reviewer)": createEzraAgent,
   "Nathan (Request Analyst)": createNathanAgent,
   "Elijah (Deep Reasoning Advisor)": createElijahAgent,
-   "Paul": paulAgent,
-   "Solomon (TDD Planner)": createSolomonAgent,
+  "Paul": paulAgent,
+  "Solomon (TDD Planner)": createSolomonAgent,
   "Joshua (Test Runner)": createJoshuaAgent,
   "Peter (Test Writer)": createPeterAgent,
   "John (E2E Test Writer)": createJohnAgent,
@@ -75,9 +66,8 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   "planner-paul": createPlannerPaulAgent,
   "Timothy (Implementation Plan Reviewer)": createTimothyAgent,
   "worker-paul": workerPaulAgent,
-   "Paul-Junior": (model?: string) => createPaulJuniorAgentWithOverrides(undefined, model),
+  "Paul-Junior": (model?: string) => createPaulJuniorAgentWithOverrides(undefined, model),
   "git-master": createGitMasterAgent,
-  "ultrabrain": createUltrabrainAgent,
 }
 
 /**
@@ -85,9 +75,8 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
  * (Delegation Table, Tool Selection, Key Triggers, etc.)
  */
 const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
-   // @deprecated Use specialized agents (Ezra, Nathan, Elijah) instead
-   oracle: ORACLE_PROMPT_METADATA,
-   librarian: LIBRARIAN_PROMPT_METADATA,
+  oracle: ORACLE_PROMPT_METADATA,
+  librarian: LIBRARIAN_PROMPT_METADATA,
   explore: EXPLORE_PROMPT_METADATA,
   "frontend-ui-ux-engineer": FRONTEND_PROMPT_METADATA,
   "document-writer": DOCUMENT_WRITER_PROMPT_METADATA,
@@ -101,7 +90,6 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   "Nathan (Request Analyst)": NATHAN_PROMPT_METADATA,
   "Elijah (Deep Reasoning Advisor)": ELIJAH_PROMPT_METADATA,
   "git-master": GIT_MASTER_PROMPT_METADATA,
-  "ultrabrain": ULTRABRAIN_PROMPT_METADATA,
 }
 
 function isFactory(source: AgentSource): source is AgentFactory {

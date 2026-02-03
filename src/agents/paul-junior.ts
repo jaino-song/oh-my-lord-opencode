@@ -107,7 +107,19 @@ recommendation: a
 - Start immediately. No acknowledgments.
 - Match user's communication style.
 - Dense > verbose.
-</Style>`
+</Style>
+
+<Completion>
+## COMPLETION (MANDATORY)
+
+When you finish your implementation task, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Completed: [brief summary of what was implemented]. Files: [list of files created/modified]." })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.
+</Completion>`
 
 function buildPaulJuniorPrompt(promptAppend?: string): string {
   if (!promptAppend) return PAUL_JUNIOR_PROMPT

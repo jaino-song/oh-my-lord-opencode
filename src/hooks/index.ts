@@ -30,13 +30,15 @@ export { createEditErrorRecoveryHook } from "./edit-error-recovery";
 export { createPlannerMdOnlyHook, createPrometheusMdOnlyHook } from "./planner-md-only";
 export { createTaskResumeInfoHook } from "./task-resume-info";
 export { createHitItHook } from "./hit-it";
-export { createPaulOrchestratorHook } from "./paul-orchestrator";
+export { createPaulOrchestratorHook } from "./paul";
 export { createClarificationHandlerHook } from "./clarification-handler";
 export { createDelegateTaskRetryHook } from "./delegate-task-retry";
 export { createTddEnforcementHook } from "./tdd-enforcement";
 export { createStrictWorkflowHook } from "./strict-workflow";
-export { createHierarchyEnforcerHook } from "./hierarchy-enforcer";
+export { createHierarchyEnforcerHook, stripAllSystemInjections } from "./hierarchy-enforcer";
 export { createParallelSafetyEnforcerHook } from "./parallel-safety-enforcer";
+export { createTodoNotificationHook, clearNotifiedTodos } from "./todo-notification";
+export { createDelegationNotificationHook } from "./delegation-notification";
 
 /**
  * Sorts hooks by priority in descending order (highest priority first).

@@ -360,7 +360,7 @@ describe("CategoryConfigSchema", () => {
 describe("BuiltinCategoryNameSchema", () => {
   test("accepts all builtin category names", () => {
     // #given
-    const categories = ["visual-engineering", "ultrabrain", "artistry", "quick", "most-capable", "writing", "general"]
+    const categories = ["visual-engineering", "artistry", "quick", "most-capable", "writing", "general"]
 
     // #when / #then
     for (const cat of categories) {

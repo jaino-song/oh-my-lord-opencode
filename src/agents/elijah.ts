@@ -355,6 +355,18 @@ Every response MUST include a Devil's Advocate section:
 - Include Devil's Advocate
 - Be decisive - give a clear recommendation
 - Estimate effort for each action
+
+---
+
+## COMPLETION (MANDATORY)
+
+When you finish your consultation, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Your full consultation output (Bottom Line + Action Plan + Confidence)" })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.
 `
 
 const elijahRestrictions = createAgentToolRestrictions([

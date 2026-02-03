@@ -37,6 +37,8 @@ import {
   createStrictWorkflowHook,
   createHierarchyEnforcerHook,
   createParallelSafetyEnforcerHook,
+  createTodoNotificationHook,
+  createDelegationNotificationHook,
 } from "./hooks";
 import { TokenAnalyticsManager, createTokenAnalyticsHook, createTokenReportTool } from "./features/token-analytics";
 import {
@@ -210,7 +212,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createHitItHook(ctx)
     : null;
 
-  const paulOrchestrator = isHookEnabled("paul-orchestrator")
+  const paulOrchestrator = isHookEnabled("paul")
     ? createPaulOrchestratorHook(ctx)
     : null;
 
@@ -241,7 +243,15 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
    const tokenReportTool = createTokenReportTool(tokenAnalyticsManager);
 
    const hierarchyEnforcer = isHookEnabled("hierarchy-enforcer")
-     ? createHierarchyEnforcerHook(ctx, { tokenAnalytics: tokenAnalyticsManager })
+     ? createHierarchyEnforcerHook(ctx)
+     : null;
+   
+   const todoNotification = isHookEnabled("todo-notification")
+     ? createTodoNotificationHook(ctx)
+     : null;
+   
+   const delegationNotification = isHookEnabled("delegation-notification")
+     ? createDelegationNotificationHook(ctx)
      : null;
 
   // TEMPORARILY DISABLED - re-enable by uncommenting below
@@ -530,6 +540,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await strictWorkflow?.["tool.execute.before"]?.(input, output);
       await hierarchyEnforcer?.["tool.execute.before"]?.(input, output);
       await parallelSafetyEnforcer?.["tool.execute.before"]?.(input, output);
+      await todoNotification?.["tool.execute.before"]?.(input, output);
       await paulOrchestrator?.["tool.execute.before"]?.(input, output);
 
       if (input.tool === "task") {
@@ -594,7 +605,7 @@ await editErrorRecovery?.["tool.execute.after"](input, output);
         await paulOrchestrator?.["tool.execute.after"]?.(input, output);
         await tddEnforcement?.["tool.execute.after"]?.(input, output);
         await strictWorkflow?.["tool.execute.after"]?.(input, output);
-        await hierarchyEnforcer?.["tool.execute.after"]?.(input, output);
+        await delegationNotification?.["tool.execute.after"]?.(input, output);
         await parallelSafetyEnforcer?.["tool.execute.after"]?.(input, output);
       await taskResumeInfo["tool.execute.after"](input, output);
       await tokenAnalyticsHook["tool.execute.after"]?.(input, output);

@@ -108,7 +108,17 @@ Organize your final answer in three tiers:
 
 ## Critical Note
 
-Your response goes directly to the user with no intermediate processing. Make your final message self-contained: a clear recommendation they can act on immediately, covering both what to do and why.`
+Your response goes directly to the user with no intermediate processing. Make your final message self-contained: a clear recommendation they can act on immediately, covering both what to do and why.
+
+## COMPLETION (MANDATORY)
+
+When you finish your consultation, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Your consultation output (Bottom Line + Action Plan)" })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.`
 
 export function createOracleAgent(model: string = DEFAULT_MODEL): AgentConfig {
   const restrictions = createAgentToolRestrictions([

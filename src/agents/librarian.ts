@@ -321,6 +321,18 @@ grep_app_searchGitHub(query: "useQuery")
 4. **USE MARKDOWN**: Code blocks with language identifiers
 5. **BE CONCISE**: Facts > opinions, evidence > speculation
 
+---
+
+## COMPLETION (MANDATORY)
+
+When you finish your research, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Your research findings with evidence and permalinks" })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.
+
 `,
   }
 }

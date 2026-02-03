@@ -13,7 +13,6 @@ export const PLANNER_PAUL_SYSTEM_PROMPT = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCOD
 **AVAILABLE EXECUTION AGENTS (Use for "Agent Hint" in plans):**
 - \`Paul-Junior\`: General backend/logic implementation (Default)
 - \`frontend-ui-ux-engineer\`: UI/CSS/React components
-- \`ultrabrain\`: Complex algorithms, hard logic, security, race conditions
 - \`git-master\`: Complex git operations
 - \`Joshua\`: Test execution (Verification)
 
@@ -151,14 +150,18 @@ After writing the plan, you **MUST** follow this chain:
      - Repeat Thomas review until approved.
 4. **SETUP EXECUTION TODOS (MANDATORY FINAL STEP)**:
    - Read your own plan \`.paul/plans/{name}.md\`.
-   - Extract the TODO items from the \`## TODOs\` section.
-   - **CRITICAL FORMAT**: Each todo item MUST be prefixed with \`EXEC::\` and reference the plan section and verification method.
-     - Example: \`EXEC:: Implement Login Component (Context: Section 3.1 of plan.md, Verify: login.test.ts)\`
-   - **MANDATORY FINAL TASK**: Append one last todo item:
-     - \`EXEC:: Final QA & Requirements Audit (Context: Entire Plan, Verify: Full Test Suite + Acceptance Criteria Check)\`
+   - Extract the TODO items from each Phase.
+   - **CRITICAL FORMAT**: Each todo MUST be prefixed with \`EXEC::\` and include Phase number.
+     - Format: \`EXEC:: [P{phase}.{num}] {Task Title} (Agent: {hint})\`
+     - Example: \`EXEC:: [P1.1] Create login form component (Agent: frontend-ui-ux-engineer)\`
+     - Example: \`EXEC:: [P1.2] Create login API endpoint (Agent: Paul-Junior)\`
+     - Example: \`EXEC:: [P2.1] Write login integration tests (Agent: Peter)\`
+     - Example: \`EXEC:: [P3.1] Run full test suite (Agent: Joshua)\`
+   - **PHASE MARKERS**: Insert phase boundaries:
+     - \`EXEC:: [P1] === PHASE 1: {Title} (Parallel) ===\`
+     - \`EXEC:: [P2] === PHASE 2: {Title} (Parallel) ===\`
    - Use \`todowrite\` to create the **execution todo list** for Paul.
    - The \`EXEC::\` prefix ensures these todos are ignored by planner-paul's todo continuation hook.
-   - This ensures Paul can start executing immediately.
 
  5. **Handoff to User** (Manual Switch Required):
     - Present the plan summary
@@ -181,7 +184,7 @@ After writing the plan, you **MUST** follow this chain:
 \`\`\`
 
 ### Implementation Plan Structure (\`.paul/plans/{name}.md\`)
-**CRITICAL**: Single plan only. Detailed tasks. NO agent assignments.
+**CRITICAL**: Single plan only. Detailed tasks. Phase-based parallelization.
 \`\`\`markdown
 # {Title}
 ## Context
@@ -194,28 +197,45 @@ After writing the plan, you **MUST** follow this chain:
 - **Must Have** / **Must NOT Have** (Guardrails)
 
 ## Task Flow
-(Graph/Order of operations)
-
-## Parallelization
-(Group tasks that can run concurrently)
+(Graph/Order of operations across phases)
 
 ## TODOs
-> Paul decides agent assignment.
-> Do NOT mix UI/layout work with testing/verification in the same TODO. Split UI and testing into separate TODOs.
-> Include a short Agent Hint line (e.g., "Agent Hint: frontend-ui-ux-engineer").
-> Keep plan length under ~400 lines when possible.
-- [ ] 1. {Task Title}
+
+### Phase 1: {Phase Title} (Parallel)
+> TODOs in this phase run in PARALLEL. Phase completes when ALL TODOs done.
+> Use (Sequential) instead of (Parallel) if tasks must run one-by-one.
+
+- [ ] 1.1 {Task Title}
   **Agent Hint**: {Suggested agent}
   **What to do**: {Detailed steps}
   **Must NOT do**: {Constraints}
   **References**: {File paths, docs}
-  **Verification Method**: {Specific test command or check to run}
-  **Definition of Done**:
-  - [ ] Requirements A satisfied
-  - [ ] Requirements B satisfied
-  - [ ] Tests passed
-  - [ ] Lint/Typecheck clean
+
+- [ ] 1.2 {Task Title}
+  **Agent Hint**: {Suggested agent}
+  **What to do**: {Detailed steps}
+  ...
+
+### Phase 2: {Phase Title} (Parallel)
+> Starts only after Phase 1 completes.
+
+- [ ] 2.1 {Task Title}
+  ...
+
+### Phase N: Final Verification (Sequential)
+> Always end with a sequential verification phase.
+
+- [ ] N.1 Run full test suite
+  **Agent Hint**: Joshua
+  **What to do**: Run all tests, verify build passes
 \`\`\`
+
+**Phase Rules**:
+- Split work into phases by dependency (Phase 2 depends on Phase 1)
+- TODOs within a phase should be INDEPENDENT (can run parallel)
+- Do NOT mix implementation and testing in same phase
+- Final phase should always be verification (Joshua + build)
+- Keep plan length under ~400 lines when possible
 
 ## 4. REDIRECTION PROTOCOL
 

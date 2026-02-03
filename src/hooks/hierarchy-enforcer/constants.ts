@@ -1,69 +1,49 @@
 export const HOOK_NAME = "hierarchy-enforcer"
 
+/**
+ * Agent delegation permissions. Lookup is case-insensitive.
+ * Only canonical casing needed per agent.
+ */
 export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
-  "User": ["Paul", "paul", "planner-paul"], 
+  "User": ["Paul", "planner-paul", "worker-paul"], 
 
-   "planner-paul": [
-    "Nathan (Request Analyst)", "nathan",
-    "Solomon (TDD Planner)", "solomon",
-    "Thomas (TDD Plan Consultant)", "thomas",
-    "Ezra (Plan Reviewer)", "ezra",
+  "planner-paul": [
+    "Nathan (Request Analyst)",
+    "Solomon (TDD Planner)",
+    "Thomas (TDD Plan Consultant)",
+    "Ezra (Plan Reviewer)",
     "explore",
-    "librarian",
-    "background-agent"
+    "librarian"
   ],
 
-  "Timothy (Implementation Plan Reviewer)": [],
-  "timothy": [],
+  // DISABLED: Timothy - unclear role, not documented in agent prompts
+  // "Timothy (Implementation Plan Reviewer)": [],
 
   "Solomon (TDD Planner)": ["explore", "librarian"],
-  "solomon": ["explore", "librarian"],
-
   "Thomas (TDD Plan Consultant)": [],
-  "thomas": [],
-  
   "Nathan (Request Analyst)": ["explore", "librarian"],
-  "nathan": ["explore", "librarian"],
 
   "Paul": [
-    "Joshua (Test Runner)", "joshua",
+    "Joshua (Test Runner)",
     "Paul-Junior",
     "frontend-ui-ux-engineer",
-    "ultrabrain",
     "git-master",
     "explore",
     "librarian",
-    "Elijah (Deep Reasoning Advisor)", "elijah",
-    "Solomon (TDD Planner)", "solomon",
-    "Peter (Test Writer)", "peter",
-    "John (E2E Test Writer)", "john",
-    "Timothy (Implementation Plan Reviewer)", "timothy",
-    "Nathan (Request Analyst)", "nathan",
-    "Thomas (TDD Plan Consultant)", "thomas"
-  ],
-  "paul": [
-    "Joshua (Test Runner)", "joshua",
-    "Paul-Junior",
-    "frontend-ui-ux-engineer",
-    "ultrabrain",
-    "git-master",
-    "explore",
-    "librarian",
-    "Elijah (Deep Reasoning Advisor)", "elijah",
-    "Solomon (TDD Planner)", "solomon",
-    "Peter (Test Writer)", "peter",
-    "John (E2E Test Writer)", "john",
-    "Timothy (Implementation Plan Reviewer)", "timothy",
-    "Nathan (Request Analyst)", "nathan",
-    "Thomas (TDD Plan Consultant)", "thomas"
+    "Elijah (Deep Reasoning Advisor)",
+    "Solomon (TDD Planner)",
+    "Peter (Test Writer)",
+    "John (E2E Test Writer)",
+    "Nathan (Request Analyst)",
+    "Thomas (TDD Plan Consultant)"
   ],
 
   "Joshua (Test Runner)": [],
-  "joshua": [],
-  
   "Paul-Junior": ["explore", "librarian"],
   "frontend-ui-ux-engineer": ["explore", "librarian"],
-  "worker-paul": ["explore", "librarian", "git-master", "document-writer", "Paul", "paul", "planner-paul", "Paul-Junior", "frontend-ui-ux-engineer"],
+  
+  // --override required for Paul/planner-paul/Paul-Junior/frontend-ui-ux-engineer
+  "worker-paul": ["explore", "librarian", "git-master", "document-writer"]
 }
 
 export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {

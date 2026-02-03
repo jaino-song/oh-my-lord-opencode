@@ -26,8 +26,6 @@
           "frontend-ui-ux-engineer",
           "document-writer",
           "multimodal-looker",
-          "Metis (Plan Consultant)",
-          "Momus (Plan Reviewer)",
           "Paul",
           "Solomon (TDD Planner)",
           "Peter (Test Writer)",
@@ -87,11 +85,13 @@
           "planner-md-only",
           "prometheus-md-only",
           "hit-it",
-          "paul-orchestrator",
+          "paul",
           "tdd-enforcement",
           "strict-workflow",
           "hierarchy-enforcer",
-          "parallel-safety-enforcer"
+          "parallel-safety-enforcer",
+          "todo-notification",
+          "delegation-notification"
         ]
       }
     },

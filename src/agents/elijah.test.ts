@@ -161,20 +161,19 @@ describe("ELIJAH_SYSTEM_PROMPT constraints", () => {
 })
 
 describe("createElijahAgent factory function", () => {
-  test("createElijahAgent with default model returns GPT-5.2-codex config", () => {
+  test("createElijahAgent with default model returns Claude Opus config", () => {
     const agent = createElijahAgent()
 
-    expect(agent.model).toBe("openai/gpt-5.2-codex")
+    expect(agent.model).toBe("anthropic/claude-opus-4-5")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
 
-  test("createElijahAgent with default model has HIGH reasoningEffort (not medium)", () => {
+  test("createElijahAgent with default model has thinking enabled (Claude)", () => {
     const agent = createElijahAgent()
 
-    expect(agent.reasoningEffort).toBe("high")
-    expect(agent.textVerbosity).toBe("high")
-    expect(agent.thinking).toBeUndefined()
+    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+    expect(agent.reasoningEffort).toBeUndefined()
   })
 
   test("createElijahAgent with Claude model has 64k budgetTokens (not 32k)", () => {
@@ -199,9 +198,15 @@ describe("createElijahAgent factory function", () => {
 })
 
 describe("Elijah vs Oracle config differences", () => {
-  test("reasoningEffort should be 'high' not 'medium'", () => {
+  test("default model uses Claude with thinking enabled", () => {
     const agent = createElijahAgent()
+    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+  })
+
+  test("GPT model uses high reasoningEffort", () => {
+    const agent = createElijahAgent("openai/gpt-5.2")
     expect(agent.reasoningEffort).toBe("high")
+    expect(agent.thinking).toBeUndefined()
   })
 
   test("budgetTokens should be 64000 not 32000 for Claude", () => {
@@ -283,7 +288,7 @@ describe("ELIJAH_PROMPT_METADATA", () => {
 describe("elijahAgent default export", () => {
   test("elijahAgent is properly configured", () => {
     expect(elijahAgent).toBeDefined()
-    expect(elijahAgent.model).toBe("openai/gpt-5.2-codex")
+    expect(elijahAgent.model).toBe("anthropic/claude-opus-4-5")
     expect(elijahAgent.prompt).toBe(ELIJAH_SYSTEM_PROMPT)
   })
 

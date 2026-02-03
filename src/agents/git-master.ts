@@ -19,6 +19,16 @@ const GIT_MASTER_PROMPT = `You are git-master, a specialized agent for Git opera
 - Verify status before and after operations
 - Use safe commands (avoid --force unless absolutely necessary)
 - Write clear, conventional commit messages
+
+## COMPLETION (MANDATORY)
+
+When you finish your git operation, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Completed: [brief summary of git operation]. Result: [commit SHA, branch name, or status]." })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.
 `
 
 const RESTRICTIONS = createAgentToolRestrictions([

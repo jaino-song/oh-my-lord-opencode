@@ -26,6 +26,8 @@ import {
   session_info,
 } from "./session-manager"
 
+import { signal_done } from "./signal-done"
+
 export { sessionExists } from "./session-manager/storage"
 
 export { interactive_bash, startBackgroundCheck as startTmuxCheck } from "./interactive-bash"
@@ -46,6 +48,8 @@ type OpencodeClient = PluginInput["client"]
 export { createCallPaulAgent } from "./call-paul-agent"
 export { createLookAt } from "./look-at"
 export { createDelegateTask, type DelegateTaskToolOptions } from "./delegate-task"
+export { createExecutePhase, type ExecutePhaseToolOptions } from "./execute-phase"
+export { SIGNAL_DONE_TOOL_NAME } from "./signal-done"
 
 export function createBackgroundTools(manager: BackgroundManager, client: OpencodeClient): Record<string, ToolDefinition> {
   return {
@@ -69,4 +73,5 @@ export const builtinTools: Record<string, ToolDefinition> = {
   session_read,
   session_search,
   session_info,
+  signal_done,
 }

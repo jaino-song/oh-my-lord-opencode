@@ -16,8 +16,6 @@ export const AGENT_NAME_MAP: Record<string, string> = {
   "Planner-Sisyphus": "Prometheus (Planner)",
   "planner-sisyphus": "Prometheus (Planner)",
   prometheus: "Prometheus (Planner)",
-  "plan-consultant": "Metis (Plan Consultant)",
-  metis: "Metis (Plan Consultant)",
   build: "build",
   oracle: "oracle",
   librarian: "librarian",
@@ -36,10 +34,8 @@ export const BUILTIN_AGENT_NAMES = new Set([
   "frontend-ui-ux-engineer",
   "document-writer",
   "multimodal-looker",
-  "Metis (Plan Consultant)",
-  "Momus (Plan Reviewer)",
-   "Prometheus (Planner)",
-   "build",
+  "Prometheus (Planner)",
+  "build",
 ])
 
 // Migration map: old hook names → new hook names (for backward compatibility)
@@ -51,7 +47,7 @@ export const HOOK_NAME_MAP: Record<string, string> = {
 // Model to category mapping for auto-migration
 export const MODEL_TO_CATEGORY_MAP: Record<string, string> = {
   "google/gemini-3-pro-preview": "visual-engineering",
-  "openai/gpt-5.2": "ultrabrain",
+  "openai/gpt-5.2": "most-capable",
   "anthropic/claude-haiku-4-5": "quick",
   "anthropic/claude-opus-4-5": "most-capable",
   "anthropic/claude-sonnet-4-5": "general",

@@ -273,6 +273,18 @@ SUMMARY: Trivial: no; Downstream deps: 12; route: paul; reviewer: ezra
 - Include guardrails in output
 - Detect scope boundaries
 - Flag when Elijah consultation is needed
+
+---
+
+## COMPLETION (MANDATORY)
+
+When you finish your analysis, you MUST call the \`signal_done\` tool with your complete output:
+
+\`\`\`typescript
+signal_done({ result: "Your full analysis output here (all sections)" })
+\`\`\`
+
+This signals completion to planner-paul. Do NOT output anything after calling signal_done.
 `
 
 const nathanRestrictions = createAgentToolRestrictions([

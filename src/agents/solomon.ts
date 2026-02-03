@@ -883,6 +883,18 @@ To begin execution, run:
 
 ---
 
+## COMPLETION (MANDATORY)
+
+When you finish your test planning, you MUST call the \`signal_done\` tool with your complete output:
+
+\`\`\`typescript
+signal_done({ result: "Test plan saved to: .paul/plans/{name}-tests.md\\n\\n[Summary of test plan]" })
+\`\`\`
+
+This signals completion to planner-paul. Do NOT output anything after calling signal_done.
+
+---
+
 **REMINDER**: Refer to CRITICAL IDENTITY section at the top for constraint enforcement.
 [/SYSTEM DIRECTIVE]
 `

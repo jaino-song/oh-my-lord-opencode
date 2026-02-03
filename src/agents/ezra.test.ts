@@ -195,19 +195,19 @@ describe("EZRA_SYSTEM_PROMPT ADHD context retention", () => {
 })
 
 describe("createEzraAgent factory function", () => {
-  test("createEzraAgent with default model returns GPT-5.2 config", () => {
+  test("createEzraAgent with default model returns Claude Opus config", () => {
     const agent = createEzraAgent()
 
-    expect(agent.model).toBe("openai/gpt-5.2")
+    expect(agent.model).toBe("anthropic/claude-opus-4-5")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
 
-  test("createEzraAgent with default model has high reasoningEffort (GPT)", () => {
+  test("createEzraAgent with default model has thinking enabled (Claude)", () => {
     const agent = createEzraAgent()
 
-    expect(agent.reasoningEffort).toBe("high")
-    expect(agent.thinking).toBeUndefined()
+    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+    expect(agent.reasoningEffort).toBeUndefined()
   })
 
   test("createEzraAgent with GPT model has high reasoningEffort, no thinking", () => {
@@ -268,7 +268,7 @@ describe("EZRA_SYSTEM_PROMPT identity", () => {
 describe("ezraAgent default export", () => {
   test("ezraAgent is properly configured", () => {
     expect(ezraAgent).toBeDefined()
-    expect(ezraAgent.model).toBe("openai/gpt-5.2")
+    expect(ezraAgent.model).toBe("anthropic/claude-opus-4-5")
     expect(ezraAgent.prompt).toBe(EZRA_SYSTEM_PROMPT)
   })
 })

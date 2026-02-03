@@ -3,6 +3,7 @@ import { basename } from "node:path"
 import { log } from "../../shared/logger"
 import { markFileDirty, clearDirtyFiles, hasDirtyFiles, getDirtyFiles } from "./dirty-file-tracker"
 import { requiresTDD, getTDDRequirementReason } from "./constants"
+import { hasRecentApproval } from "../hierarchy-enforcer/approval-state"
 
 const HOOK_NAME = "tdd-enforcement"
 const WRITE_EDIT_TOOLS = ["mcp_write", "mcp_edit"]
@@ -49,6 +50,13 @@ function isTestFile(filePath: string): boolean {
 function isVerificationAgent(args: Record<string, unknown>): boolean {
   const agentName = (args.subagent_type as string | undefined) ?? ""
   return agentName.includes("Joshua") || agentName.includes("Test Runner")
+}
+
+const IMPLEMENTATION_AGENTS = ["paul-junior", "frontend-ui-ux-engineer"]
+
+function isImplementationAgent(args: Record<string, unknown>): boolean {
+  const agentName = ((args.subagent_type as string | undefined) ?? "").toLowerCase()
+  return IMPLEMENTATION_AGENTS.some(a => agentName.includes(a))
 }
 
 const TODO_TOOLS = ["todo", "todowrite"]
@@ -102,10 +110,8 @@ Use: \`delegate_task(subagent_type="Joshua (Test Runner)", prompt="Run tests")\`
              })
              clearDirtyFiles(input.sessionID)
 
-             // Also reset phase state after verification
              const phaseState = getTodoPhaseState(input.sessionID)
              if (phaseState.phase === "GREEN") {
-               // Tests will verify GREEN phase → Reset for next cycle
                phaseState.phase = "NONE"
                phaseState.testFiles.clear()
                phaseState.implFiles.clear()
@@ -116,6 +122,15 @@ Use: \`delegate_task(subagent_type="Joshua (Test Runner)", prompt="Run tests")\`
              }
           }
           return
+        }
+
+        if (isImplementationAgent(output.args)) {
+          const hasRecentTestRun = hasRecentApproval(ctx.directory, "joshua", 600000)
+          if (!hasRecentTestRun) {
+            log(`[${HOOK_NAME}] TDD Warning: No recent test run`, { sessionID: input.sessionID })
+            const currentPrompt = (output.args.prompt as string) || ""
+            output.args.prompt = `[TDD: No recent test run. Run tests first if needed.]\n\n${currentPrompt}`
+          }
         }
 
         if (hasDirtyFiles(input.sessionID)) {

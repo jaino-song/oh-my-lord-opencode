@@ -140,8 +140,8 @@ describe("NATHAN_SYSTEM_PROMPT output format", () => {
   })
 
   test("should include required SUMMARY fields for compatibility", () => {
-    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Complexity:\s*LOW\|MEDIUM\|HIGH/)
-    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Trivial:\s*yes\|no;\s*Files:\s*N;\s*LOC:\s*<30\|~50\|100\+/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Trivial:\s*yes\|no/)
+    expect(NATHAN_SYSTEM_PROMPT).toMatch(/Downstream deps:/)
   })
 
   test("should include core JSON keys for downstream parsing", () => {
@@ -169,19 +169,19 @@ describe("NATHAN_SYSTEM_PROMPT constraints", () => {
 })
 
 describe("createNathanAgent factory function", () => {
-  test("createNathanAgent with default model returns GPT-5.2-codex config", () => {
+  test("createNathanAgent with default model returns Claude Opus config", () => {
     const agent = createNathanAgent()
 
-    expect(agent.model).toBe("openai/gpt-5.2-codex")
+    expect(agent.model).toBe("anthropic/claude-opus-4-5")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
 
-  test("createNathanAgent with default model has high reasoningEffort (GPT)", () => {
+  test("createNathanAgent with default model has thinking enabled (Claude)", () => {
     const agent = createNathanAgent()
 
-    expect(agent.reasoningEffort).toBe("high")
-    expect(agent.thinking).toBeUndefined()
+    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+    expect(agent.reasoningEffort).toBeUndefined()
   })
 
   test("createNathanAgent with GPT model has high reasoningEffort, no thinking", () => {
@@ -245,7 +245,7 @@ describe("NATHAN_PROMPT_METADATA", () => {
 describe("nathanAgent default export", () => {
   test("nathanAgent is properly configured", () => {
     expect(nathanAgent).toBeDefined()
-    expect(nathanAgent.model).toBe("openai/gpt-5.2-codex")
+    expect(nathanAgent.model).toBe("anthropic/claude-opus-4-5")
     expect(nathanAgent.prompt).toBe(NATHAN_SYSTEM_PROMPT)
   })
 

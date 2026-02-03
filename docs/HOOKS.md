@@ -357,6 +357,48 @@ Note: The call has already completed - you are NOT waiting for a response. Proce
 
 ### Workflow / UX
 
+#### `todo-notification`
+**Purpose**: Shows OS notifications and toasts when todo items are completed or started.
+
+**Behavior**:
+- Monitors `todowrite` tool calls
+- Shows toast notification when todo status changes to `completed`
+- Shows toast notification when todo status changes to `in_progress`
+- Injects completion notification into session (except for delegation todos)
+- Tracks notified todos per session to avoid duplicates
+
+**Notifications**:
+- ✅ Task Completed: Shows when a todo is marked complete
+- 🔄 Task Started: Shows when a todo is marked in_progress
+
+---
+
+#### `delegation-notification`
+**Purpose**: Shows OS notifications and toasts when delegate_task completes.
+
+**Behavior**:
+- Monitors `delegate_task` tool results
+- Shows agent-specific toasts based on result content
+- Records approvals for hierarchy-enforcer (Timothy, Thomas, Joshua)
+- Injects notifications for background tasks
+
+**Agent-specific notifications**:
+- **Nathan**: Shows complexity analysis (LOW/MEDIUM/HIGH)
+- **Timothy**: Shows approval status (approved/issues to address)
+- **Solomon**: Shows test count planned
+- **Thomas**: Shows spec review status (approved/complete)
+- **Joshua**: Shows pass/fail with test counts
+- **Paul-Junior/frontend-ui-ux**: Shows success/error with task details
+- **git-master**: Shows commit SHA or push status
+- **explore/librarian**: Shows file count found
+
+**Approval Recording**:
+- Timothy approval → records for hierarchy-enforcer
+- Thomas approval → records for hierarchy-enforcer
+- Joshua pass → records for hierarchy-enforcer
+
+---
+
 #### `todo-continuation-enforcer`
 **Purpose**: Advises agent to continue incomplete tasks when stopping.
 

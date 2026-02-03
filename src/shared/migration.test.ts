@@ -240,7 +240,6 @@ describe("migration maps", () => {
      expect(AGENT_NAME_MAP["OmO-Plan"]).toBe("Prometheus (Planner)")
      expect(AGENT_NAME_MAP["omo-plan"]).toBe("Prometheus (Planner)")
      expect(AGENT_NAME_MAP["Planner-Sisyphus"]).toBe("Prometheus (Planner)")
-     expect(AGENT_NAME_MAP["plan-consultant"]).toBe("Metis (Plan Consultant)")
   })
 
   test("HOOK_NAME_MAP contains anthropic-auto-compact migration", () => {
@@ -310,7 +309,7 @@ describe("migrateAgentConfigToCategory", () => {
       { model: "anthropic/claude-sonnet-4-5" },
     ]
 
-    const expectedCategories = ["visual-engineering", "ultrabrain", "quick", "most-capable", "general"]
+    const expectedCategories = ["visual-engineering", "most-capable", "quick", "most-capable", "general"]
 
     // #when: Migrate each config
     const results = configs.map(migrateAgentConfigToCategory)
@@ -337,7 +336,7 @@ describe("migrateAgentConfigToCategory", () => {
     const { migrated } = migrateAgentConfigToCategory(config)
 
     // #then: All non-model fields should be preserved
-    expect(migrated.category).toBe("ultrabrain")
+    expect(migrated.category).toBe("most-capable")
     expect(migrated.temperature).toBe(0.1)
     expect(migrated.top_p).toBe(0.95)
     expect(migrated.maxTokens).toBe(4096)
@@ -346,15 +345,15 @@ describe("migrateAgentConfigToCategory", () => {
 })
 
 describe("shouldDeleteAgentConfig", () => {
-  test("returns true when config only has category field", () => {
+  test("always returns false (deprecated function)", () => {
     // #given: Config with only category field (no overrides)
     const config = { category: "visual-engineering" }
 
     // #when: Check if config should be deleted
     const shouldDelete = shouldDeleteAgentConfig(config, "visual-engineering")
 
-    // #then: Should return true (matches category defaults)
-    expect(shouldDelete).toBe(true)
+    // #then: Should return false (function is deprecated)
+    expect(shouldDelete).toBe(false)
   })
 
   test("returns false when category does not exist", () => {
@@ -368,7 +367,7 @@ describe("shouldDeleteAgentConfig", () => {
     expect(shouldDelete).toBe(false)
   })
 
-  test("returns true when all fields match category defaults", () => {
+  test("returns false even when all fields match category defaults (deprecated)", () => {
     // #given: Config with fields matching category defaults
     const config = {
       category: "visual-engineering",
@@ -379,8 +378,8 @@ describe("shouldDeleteAgentConfig", () => {
     // #when: Check if config should be deleted
     const shouldDelete = shouldDeleteAgentConfig(config, "visual-engineering")
 
-    // #then: Should return true (all fields match defaults)
-    expect(shouldDelete).toBe(true)
+    // #then: Should return false (function is deprecated)
+    expect(shouldDelete).toBe(false)
   })
 
   test("returns false when fields differ from category defaults", () => {
@@ -397,10 +396,10 @@ describe("shouldDeleteAgentConfig", () => {
     expect(shouldDelete).toBe(false)
   })
 
-  test("handles different categories with their defaults", () => {
+  test("always returns false for all categories (deprecated)", () => {
     // #given: Configs for different categories
     const configs = [
-      { category: "ultrabrain", temperature: 0.1 },
+      { category: "most-capable", temperature: 0.1 },
       { category: "quick", temperature: 0.3 },
       { category: "most-capable", temperature: 0.1 },
       { category: "general", temperature: 0.3 },
@@ -409,9 +408,9 @@ describe("shouldDeleteAgentConfig", () => {
     // #when: Check each config
     const results = configs.map((config) => shouldDeleteAgentConfig(config, config.category as string))
 
-    // #then: All should be true (all match defaults)
+    // #then: All should be false (function is deprecated)
     results.forEach((result) => {
-      expect(result).toBe(true)
+      expect(result).toBe(false)
     })
   })
 

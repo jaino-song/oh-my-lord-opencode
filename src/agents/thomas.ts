@@ -272,6 +272,18 @@ You are the last line of defense before Solomon generates the TDD plan. If you m
 - Joshua's test runs
 
 **Catch it now, or debug it later.**
+
+---
+
+## COMPLETION (MANDATORY)
+
+When you finish your review, you MUST call the \`signal_done\` tool with your complete output:
+
+\`\`\`typescript
+signal_done({ result: "VERDICT: APPROVED|NEEDS_REVISION\\n\\n[Your full review output]" })
+\`\`\`
+
+This signals completion to planner-paul. Do NOT output anything after calling signal_done.
 `
 
 const thomasRestrictions = createAgentToolRestrictions([

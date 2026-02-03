@@ -12,18 +12,62 @@ import { findNearestMessageWithFields, MESSAGE_STORAGE } from "../../features/ho
 import { log } from "../../shared/logger"
 import { createSystemDirective, SYSTEM_DIRECTIVE_PREFIX, SystemDirectiveTypes } from "../../shared/system-directive"
 import type { BackgroundManager } from "../../features/background-agent"
+import { getParentAgentName } from "../../features/agent-context"
 
-export const HOOK_NAME = "sisyphus-orchestrator"
+export const HOOK_NAME = "paul"
 
 /**
- * Cross-platform check if a path is inside .sisyphus/ directory.
+ * Cross-platform check if a path is inside .paul/ directory.
  * Handles both forward slashes (Unix) and backslashes (Windows).
  */
-function isSisyphusPath(filePath: string): boolean {
-  return /\.sisyphus[/\\]/.test(filePath)
+function isPaulPath(filePath: string): boolean {
+  return /\.paul[/\\]/.test(filePath)
+}
+
+/**
+ * Cross-platform check if a path is inside .paul/plans/ directory.
+ * Handles both forward slashes (Unix) and backslashes (Windows).
+ */
+function isPaulPlanPath(filePath: string): boolean {
+  return /\.paul[/\\]plans[/\\]/.test(filePath)
 }
 
 const WRITE_EDIT_TOOLS = ["Write", "Edit", "write", "edit"]
+
+/**
+ * Keywords that indicate user wants to modify the plan.
+ * Plan file modifications are only allowed when user explicitly requests it.
+ */
+const PLAN_MODIFICATION_KEYWORDS = [
+  /\b(edit|modify|update|change|revise|rewrite)\s+(the\s+)?plan\b/i,
+  /\bplan\s+(edit|modification|update|change)\b/i,
+  /\b(add|remove|delete)\s+(task|step|item)s?\s+(to|from|in)\s+(the\s+)?plan\b/i,
+  /\breorganize\s+(the\s+)?plan\b/i,
+]
+
+/** Tracks sessions where user has requested plan modification */
+const planModificationAllowed = new Map<string, number>()
+
+/** Plan modification permission expires after 5 minutes */
+const PLAN_MODIFICATION_TTL_MS = 5 * 60 * 1000
+
+function isPlanModificationAllowed(sessionID: string): boolean {
+  const timestamp = planModificationAllowed.get(sessionID)
+  if (!timestamp) return false
+  if (Date.now() - timestamp > PLAN_MODIFICATION_TTL_MS) {
+    planModificationAllowed.delete(sessionID)
+    return false
+  }
+  return true
+}
+
+function allowPlanModification(sessionID: string): void {
+  planModificationAllowed.set(sessionID, Date.now())
+}
+
+function checkUserMessageForPlanModification(text: string): boolean {
+  return PLAN_MODIFICATION_KEYWORDS.some(pattern => pattern.test(text))
+}
 
 const DIRECT_WORK_REMINDER = `
 
@@ -31,7 +75,7 @@ const DIRECT_WORK_REMINDER = `
 
 ${createSystemDirective(SystemDirectiveTypes.DELEGATION_REQUIRED)}
 
-You just performed direct file modifications outside \`.sisyphus/\`.
+You just performed direct file modifications outside \`.paul/\`.
 
 **You are an ORCHESTRATOR, not an IMPLEMENTER.**
 
@@ -41,8 +85,8 @@ As an orchestrator, you should:
 - **COORDINATE** multiple tasks and ensure completion
 
 You should NOT:
-- Write code directly (except for \`.sisyphus/\` files like plans and notepads)
-- Make direct file edits outside \`.sisyphus/\`
+- Write code directly (except for \`.paul/\` files like plans and notepads)
+- Make direct file edits outside \`.paul/\`
 - Implement features yourself
 
 **If you need to make changes:**
@@ -53,129 +97,38 @@ You should NOT:
 ---
 `
 
-const BOULDER_CONTINUATION_PROMPT = `${createSystemDirective(SystemDirectiveTypes.BOULDER_CONTINUATION)}
+const MISSIONARY_CONTINUATION_PROMPT = `${createSystemDirective(SystemDirectiveTypes.MISSIONARY_CONTINUATION)}
 
-You have an active work plan with incomplete tasks. Continue working.
+You have an active work plan with incomplete tasks. Continue your missionary journey.
 
 RULES:
 - Proceed without asking for permission
 - Mark each checkbox [x] in the plan file when done
-- Use the notepad at .sisyphus/notepads/{PLAN_NAME}/ to record learnings
+- Use the notepad at .paul/notepads/{PLAN_NAME}/ to record learnings
 - Do not stop until all tasks are complete
 - If blocked, document the blocker and move to the next task`
 
-const VERIFICATION_REMINDER = `**MANDATORY: WHAT YOU MUST DO RIGHT NOW**
+const USER_QUESTION_PROMPT = `${createSystemDirective(SystemDirectiveTypes.MISSIONARY_CONTINUATION)}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+User asked a question while plan is in progress.
 
-⚠️ CRITICAL: Subagents FREQUENTLY LIE about completion.
-Tests FAILING, code has ERRORS, implementation INCOMPLETE - but they say "done".
+**Plan Status:** {PLAN_NAME} - {COMPLETED}/{TOTAL} tasks done, {REMAINING} remaining.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Answer the user's question, then ask:
+"Would you like me to continue with the plan? (yes/no)"`
 
-**STEP 1: VERIFY WITH YOUR OWN TOOL CALLS (DO THIS NOW)**
+const VERIFICATION_REMINDER = `**VERIFY BEFORE PROCEEDING**
 
-Run these commands YOURSELF - do NOT trust agent's claims:
 1. \`lsp_diagnostics\` on changed files → Must be CLEAN
-2. \`bash\` to run tests → Must PASS
-3. \`bash\` to run build/typecheck → Must succeed
-4. \`Read\` the actual code → Must match requirements
+2. \`Read\` the code → Verify it matches requirements
 
-**STEP 2: DETERMINE IF HANDS-ON QA IS NEEDED**
+**If UI/visual work:** Use \`/playwright\` skill for hands-on QA.
 
-| Deliverable Type | QA Method | Tool |
-|------------------|-----------|------|
-| **Frontend/UI** | Browser interaction | \`/playwright\` skill |
-| **TUI/CLI** | Run interactively | \`interactive_bash\` (tmux) |
-| **API/Backend** | Send real requests | \`bash\` with curl |
-
-Static analysis CANNOT catch: visual bugs, animation issues, user flow breakages.
-
-**STEP 3: IF QA IS NEEDED - ADD TO TODO IMMEDIATELY**
-
-\`\`\`
-todowrite([
-  { id: "qa-X", content: "HANDS-ON QA: [specific verification action]", status: "pending", priority: "high" }
-])
-\`\`\`
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-**BLOCKING: DO NOT proceed to Step 4 until Steps 1-3 are VERIFIED.**`
-
-const ORCHESTRATOR_DELEGATION_REQUIRED = `
-
----
-
-⚠️⚠️⚠️ ${createSystemDirective(SystemDirectiveTypes.DELEGATION_REQUIRED)} ⚠️⚠️⚠️
-
-**STOP. YOU ARE VIOLATING ORCHESTRATOR PROTOCOL.**
-
-You (orchestrator-sisyphus) are attempting to directly modify a file outside \`.sisyphus/\`.
-
-**Path attempted:** $FILE_PATH
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🚫 **THIS IS FORBIDDEN** (except for VERIFICATION purposes)
-
-As an ORCHESTRATOR, you MUST:
-1. **DELEGATE** all implementation work via \`delegate_task\`
-2. **VERIFY** the work done by subagents (reading files is OK)
-3. **COORDINATE** - you orchestrate, you don't implement
-
-**ALLOWED direct file operations:**
-- Files inside \`.sisyphus/\` (plans, notepads, drafts)
-- Reading files for verification
-- Running diagnostics/tests
-
-**FORBIDDEN direct file operations:**
-- Writing/editing source code
-- Creating new files outside \`.sisyphus/\`
-- Any implementation work
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-**IF THIS IS FOR VERIFICATION:**
-Proceed if you are verifying subagent work by making a small fix.
-But for any substantial changes, USE \`delegate_task\`.
-
-**CORRECT APPROACH:**
-\`\`\`
-delegate_task(
-  category="...",
-  prompt="[specific single task with clear acceptance criteria]"
-)
-\`\`\`
-
-⚠️⚠️⚠️ DELEGATE. DON'T IMPLEMENT. ⚠️⚠️⚠️
-
----
-`
+**DO NOT proceed until verification passes.**`
 
 const SINGLE_TASK_DIRECTIVE = `
-
 ${createSystemDirective(SystemDirectiveTypes.SINGLE_TASK_ONLY)}
-
-**STOP. READ THIS BEFORE PROCEEDING.**
-
-If you were NOT given **exactly ONE atomic task**, you MUST:
-1. **IMMEDIATELY REFUSE** this request
-2. **DEMAND** the orchestrator provide a single, specific task
-
-**Your response if multiple tasks detected:**
-> "I refuse to proceed. You provided multiple tasks. An orchestrator's impatience destroys work quality.
-> 
-> PROVIDE EXACTLY ONE TASK. One file. One change. One verification.
-> 
-> Your rushing will cause: incomplete work, missed edge cases, broken tests, wasted context."
-
-**WARNING TO ORCHESTRATOR:**
-- Your hasty batching RUINS deliverables
-- Each task needs FULL attention and PROPER verification  
-- Batch delegation = sloppy work = rework = wasted tokens
-
-**REFUSE multi-task requests. DEMAND single-task clarity.**
+ONE task only. If given multiple tasks, REFUSE and demand single-task clarity.
 `
 
 function buildVerificationReminder(sessionId: string): string {
@@ -194,7 +147,7 @@ function buildOrchestratorReminder(planName: string, progress: { total: number; 
   return `
 ---
 
-**BOULDER STATE:** Plan: \`${planName}\` | ${progress.completed}/${progress.total} done | ${remaining} remaining
+**MISSIONARY JOURNEY:** Plan: \`${planName}\` | ${progress.completed}/${progress.total} done | ${remaining} remaining
 
 ---
 
@@ -204,7 +157,7 @@ ${buildVerificationReminder(sessionId)}
 
 RIGHT NOW - Do not delay. Verification passed → Mark IMMEDIATELY.
 
-Update the plan file \`.sisyphus/tasks/${planName}.yaml\`:
+Update the plan file \`.paul/plans/${planName}.md\`:
 - Change \`[ ]\` to \`[x]\` for the completed task
 - Use \`Edit\` tool to modify the checkbox
 
@@ -222,7 +175,7 @@ Update the plan file \`.sisyphus/tasks/${planName}.yaml\`:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**${remaining} tasks remain. Keep bouldering.**`
+**${remaining} tasks remain. Press on toward the goal.**`
 }
 
 function buildStandaloneVerificationReminder(sessionId: string): string {
@@ -355,7 +308,7 @@ function formatFileChanges(stats: GitFileStat[], notepadPath?: string): string {
   }
 
   if (notepadPath) {
-    const notepadStat = stats.find((s) => s.path.includes("notepad") || s.path.includes(".sisyphus"))
+    const notepadStat = stats.find((s) => s.path.includes("notepad") || s.path.includes(".paul"))
     if (notepadStat) {
       lines.push("[NOTEPAD UPDATED]")
       lines.push(`  ${notepadStat.path}  (+${notepadStat.added})`)
@@ -393,11 +346,12 @@ function getMessageDir(sessionID: string): string | null {
 }
 
 function isCallerOrchestrator(sessionID?: string): boolean {
-  if (!sessionID) return false
-  const messageDir = getMessageDir(sessionID)
-  if (!messageDir) return false
-  const nearest = findNearestMessageWithFields(messageDir)
-  return nearest?.agent === "orchestrator-sisyphus"
+   if (!sessionID) return false
+   const messageDir = getMessageDir(sessionID)
+   if (!messageDir) return false
+   const nearest = findNearestMessageWithFields(messageDir)
+   // Paul is the orchestrator who delegates, not implements
+   return nearest?.agent === "Paul"
 }
 
 interface SessionState {
@@ -407,7 +361,7 @@ interface SessionState {
 
 const CONTINUATION_COOLDOWN_MS = 5000
 
-export interface SisyphusOrchestratorHookOptions {
+export interface PaulOrchestratorHookOptions {
   directory: string
   backgroundManager?: BackgroundManager
 }
@@ -433,9 +387,39 @@ function isAbortError(error: unknown): boolean {
   return false
 }
 
-export function createSisyphusOrchestratorHook(
+interface MessageInfo {
+  id?: string
+  role?: string
+  error?: { name?: string; data?: unknown }
+}
+
+/**
+ * API fallback for abort detection - checks if the last assistant message was aborted.
+ * Used when session.error event might have been missed.
+ */
+function isLastAssistantMessageAborted(messages: Array<{ info?: MessageInfo }>): boolean {
+  if (!messages || messages.length === 0) return false
+
+  const assistantMessages = messages.filter(m => m.info?.role === "assistant")
+  if (assistantMessages.length === 0) return false
+
+  const lastAssistant = assistantMessages[assistantMessages.length - 1]
+  const errorName = lastAssistant.info?.error?.name
+
+  if (!errorName) return false
+
+  return errorName === "MessageAbortedError" || errorName === "AbortError"
+}
+
+function isLastMessageFromUser(messages: Array<{ info?: MessageInfo }>): boolean {
+  if (!messages || messages.length === 0) return false
+  const lastMessage = messages[messages.length - 1]
+  return lastMessage.info?.role === "user"
+}
+
+export function createPaulOrchestratorHook(
   ctx: PluginInput,
-  options?: SisyphusOrchestratorHookOptions
+  options?: PaulOrchestratorHookOptions
 ) {
   const backgroundManager = options?.backgroundManager
   const sessions = new Map<string, SessionState>()
@@ -450,7 +434,7 @@ export function createSisyphusOrchestratorHook(
     return state
   }
 
-  async function injectContinuation(sessionID: string, planName: string, remaining: number, total: number): Promise<void> {
+  async function injectContinuation(sessionID: string, planName: string, remaining: number, total: number, isUserQuestion: boolean = false): Promise<void> {
     const hasRunningBgTasks = backgroundManager
       ? backgroundManager.getTasksByParentSession(sessionID).some(t => t.status === "running")
       : false
@@ -460,12 +444,19 @@ export function createSisyphusOrchestratorHook(
       return
     }
 
-    const prompt = BOULDER_CONTINUATION_PROMPT
-      .replace(/{PLAN_NAME}/g, planName) +
-      `\n\n[Status: ${total - remaining}/${total} completed, ${remaining} remaining]`
+    const completed = total - remaining
+    const prompt = isUserQuestion
+      ? USER_QUESTION_PROMPT
+          .replace(/{PLAN_NAME}/g, planName)
+          .replace(/{COMPLETED}/g, String(completed))
+          .replace(/{TOTAL}/g, String(total))
+          .replace(/{REMAINING}/g, String(remaining))
+      : MISSIONARY_CONTINUATION_PROMPT
+          .replace(/{PLAN_NAME}/g, planName) +
+          `\n\n[Status: ${completed}/${total} completed, ${remaining} remaining]`
 
     try {
-      log(`[${HOOK_NAME}] Injecting boulder continuation`, { sessionID, planName, remaining })
+      log(`[${HOOK_NAME}] Injecting missionary continuation`, { sessionID, planName, remaining })
 
       let model: { providerID: string; modelID: string } | undefined
       try {
@@ -493,19 +484,20 @@ export function createSisyphusOrchestratorHook(
           : undefined
       }
 
-      await ctx.client.session.prompt({
-        path: { id: sessionID },
-        body: {
-          agent: "orchestrator-sisyphus",
-          ...(model !== undefined ? { model } : {}),
-          parts: [{ type: "text", text: prompt }],
-        },
-        query: { directory: ctx.directory },
-      })
+       const currentAgent = getParentAgentName(sessionID, "Paul")
+       await ctx.client.session.prompt({
+         path: { id: sessionID },
+         body: {
+           agent: currentAgent,
+           ...(model !== undefined ? { model } : {}),
+           parts: [{ type: "text", text: prompt }],
+         },
+         query: { directory: ctx.directory },
+       })
 
-      log(`[${HOOK_NAME}] Boulder continuation injected`, { sessionID })
+      log(`[${HOOK_NAME}] Missionary continuation injected`, { sessionID })
     } catch (err) {
-      log(`[${HOOK_NAME}] Boulder continuation failed`, { sessionID, error: String(err) })
+      log(`[${HOOK_NAME}] Missionary continuation failed`, { sessionID, error: String(err) })
     }
   }
 
@@ -553,6 +545,26 @@ export function createSisyphusOrchestratorHook(
           return
         }
 
+        // API fallback: check if last assistant message was aborted (in case event was missed)
+        // Also check if last message was from user (to ask about continuation)
+        let lastMessageWasFromUser = false
+        try {
+          const messagesResp = await ctx.client.session.messages({
+            path: { id: sessionID },
+            query: { directory: ctx.directory },
+          })
+          const messages = (messagesResp as { data?: Array<{ info?: MessageInfo }> }).data ?? []
+
+          if (isLastAssistantMessageAborted(messages)) {
+            log(`[${HOOK_NAME}] Skipped: last assistant message was aborted (API fallback)`, { sessionID })
+            return
+          }
+          
+          lastMessageWasFromUser = isLastMessageFromUser(messages)
+        } catch (err) {
+          log(`[${HOOK_NAME}] Messages fetch failed for abort check, continuing`, { sessionID, error: String(err) })
+        }
+
         const hasRunningBgTasks = backgroundManager
           ? backgroundManager.getTasksByParentSession(sessionID).some(t => t.status === "running")
           : false
@@ -563,15 +575,15 @@ export function createSisyphusOrchestratorHook(
         }
 
 
-        if (!boulderState) {
+         if (!boulderState) {
           log(`[${HOOK_NAME}] No active boulder`, { sessionID })
           return
         }
 
-        if (!isCallerOrchestrator(sessionID)) {
-          log(`[${HOOK_NAME}] Skipped: last agent is not orchestrator-sisyphus`, { sessionID })
-          return
-        }
+         if (!isCallerOrchestrator(sessionID) && !isBoulderSession) {
+           log(`[${HOOK_NAME}] Skipped: not orchestrator or boulder session`, { sessionID })
+           return
+         }
 
         const progress = getPlanProgress(boulderState.active_plan)
         if (progress.isComplete) {
@@ -587,7 +599,12 @@ export function createSisyphusOrchestratorHook(
 
         state.lastContinuationInjectedAt = now
         const remaining = progress.total - progress.completed
-        injectContinuation(sessionID, boulderState.plan_name, remaining, progress.total)
+        
+        if (lastMessageWasFromUser) {
+          log(`[${HOOK_NAME}] User question detected, asking about continuation`, { sessionID })
+        }
+        
+        injectContinuation(sessionID, boulderState.plan_name, remaining, progress.total, lastMessageWasFromUser)
         return
       }
 
@@ -639,6 +656,23 @@ export function createSisyphusOrchestratorHook(
       }
     },
 
+    "chat.message": async (
+      input: { sessionID: string },
+      output: { parts: Array<{ type: string; text?: string }> }
+    ): Promise<void> => {
+      const text = output.parts
+        ?.filter(p => p.type === "text" && p.text)
+        .map(p => p.text)
+        .join("\n") || ""
+
+      if (checkUserMessageForPlanModification(text)) {
+        allowPlanModification(input.sessionID)
+        log(`[${HOOK_NAME}] Plan modification permitted by user`, {
+          sessionID: input.sessionID,
+        })
+      }
+    },
+
     "tool.execute.before": async (
       input: { tool: string; sessionID?: string; callID?: string },
       output: { args: Record<string, unknown>; message?: string }
@@ -650,27 +684,83 @@ export function createSisyphusOrchestratorHook(
       // Check Write/Edit tools for orchestrator - inject strong warning
       if (WRITE_EDIT_TOOLS.includes(input.tool)) {
         const filePath = (output.args.filePath ?? output.args.path ?? output.args.file) as string | undefined
-        if (filePath && !isSisyphusPath(filePath)) {
+
+        // Plan file modifications require explicit user permission
+        if (filePath && isPaulPlanPath(filePath)) {
+          if (!input.sessionID || !isPlanModificationAllowed(input.sessionID)) {
+            log(`[${HOOK_NAME}] BLOCKED: Plan modification without user permission`, {
+              sessionID: input.sessionID,
+              tool: input.tool,
+              filePath,
+            })
+            throw new Error(
+              `[${HOOK_NAME}] BLOCKED: Plan file modification requires explicit user permission.\n` +
+              `You attempted to modify: ${filePath}\n` +
+              `Ask the user: "Do you want me to edit/modify the plan?" and wait for confirmation.`
+            )
+          }
+          log(`[${HOOK_NAME}] Allowed: Plan modification (user permitted)`, {
+            sessionID: input.sessionID,
+            filePath,
+          })
+          return
+        }
+
+        if (filePath && !isPaulPath(filePath)) {
           // Store filePath for use in tool.execute.after
           if (input.callID) {
             pendingFilePaths.set(input.callID, filePath)
           }
-          const warning = ORCHESTRATOR_DELEGATION_REQUIRED.replace("$FILE_PATH", filePath)
-          output.message = (output.message || "") + warning
-          log(`[${HOOK_NAME}] Injected delegation warning for direct file modification`, {
+          log(`[${HOOK_NAME}] BLOCKED: Direct file modification by orchestrator`, {
             sessionID: input.sessionID,
             tool: input.tool,
             filePath,
           })
+
+          throw new Error(
+            `[${HOOK_NAME}] VIOLATION BLOCKED: You (Orchestrator) attempted to modify '${filePath}' directly.\n` +
+            `Protocol: You MUST delegate implementation to subagents (Paul-Junior, frontend-ui-ux, etc.).\n` +
+            `Action: Use delegate_task() to assign this work.`
+          )
         }
         return
+      }
+
+      // Check bash commands for file-writing patterns
+      if (input.tool === "bash" || input.tool === "Bash") {
+        const command = output.args.command as string | undefined
+        if (command) {
+          const dangerousPatterns = [
+            />(?!\s*\/dev\/null)/,  // Output redirection
+            />>/,                    // Append redirection
+            /\becho\s+.*>/,          // echo to file
+            /\bprintf\s+.*>/,        // printf to file
+            /\bcat\s+.*>/,           // cat to file
+            /\btee\s+/,              // tee command
+            /<<\s*['"]?EOF/i,        // Here-doc
+            /<<\s*['"]?END/i,        // Here-doc
+          ]
+          
+          const isDangerous = dangerousPatterns.some(p => p.test(command))
+          if (isDangerous) {
+            log(`[${HOOK_NAME}] BLOCKED: Orchestrator attempted file-writing bash command`, {
+              sessionID: input.sessionID,
+              command: command.substring(0, 200),
+            })
+            throw new Error(
+              `[${HOOK_NAME}] VIOLATION BLOCKED: You (Orchestrator) attempted to write files via bash.\n` +
+              `Protocol: You MUST delegate implementation to subagents (Paul-Junior, frontend-ui-ux, etc.).\n` +
+              `Action: Use delegate_task() to assign this work.`
+            )
+          }
+        }
       }
 
       // Check delegate_task - inject single-task directive
       if (input.tool === "delegate_task") {
         const prompt = output.args.prompt as string | undefined
         if (prompt && !prompt.includes(SYSTEM_DIRECTIVE_PREFIX)) {
-          output.args.prompt = prompt + `\n<system-reminder>${SINGLE_TASK_DIRECTIVE}</system-reminder>`
+          output.args.prompt = prompt + `\n[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]${SINGLE_TASK_DIRECTIVE}[/SYSTEM DIRECTIVE]`
           log(`[${HOOK_NAME}] Injected single-task directive to delegate_task`, {
             sessionID: input.sessionID,
           })
@@ -694,7 +784,7 @@ export function createSisyphusOrchestratorHook(
         if (!filePath) {
           filePath = output.metadata?.filePath as string | undefined
         }
-        if (filePath && !isSisyphusPath(filePath)) {
+        if (filePath && !isPaulPath(filePath)) {
           output.output = (output.output || "") + DIRECT_WORK_REMINDER
           log(`[${HOOK_NAME}] Direct work reminder appended`, {
             sessionID: input.sessionID,
@@ -748,9 +838,9 @@ ${fileChanges}
 
 ${originalResponse}
 
-<system-reminder>
+[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)}
-</system-reminder>`
+[/SYSTEM DIRECTIVE]`
 
           log(`[${HOOK_NAME}] Output transformed for orchestrator mode (boulder)`, {
             plan: boulderState.plan_name,
@@ -758,7 +848,7 @@ ${buildOrchestratorReminder(boulderState.plan_name, progress, subagentSessionId)
             fileCount: gitStats.length,
           })
         } else {
-          output.output += `\n<system-reminder>\n${buildStandaloneVerificationReminder(subagentSessionId)}\n</system-reminder>`
+          output.output += `\n[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]\n${buildStandaloneVerificationReminder(subagentSessionId)}\n[/SYSTEM DIRECTIVE]`
 
           log(`[${HOOK_NAME}] Verification reminder appended for orchestrator`, {
             sessionID: input.sessionID,

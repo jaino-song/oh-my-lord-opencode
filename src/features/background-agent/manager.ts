@@ -379,6 +379,9 @@ export class BackgroundManager {
       toolCalls: existingTask.progress?.toolCalls ?? 0,
       lastUpdate: new Date(),
     }
+    existingTask.lastMsgChangeTime = new Date()
+    existingTask.lastMsgCount = undefined
+    existingTask.stablePolls = 0
 
     this.startPolling()
     subagentSessions.add(existingTask.sessionID)

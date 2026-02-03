@@ -12,34 +12,68 @@ export interface SummarizeContext {
 
 const SUMMARIZE_CONTEXT_PROMPT = `${createSystemDirective(SystemDirectiveTypes.COMPACTION_CONTEXT)}
 
-When summarizing this session, you MUST include the following sections in your summary:
+SUMMARY LENGTH: Create a COMPREHENSIVE summary (4000-8000 tokens). Prioritize SPECIFICITY over brevity.
+Include exact file paths, function names, error messages, and technical details. Vague summaries lose critical context.
 
-## 1. User Requests (As-Is)
-- List all original user requests exactly as they were stated
-- Preserve the user's exact wording and intent
+You MUST include the following sections IN THIS EXACT ORDER.
+Sections 1-2 are CRITICAL - preserve them VERBATIM, not summarized.
 
-## 2. Final Goal
-- What the user ultimately wanted to achieve
-- The end result or deliverable expected
+## 1. USER CONSTRAINTS (CRITICAL - PRESERVE VERBATIM)
+Copy these EXACTLY as the user stated. Do NOT paraphrase:
+- Explicit prohibitions ("don't", "never", "do not", "stop", "wait")
+- Consent requirements ("ask me first", "confirm before", "wait for my approval")
+- Workflow restrictions ("don't proceed", "don't mark complete", "don't auto-continue")
+- Preferences about how work should be done
+- Any instruction where user sets boundaries on agent behavior
 
-## 3. Work Completed
-- What has been done so far
-- Files created/modified
-- Features implemented
-- Problems solved
+WARNING: Dropping user constraints causes the agent to violate user trust. NEVER omit these.
 
-## 4. Remaining Tasks
-- What still needs to be done
-- Pending items from the original request
-- Follow-up tasks identified during the work
+## 2. USER'S GOAL (What They Want to Achieve)
+- The overall objective of this session
+- Why the user wants this (context/motivation if stated)
+- Success criteria (how will we know it's done?)
+- Quote user's exact words when describing their goal
 
-## 5. MUST NOT Do (Critical Constraints)
-- Things that were explicitly forbidden
-- Approaches that failed and should not be retried
-- User's explicit restrictions or preferences
-- Anti-patterns identified during the session
+## 3. WORK COMPLETED (Be Specific)
+For each completed item, include:
+- Exact file paths modified/created (e.g., \`src/hooks/foo/index.ts\`)
+- What was changed (function names, line ranges if significant)
+- Why it was done this way (technical decisions made)
+- Any configuration or dependencies added
 
-This context is critical for maintaining continuity after compaction.
+Example format:
+- \`src/hooks/todo-enforcer.ts\`: Added \`worker-paul\` to DEFAULT_SKIP_AGENTS array (line 16)
+- \`src/hooks/paul/index.ts\`: Added API fallback for abort detection - new \`isLastAssistantMessageAborted()\` function
+
+## 4. REMAINING TASKS (Be Specific)
+For each remaining item:
+- Exact description of what needs to be done
+- Which files will likely need modification
+- Any blockers or dependencies
+- Priority/order if relevant
+
+Example format:
+- [ ] Add tests for new abort detection in \`src/hooks/paul/index.test.ts\`
+- [ ] Update documentation in \`docs/HOOKS.md\` to reflect new skip agents
+
+## 5. CURRENT STATE
+- What was the agent doing when compaction occurred?
+- Any in-progress operations (uncommitted changes, running tests, etc.)
+- Current branch and git state if relevant
+- Active todo list items and their status
+
+## 6. TECHNICAL CONTEXT
+- Key technical decisions made and WHY
+- Architecture patterns being followed
+- Relevant code patterns or conventions discovered
+- Error messages encountered and how they were resolved
+
+## 7. FAILED APPROACHES (Avoid Repeating)
+- What was tried and didn't work
+- Specific error messages or reasons for failure
+- Why the approach was abandoned
+
+Post-compaction: Agent MUST re-read sections 1-2 before taking any action.
 `
 
 export function createCompactionContextInjector() {

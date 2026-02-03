@@ -16,6 +16,7 @@ import { log, getAgentToolRestrictions, hasValidOutputFromMessages } from "../..
 import { truncateToTokenLimit } from "../../shared/dynamic-truncator"
 import { getParentAgentName } from "../../features/agent-context"
 import { AGENT_FALLBACK_MODELS, MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS } from "../../config/fallback-models"
+import { SIGNAL_DONE_TOOL_NAME } from "../signal-done"
 
 type OpencodeClient = PluginInput["client"]
 
@@ -134,6 +135,34 @@ function summarizeSkillContent(content: string): string {
   const { result, truncated } = truncateToTokenLimit(content, SKILL_SUMMARY_TOKENS, 0)
   if (!truncated) return result
   return `${result}\n\n[Skill content truncated to save context. Use a full skill load if needed.]`
+}
+
+interface MessagePart {
+  type?: string
+  name?: string
+  tool?: string
+  text?: string
+  input?: { result?: string }
+}
+
+interface SessionMessage {
+  info?: { role?: string }
+  parts?: MessagePart[]
+}
+
+function findSignalDoneResult(messages: SessionMessage[]): string | null {
+  for (const msg of messages) {
+    if (msg.info?.role !== "assistant") continue
+    for (const part of msg.parts ?? []) {
+      if (part.type === "tool_use" && (part.name === SIGNAL_DONE_TOOL_NAME || part.tool === SIGNAL_DONE_TOOL_NAME)) {
+        const result = part.input?.result
+        if (typeof result === "string") {
+          return result
+        }
+      }
+    }
+  }
+  return null
 }
 
 type ToolContextWithMetadata = {
@@ -351,24 +380,23 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
           const currentMsgCount = msgs.length
           const hasValidOutput = hasValidOutputFromMessages(msgs as any)
 
-          if (currentMsgCount !== lastMsgCount) {
-            lastMsgChangeTime = Date.now()
-            stablePolls = 0
-          } else {
-            const timeSinceLastProgress = Date.now() - lastMsgChangeTime
-            if (!hasValidOutput && timeSinceLastProgress >= NO_PROGRESS_TIMEOUT_MS) {
-              log("[delegate_task:resume] No progress timeout", { sessionID: args.resume, timeSinceLastProgress })
-              throw new Error("No progress for 90s and no valid output - possible rate limiting or API stall")
-            }
-          }
+          // BUG: no-progress timeout disabled for resume - has timing bugs with stale lastMsgChangeTime
+          // if (currentMsgCount !== lastMsgCount) {
+          //   lastMsgChangeTime = Date.now()
+          //   stablePolls = 0
+          // } else {
+          //   const timeSinceLastProgress = Date.now() - lastMsgChangeTime
+          //   if (!hasValidOutput && timeSinceLastProgress >= NO_PROGRESS_TIMEOUT_MS) {
+          //     log("[delegate_task:resume] No progress timeout", { sessionID: args.resume, timeSinceLastProgress })
+          //     throw new Error("No progress for 90s and no valid output - possible rate limiting or API stall")
+          //   }
+          // }
           lastMsgCount = currentMsgCount
 
+          // BUG: stability detection disabled for resume - unreliable completion detection
           const elapsed = Date.now() - pollStart
-          if (elapsed >= MIN_STABILITY_TIME_MS && currentMsgCount > 0 && stablePolls >= STABILITY_POLLS_REQUIRED && hasValidOutput) {
+          if (elapsed >= MIN_STABILITY_TIME_MS && currentMsgCount > 0 && hasValidOutput) {
             break
-          }
-          if (currentMsgCount > 0 && currentMsgCount === lastMsgCount) {
-            stablePolls++
           }
         }
 
@@ -637,9 +665,40 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
               }
 
               const messagesCheck = await client.session.messages({ path: { id: sessionID } })
-              const msgs = ((messagesCheck as { data?: unknown }).data ?? messagesCheck) as Array<{info?: {role?: string}}>
+              const msgs = ((messagesCheck as { data?: unknown }).data ?? messagesCheck) as Array<SessionMessage>
               const currentMsgCount = msgs.length
-              const assistantMsgs = msgs.filter((m: any) => m.info?.role === "assistant")
+              const assistantMsgs = msgs.filter((m) => m.info?.role === "assistant")
+
+              const signalDoneResult = findSignalDoneResult(msgs)
+              if (signalDoneResult !== null) {
+                log("[delegate_task] signal_done detected", { sessionID, pollCount })
+                subagentSessions.delete(sessionID)
+                const duration = formatDuration(startTime)
+                const tokens = await getsessiontokenusage(client as any, sessionID)
+                const total = tokens ? tokens.input + tokens.output : 0
+                const tokenline = tokens ? `TOKENS: ${tokens.input} in / ${tokens.output} out / ${total} total` : ""
+                if (toastManager && taskId) {
+                  toastManager.showCompletionToast({
+                    id: taskId,
+                    description: args.description,
+                    agent: agentToUse,
+                    duration,
+                    tokens: tokens ?? undefined,
+                    result: signalDoneResult.slice(0, 200),
+                  })
+                }
+                return `⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(agentToUse)}
+TASK: ${args.description}
+${tokenline}
+DURATION: ${duration}
+✅ DELEGATION COMPLETE (signal_done)
+
+SESSION ID: ${sessionID}
+
+---
+
+${formatOutputByPreference(signalDoneResult, outputFormat)}`
+              }
 
               // debug: log message state every 10 polls
               if (pollCount % 10 === 0) {
@@ -669,18 +728,25 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
                 }
               }
 
-              // step 4: stability detection (always runs, regardless of status)
+              // BUG: stability detection disabled - unreliable, causes premature completion
+              // const elapsed = Date.now() - pollStart
+              // if (elapsed >= MIN_STABILITY_TIME_MS) {
+              //   if (currentMsgCount === lastMsgCount) {
+              //     stablePolls++
+              //     if (stablePolls >= STABILITY_POLLS_REQUIRED && hasValidOutput) {
+              //       log("[delegate_task] Poll complete - stable with output", { 
+              //         sessionID, pollCount, currentMsgCount 
+              //       })
+              //       break  // success
+              //     }
+              //   }
+              // }
+              
+              // Simple completion: just check for valid output after minimum time
               const elapsed = Date.now() - pollStart
-              if (elapsed >= MIN_STABILITY_TIME_MS) {
-                if (currentMsgCount === lastMsgCount) {
-                  stablePolls++
-                  if (stablePolls >= STABILITY_POLLS_REQUIRED && hasValidOutput) {
-                    log("[delegate_task] Poll complete - stable with output", { 
-                      sessionID, pollCount, currentMsgCount 
-                    })
-                    break  // success
-                  }
-                }
+              if (elapsed >= MIN_STABILITY_TIME_MS && hasValidOutput) {
+                log("[delegate_task] Poll complete - has valid output", { sessionID, pollCount, currentMsgCount })
+                break
               }
               lastMsgCount = currentMsgCount
             }

@@ -53,7 +53,17 @@ Response rules:
 - Match the language of the request
 - Be thorough on the goal, concise on everything else
 
-Your output goes straight to the main agent for continued work.`,
+Your output goes straight to the main agent for continued work.
+
+## COMPLETION (MANDATORY)
+
+When you finish analyzing the media file, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Your extracted information from the media file" })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.`,
   }
 }
 

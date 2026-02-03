@@ -40,13 +40,15 @@ From `src/tools/session-manager`:
 
 ### Delegation / Background
 
-From `src/tools/delegate-task` and `src/tools/background-task`:
+From `src/tools/delegate-task`, `src/tools/background-task`, and `src/tools/signal-done`:
 - `delegate_task`
 - `background_output`
 - `background_cancel`
+- `signal_done`
 
 Notes:
 - `delegate_task` args are defined in `src/tools/delegate-task/types.ts`.
+- `signal_done` is called by subagents to explicitly signal completion to the orchestrator.
 
 ### Explore/Librarian Spawner
 

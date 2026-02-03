@@ -17,22 +17,20 @@ const AgentPermissionSchema = z.object({
 })
 
 export const BuiltinAgentNameSchema = z.enum([
-   "oracle",
-   "librarian",
-   "explore",
-   "frontend-ui-ux-engineer",
-   "document-writer",
-   "multimodal-looker",
-   "Metis (Plan Consultant)",
-   "Momus (Plan Reviewer)",
-   "Paul",
-   "Solomon (TDD Planner)",
-   "Peter (Test Writer)",
-   "John (E2E Test Writer)",
-   "Joshua (Test Runner)",
-   "Thomas (TDD Plan Consultant)",
-   "planner-paul",
-   "worker-paul",
+  "oracle",
+  "librarian",
+  "explore",
+  "frontend-ui-ux-engineer",
+  "document-writer",
+  "multimodal-looker",
+  "Paul",
+  "Solomon (TDD Planner)",
+  "Peter (Test Writer)",
+  "John (E2E Test Writer)",
+  "Joshua (Test Runner)",
+  "Thomas (TDD Plan Consultant)",
+  "planner-paul",
+  "worker-paul",
 ])
 
 export const BuiltinSkillNameSchema = z.enum([
@@ -42,27 +40,25 @@ export const BuiltinSkillNameSchema = z.enum([
 ])
 
 export const OverridableAgentNameSchema = z.enum([
-    "build",
-    "plan",
-    "Paul-Junior",
-    "OpenCode-Builder",
-   "Prometheus (Planner)",
-   "Metis (Plan Consultant)",
-   "Momus (Plan Reviewer)",
-   "Paul",
-   "oracle",
-   "librarian",
-   "explore",
-   "frontend-ui-ux-engineer",
-   "document-writer",
-   "multimodal-looker",
-   "Solomon (TDD Planner)",
-   "Peter (Test Writer)",
-   "John (E2E Test Writer)",
-   "Joshua (Test Runner)",
-   "Thomas (TDD Plan Consultant)",
-   "planner-paul",
-   "Timothy (Implementation Plan Reviewer)",
+  "build",
+  "plan",
+  "Paul-Junior",
+  "OpenCode-Builder",
+  "Prometheus (Planner)",
+  "Paul",
+  "oracle",
+  "librarian",
+  "explore",
+  "frontend-ui-ux-engineer",
+  "document-writer",
+  "multimodal-looker",
+  "Solomon (TDD Planner)",
+  "Peter (Test Writer)",
+  "John (E2E Test Writer)",
+  "Joshua (Test Runner)",
+  "Thomas (TDD Plan Consultant)",
+  "planner-paul",
+  "Timothy (Implementation Plan Reviewer)",
 ])
 
 export const AgentNameSchema = BuiltinAgentNameSchema
@@ -101,11 +97,13 @@ export const HookNameSchema = z.enum([
    "planner-md-only",
    "prometheus-md-only",
    "hit-it",
-   "paul-orchestrator",
+   "paul",
    "tdd-enforcement",
    "strict-workflow",
    "hierarchy-enforcer",
    "parallel-safety-enforcer",
+   "todo-notification",
+   "delegation-notification",
 ])
 
 export const BuiltinCommandNameSchema = z.enum([
@@ -195,7 +193,6 @@ export const CategoryConfigSchema = z.object({
 
 export const BuiltinCategoryNameSchema = z.enum([
   "visual-engineering",
-  "ultrabrain",
   "artistry",
   "quick",
   "most-capable",

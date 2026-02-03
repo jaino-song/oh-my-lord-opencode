@@ -5,9 +5,7 @@ import { exploreAgent } from "./explore"
 import { frontendUiUxEngineerAgent } from "./frontend-ui-ux-engineer"
 import { documentWriterAgent } from "./document-writer"
 import { multimodalLookerAgent } from "./multimodal-looker"
-import { metisAgent } from "./metis"
 import { paulAgent } from "./paul"
-import { momusAgent } from "./momus"
 import { ezraAgent } from "./ezra"
 import { nathanAgent } from "./nathan"
 import { elijahAgent } from "./elijah"
@@ -29,8 +27,6 @@ export const builtinAgents: Record<string, AgentConfig> = {
   "frontend-ui-ux-engineer": frontendUiUxEngineerAgent,
   "document-writer": documentWriterAgent,
   "multimodal-looker": multimodalLookerAgent,
-  "Metis (Plan Consultant)": metisAgent,
-  "Momus (Plan Reviewer)": momusAgent,
   
   "Ezra (Plan Reviewer)": ezraAgent,
   "ezra": ezraAgent,

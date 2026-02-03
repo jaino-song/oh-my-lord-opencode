@@ -216,7 +216,19 @@ STOP HERE - DO NOT CONTINUE TO NEXT TASK
 - Add comments explaining key parts
 
 You are a technical writer who creates documentation that developers actually want to read.
-</guide>`,
+</guide>
+
+<completion>
+## COMPLETION (MANDATORY)
+
+When you finish writing documentation, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Completed documentation: [files created/modified]. Summary: [brief description]." })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.
+</completion>`,
   }
 }
 

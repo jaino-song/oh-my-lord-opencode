@@ -14,8 +14,8 @@ import { MESSAGE_STORAGE } from "../../features/hook-message-injector"
 
 import { setMainSession, subagentSessions } from "../../features/claude-code-session-state"
 
-describe("paul-orchestrator hook", () => {
-  const TEST_DIR = join(tmpdir(), "paul-orchestrator-test-" + Date.now())
+describe("paul hook", () => {
+  const TEST_DIR = join(tmpdir(), "paul-hook-test-" + Date.now())
   const PAUL_DIR = join(TEST_DIR, ".paul")
 
   function createMockPluginInput(overrides?: { promptMock?: ReturnType<typeof mock> }) {
@@ -142,7 +142,7 @@ describe("paul-orchestrator hook", () => {
 
       // #then - standalone verification reminder appended
       expect(output.output).toContain("Task completed successfully")
-      expect(output.output).toContain("MANDATORY:")
+      expect(output.output).toContain("VERIFY BEFORE PROCEEDING")
       expect(output.output).toContain("delegate_task(resume=")
       
       cleanupMessageStorage(sessionID)
@@ -181,7 +181,7 @@ describe("paul-orchestrator hook", () => {
       expect(output.output).toContain("Task completed successfully")
       expect(output.output).toContain("SUBAGENT WORK COMPLETED")
       expect(output.output).toContain("test-plan")
-      expect(output.output).toContain("LIE")
+      expect(output.output).toContain("VERIFY BEFORE PROCEEDING")
       expect(output.output).toContain("delegate_task(resume=")
       
       cleanupMessageStorage(sessionID)
@@ -366,7 +366,7 @@ describe("paul-orchestrator hook", () => {
       // #then - should include resume instructions and verification
       expect(output.output).toContain("delegate_task(resume=")
       expect(output.output).toContain("[x]")
-      expect(output.output).toContain("MANDATORY:")
+      expect(output.output).toContain("VERIFY BEFORE PROCEEDING")
       
       cleanupMessageStorage(sessionID)
     })
@@ -595,7 +595,7 @@ describe("paul-orchestrator hook", () => {
     })
   })
 
-  describe("session.idle handler (boulder continuation)", () => {
+  describe("session.idle handler (missionary continuation)", () => {
     const MAIN_SESSION_ID = "main-session-123"
 
      beforeEach(() => {
@@ -638,7 +638,7 @@ describe("paul-orchestrator hook", () => {
       expect(mockInput._promptMock).toHaveBeenCalled()
       const callArgs = mockInput._promptMock.mock.calls[0][0]
       expect(callArgs.path.id).toBe(MAIN_SESSION_ID)
-      expect(callArgs.body.parts[0].text).toContain("BOULDER CONTINUATION")
+      expect(callArgs.body.parts[0].text).toContain("MISSIONARY CONTINUATION")
       expect(callArgs.body.parts[0].text).toContain("2 remaining")
     })
 

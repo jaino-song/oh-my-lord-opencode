@@ -157,7 +157,19 @@ recommendation: a
 - After asking, the orchestrator will resume with an answer
 - Continue with the chosen option
 - If no answer after timeout, use your recommendation
-</clarification_protocol>`,
+</clarification_protocol>
+
+<completion>
+## COMPLETION (MANDATORY)
+
+When you finish your UI/UX implementation, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Completed: [brief summary of UI changes]. Files: [list of files created/modified]." })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.
+</completion>`,
   }
 }
 

@@ -117,7 +117,17 @@ Use the right tool for the job:
 - **File patterns** (find by name/extension): glob
 - **History/evolution** (when added, who changed): git commands
 
-Flood with parallel calls. Cross-validate findings across multiple tools.`,
+Flood with parallel calls. Cross-validate findings across multiple tools.
+
+## COMPLETION (MANDATORY)
+
+When you finish your search, you MUST call the \`signal_done\` tool:
+
+\`\`\`typescript
+signal_done({ result: "Your structured <results> output with files, answer, and next_steps" })
+\`\`\`
+
+This signals completion to the orchestrator. Do NOT output anything after calling signal_done.`,
   }
 }
 
