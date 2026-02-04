@@ -1,18 +1,9 @@
-import { injectHookMessage } from "../../features/hook-message-injector"
 import { log } from "../../shared/logger"
 import { createSystemDirective, SystemDirectiveTypes } from "../../shared/system-directive"
 
-export interface SummarizeContext {
-  sessionID: string
-  providerID: string
-  modelID: string
-  usageRatio: number
-  directory: string
-}
+export const COMPACTION_CONTEXT_PROMPT = `${createSystemDirective(SystemDirectiveTypes.COMPACTION_CONTEXT)}
 
-const SUMMARIZE_CONTEXT_PROMPT = `${createSystemDirective(SystemDirectiveTypes.COMPACTION_CONTEXT)}
-
-SUMMARY LENGTH: Create a COMPREHENSIVE summary (4000-8000 tokens). Prioritize SPECIFICITY over brevity.
+SUMMARY LENGTH: Create a COMPREHENSIVE summary (6000-8000 tokens). Prioritize SPECIFICITY over brevity.
 Include exact file paths, function names, error messages, and technical details. Vague summaries lose critical context.
 
 You MUST include the following sections IN THIS EXACT ORDER.
@@ -76,20 +67,24 @@ Example format:
 Post-compaction: Agent MUST re-read sections 1-2 before taking any action.
 `
 
+interface CompactingInput {
+  sessionID: string
+}
+
+interface CompactingOutput {
+  context: string[]
+  prompt?: string
+}
+
 export function createCompactionContextInjector() {
-  return async (ctx: SummarizeContext): Promise<void> => {
-    log("[compaction-context-injector] injecting context", { sessionID: ctx.sessionID })
-
-    const success = injectHookMessage(ctx.sessionID, SUMMARIZE_CONTEXT_PROMPT, {
-      agent: "general",
-      model: { providerID: ctx.providerID, modelID: ctx.modelID },
-      path: { cwd: ctx.directory },
-    })
-
-    if (success) {
-      log("[compaction-context-injector] context injected", { sessionID: ctx.sessionID })
-    } else {
-      log("[compaction-context-injector] injection failed", { sessionID: ctx.sessionID })
+  return {
+    "experimental.session.compacting": async (
+      input: CompactingInput,
+      output: CompactingOutput
+    ): Promise<void> => {
+      log("[compaction-context-injector] injecting context", { sessionID: input.sessionID })
+      output.context.push(COMPACTION_CONTEXT_PROMPT)
+      log("[compaction-context-injector] context injected", { sessionID: input.sessionID })
     }
   }
 }

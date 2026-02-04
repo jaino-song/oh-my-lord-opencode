@@ -3,6 +3,12 @@ import { HOOK_NAME, PACKAGE_MANAGERS, BANNED_PM_COMMANDS, COMMIT_REGEX } from ".
 
 export * from "./constants"
 
+const OH_MY_LORD_REPO_MARKERS = ["oh-my-lord-opencode", "oh-my-lord-claude"]
+
+function isOhMyLordRepo(directory: string): boolean {
+  return OH_MY_LORD_REPO_MARKERS.some(marker => directory.toLowerCase().includes(marker))
+}
+
 function isBannedPackageCommand(command: string): boolean {
   const trimmed = command.trim()
   const pm = PACKAGE_MANAGERS.find(p => trimmed.startsWith(p + " "))
@@ -25,11 +31,14 @@ export function createStrictWorkflowHook(ctx: PluginInput) {
 
       if (tool === "bash") {
         const command = output.args.command as string | undefined
-        if (command && isBannedPackageCommand(command)) {
+        const workdir = output.args.workdir as string | undefined
+        const effectiveDir = workdir ?? ctx.directory
+        
+        if (command && isBannedPackageCommand(command) && isOhMyLordRepo(effectiveDir)) {
           const pm = PACKAGE_MANAGERS.find(p => command.trim().startsWith(p))
           throw new Error(
             `[${HOOK_NAME}] BLOCKED: usage of '${pm}' for dependency management.\n` +
-            `This project strictly uses 'bun'.\n` +
+            `This project (oh-my-lord) strictly uses 'bun'.\n` +
             `Use 'bun install', 'bun add', 'bun remove' instead.`
           )
         }

@@ -441,6 +441,14 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       ]?.(input, output as any);
     },
 
+    "experimental.session.compacting": async (
+      input: { sessionID: string },
+      output: { context: string[]; prompt?: string }
+    ) => {
+      await compactionContextInjector?.["experimental.session.compacting"]?.(input, output);
+      await claudeCodeHooks["experimental.session.compacting"]?.(input, output);
+    },
+
     config: configHandler,
 
     event: async (input) => {
