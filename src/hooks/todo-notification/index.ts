@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { getParentAgentName } from "../../features/agent-context"
-import { showToast, injectNotification, getCurrentModel, type ToastClient } from "../shared/notification"
+import { showToast, getCurrentModel, type ToastClient } from "../shared/notification"
+import type { StoredMessage } from "../../features/hook-message-injector"
 
 const notifiedTodos = new Map<string, Set<string>>()
 
@@ -10,6 +11,35 @@ export function clearNotifiedTodos(sessionID?: string): void {
   } else {
     notifiedTodos.clear()
   }
+}
+
+function capitalizeAgent(agent: string): string {
+  return agent.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join("-")
+}
+
+async function injectTodoAlert(
+  client: ToastClient,
+  sessionID: string,
+  agent: string,
+  task: string,
+  currentModel?: StoredMessage["model"]
+): Promise<void> {
+  if (!client.session?.prompt) return
+  
+  const notification = `[TODO ALERT - OH-MY-LORD-OPENCODE]
+⚡ ${capitalizeAgent(agent)}
+TODO: ${task}
+✅ TODO DONE`
+
+  await client.session.prompt({
+    path: { id: sessionID },
+    body: {
+      noReply: true,
+      parts: [{ type: "text", text: notification }],
+      ...(agent ? { agent } : {}),
+      ...(currentModel ? { model: currentModel } : {}),
+    },
+  }).catch(() => {})
 }
 
 export function createTodoNotificationHook(ctx: PluginInput) {
@@ -41,11 +71,7 @@ export function createTodoNotificationHook(ctx: PluginInput) {
           if (!sessionNotified.has(todo.id)) {
             await showToast(client, "✅ Task Completed", shortTask, "success", 5000)
             if (!isDelegationTodo) {
-              await injectNotification(client, input.sessionID, "completed", { 
-                fromAgent: currentAgent, 
-                toAgent: "todo", 
-                task: todo.content 
-              }, currentAgent, currentModel)
+              await injectTodoAlert(client, input.sessionID, currentAgent, todo.content, currentModel)
             }
             sessionNotified.add(todo.id)
           }

@@ -39,6 +39,8 @@ export { createHierarchyEnforcerHook, stripAllSystemInjections } from "./hierarc
 export { createParallelSafetyEnforcerHook } from "./parallel-safety-enforcer";
 export { createTodoNotificationHook, clearNotifiedTodos } from "./todo-notification";
 export { createDelegationNotificationHook } from "./delegation-notification";
+export { createSystemInjectionStripperHook } from "./system-injection-stripper";
+export { createSignalDoneEnforcerHook, clearSignalDoneTracking } from "./signal-done-enforcer";
 
 /**
  * Sorts hooks by priority in descending order (highest priority first).

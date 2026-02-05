@@ -70,7 +70,7 @@ export async function injectNotification(
     lines.push(`ERROR: ${options.reason}`)
   }
   
-  const notification = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
+  const notification = `[DELEGATION ALERT - OH-MY-LORD-OPENCODE]
 ${lines.join("\n")}`
   
   await client.session.prompt({

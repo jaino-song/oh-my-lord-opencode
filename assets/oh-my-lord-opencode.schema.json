@@ -91,7 +91,9 @@
           "hierarchy-enforcer",
           "parallel-safety-enforcer",
           "todo-notification",
-          "delegation-notification"
+          "delegation-notification",
+          "system-injection-stripper",
+          "signal-done-enforcer"
         ]
       }
     },

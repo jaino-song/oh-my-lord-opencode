@@ -55,12 +55,12 @@ describe("prometheus-md-only", () => {
     }
   })
 
-  describe("with Prometheus agent in message storage", () => {
+  describe("with planner-paul agent in message storage", () => {
     beforeEach(() => {
-      setupMessageStorage(TEST_SESSION_ID, "Prometheus (Planner)")
+      setupMessageStorage(TEST_SESSION_ID, "planner-paul")
     })
 
-    test("should block Prometheus from writing non-.md files", async () => {
+    test("should block planner-paul from writing non-.md files", async () => {
       // #given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -488,7 +488,7 @@ describe("prometheus-md-only", () => {
 
   describe("cross-platform path validation", () => {
     beforeEach(() => {
-      setupMessageStorage(TEST_SESSION_ID, "Prometheus (Planner)")
+      setupMessageStorage(TEST_SESSION_ID, "planner-paul")
     })
 
      test("should allow Windows-style backslash paths under .paul/", async () => {

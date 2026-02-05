@@ -761,14 +761,13 @@ export class BackgroundManager {
         .map(t => `- \`${t.id}\`: ${t.description}`)
         .join("\n")
 
-      notification = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
+      notification = `[DELEGATION ALERT - OH-MY-LORD-OPENCODE]
 ✅ all background tasks complete
 ${tokenLine}
 
 ${completedTasks || `- \`${task.id}\`: ${task.description}`}
 
-Use \`background_output(task_id="<id>")\` to retrieve each result.
-[/SYSTEM DIRECTIVE]`
+Use \`background_output(task_id="<id>")\` to retrieve each result.`
     } else {
       // Individual completion - get token usage
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -779,17 +778,16 @@ Use \`background_output(task_id="<id>")\` to retrieve each result.
         : ""
       
       const parentAgentName = task.parentAgent || "Agent"
-      notification = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
+      notification = `[DELEGATION ALERT - OH-MY-LORD-OPENCODE]
 ⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(task.agent)}
 TASK: ${task.description}
 ${tokenLine}
 DURATION: ${duration}
-${statusText === "COMPLETED" ? "✅ DELEGATION COMPLETE" : `❌ DELEGATION ${statusText}`}${errorInfo}
+${statusText === "COMPLETED" ? `✅ TASK (task_id="${task.id}") COMPLETE` : `❌ TASK (task_id="${task.id}") ${statusText}`}${errorInfo}
 
 ${remainingCount > 0 ? `${remainingCount} task${remainingCount === 1 ? "" : "s"} still running.` : ""}
 
-Use \`background_output(task_id="${task.id}")\` to retrieve result.
-[/SYSTEM DIRECTIVE]`
+Use \`background_output(task_id="${task.id}")\` to retrieve result.`
     }
 
     let agent: string | undefined = task.parentAgent

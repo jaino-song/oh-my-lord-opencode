@@ -3,7 +3,6 @@ import { createSystemDirective, SystemDirectiveTypes } from "../../shared/system
 export const HOOK_NAME = "planner-md-only"
 
 export const PLANNER_AGENTS = [
-  "Prometheus (Planner)",
   "Solomon (TDD Planner)",
   "planner-paul",
 ]

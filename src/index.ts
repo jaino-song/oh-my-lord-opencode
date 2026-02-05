@@ -39,6 +39,8 @@ import {
   createParallelSafetyEnforcerHook,
   createTodoNotificationHook,
   createDelegationNotificationHook,
+  createSystemInjectionStripperHook,
+  createSignalDoneEnforcerHook,
 } from "./hooks";
 import { TokenAnalyticsManager, createTokenAnalyticsHook, createTokenReportTool } from "./features/token-analytics";
 import {
@@ -192,6 +194,9 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   const thinkingBlockValidator = isHookEnabled("thinking-block-validator")
     ? createThinkingBlockValidatorHook()
     : null;
+  const systemInjectionStripper = isHookEnabled("system-injection-stripper")
+    ? createSystemInjectionStripperHook()
+    : null;
 
   const ralphLoop = isHookEnabled("ralph-loop")
     ? createRalphLoopHook(ctx, {
@@ -252,6 +257,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
    
    const delegationNotification = isHookEnabled("delegation-notification")
      ? createDelegationNotificationHook(ctx)
+     : null;
+
+   const signalDoneEnforcer = isHookEnabled("signal-done-enforcer")
+     ? createSignalDoneEnforcerHook(ctx)
      : null;
 
   // TEMPORARILY DISABLED - re-enable by uncommenting below
@@ -439,6 +448,10 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
         "experimental.chat.messages.transform"
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ]?.(input, output as any);
+      await systemInjectionStripper?.[
+        "experimental.chat.messages.transform"
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ]?.(input, output as any);
     },
 
     "experimental.session.compacting": async (
@@ -468,6 +481,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await ralphLoop?.event(input);
       await paulOrchestrator?.handler(input);
       await tokenAnalyticsHook.event?.(input);
+      await signalDoneEnforcer?.handler(input);
 
       const { event } = input;
       const props = event.properties as Record<string, unknown> | undefined;
@@ -615,6 +629,7 @@ await editErrorRecovery?.["tool.execute.after"](input, output);
         await strictWorkflow?.["tool.execute.after"]?.(input, output);
         await delegationNotification?.["tool.execute.after"]?.(input, output);
         await parallelSafetyEnforcer?.["tool.execute.after"]?.(input, output);
+        await signalDoneEnforcer?.["tool.execute.after"]?.(input, output);
       await taskResumeInfo["tool.execute.after"](input, output);
       await tokenAnalyticsHook["tool.execute.after"]?.(input, output);
     },

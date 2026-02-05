@@ -143,6 +143,7 @@ interface MessagePart {
   tool?: string
   text?: string
   input?: { result?: string }
+  state?: { input?: { result?: string } }
 }
 
 interface SessionMessage {
@@ -154,8 +155,10 @@ function findSignalDoneResult(messages: SessionMessage[]): string | null {
   for (const msg of messages) {
     if (msg.info?.role !== "assistant") continue
     for (const part of msg.parts ?? []) {
-      if (part.type === "tool_use" && (part.name === SIGNAL_DONE_TOOL_NAME || part.tool === SIGNAL_DONE_TOOL_NAME)) {
-        const result = part.input?.result
+      const isToolPart = part.type === "tool_use" || part.type === "tool"
+      const isSignalDone = part.name === SIGNAL_DONE_TOOL_NAME || part.tool === SIGNAL_DONE_TOOL_NAME
+      if (isToolPart && isSignalDone) {
+        const result = part.input?.result ?? part.state?.input?.result
         if (typeof result === "string") {
           return result
         }
@@ -163,6 +166,52 @@ function findSignalDoneResult(messages: SessionMessage[]): string | null {
     }
   }
   return null
+}
+
+interface ErrorLoopResult {
+  detected: boolean
+  reason?: string
+  recentOutputs?: string[]
+}
+
+function detectErrorLoop(messages: SessionMessage[]): ErrorLoopResult {
+  const recentTexts: string[] = []
+  
+  const recentMsgs = messages.slice(-10)
+  for (const msg of recentMsgs) {
+    if (msg.info?.role !== "assistant") continue
+    for (const part of msg.parts ?? []) {
+      if (part.type === "text" && part.text) {
+        recentTexts.push(part.text.trim().slice(0, 200))
+      }
+    }
+  }
+  
+  if (recentTexts.length < 3) {
+    return { detected: false }
+  }
+  
+  const lastThree = recentTexts.slice(-3)
+  const allSame = lastThree.every(t => t === lastThree[0])
+  if (allSame && lastThree[0].length > 10) {
+    return {
+      detected: true,
+      reason: "Same output repeated 3+ times",
+      recentOutputs: lastThree,
+    }
+  }
+  
+  const errorPatterns = /\b(error|failed|cannot|unable|exception|refused|denied|invalid|unauthorized)\b/i
+  const errorCount = recentTexts.filter(t => errorPatterns.test(t)).length
+  if (errorCount >= 3 && errorCount === recentTexts.length) {
+    return {
+      detected: true,
+      reason: "All recent outputs contain error messages",
+      recentOutputs: recentTexts.slice(-3),
+    }
+  }
+  
+  return { detected: false }
 }
 
 type ToolContextWithMetadata = {
@@ -362,42 +411,40 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
           return `❌ Failed to send resume prompt: ${errorMessage}\n\nSession ID: ${args.resume}`
         }
 
-        // Wait for message stability after prompt completes
         const POLL_INTERVAL_MS = 500
-        const MIN_STABILITY_TIME_MS = 15000
-        const STABILITY_POLLS_REQUIRED = 4
-        const NO_PROGRESS_TIMEOUT_MS = 90000
         const pollStart = Date.now()
         let lastMsgCount = 0
-        let stablePolls = 0
-        let lastMsgChangeTime = Date.now()
 
         while (Date.now() - pollStart < 120000) {
           await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS))
 
           const messagesCheck = await client.session.messages({ path: { id: args.resume } })
-          const msgs = ((messagesCheck as { data?: unknown }).data ?? messagesCheck) as Array<unknown>
+          const msgs = ((messagesCheck as { data?: unknown }).data ?? messagesCheck) as Array<SessionMessage>
           const currentMsgCount = msgs.length
-          const hasValidOutput = hasValidOutputFromMessages(msgs as any)
 
-          // BUG: no-progress timeout disabled for resume - has timing bugs with stale lastMsgChangeTime
-          // if (currentMsgCount !== lastMsgCount) {
-          //   lastMsgChangeTime = Date.now()
-          //   stablePolls = 0
-          // } else {
-          //   const timeSinceLastProgress = Date.now() - lastMsgChangeTime
-          //   if (!hasValidOutput && timeSinceLastProgress >= NO_PROGRESS_TIMEOUT_MS) {
-          //     log("[delegate_task:resume] No progress timeout", { sessionID: args.resume, timeSinceLastProgress })
-          //     throw new Error("No progress for 90s and no valid output - possible rate limiting or API stall")
-          //   }
-          // }
-          lastMsgCount = currentMsgCount
+          const signalDoneResult = findSignalDoneResult(msgs)
+          if (signalDoneResult !== null) {
+            log("[delegate_task:resume] signal_done detected", { sessionID: args.resume })
+            subagentSessions.delete(args.resume)
+            if (toastManager) toastManager.removeTask(taskId)
+            const duration = formatDuration(startTime)
+            const tokens = await getsessiontokenusage(client as any, args.resume)
+            const total = tokens ? tokens.input + tokens.output : 0
+            const tokenline = tokens ? `TOKENS: ${tokens.input} in / ${tokens.output} out / ${total} total` : ""
+            return `⚡ RESUME → ${args.resume}
+TASK: ${args.prompt.slice(0, 100)}...
+${tokenline}
+DURATION: ${duration}
+✅ TASK (session_id="${args.resume}") COMPLETE (signal_done)
 
-          // BUG: stability detection disabled for resume - unreliable completion detection
-          const elapsed = Date.now() - pollStart
-          if (elapsed >= MIN_STABILITY_TIME_MS && currentMsgCount > 0 && hasValidOutput) {
-            break
+SESSION ID: ${args.resume}
+
+---
+
+${formatOutputByPreference(signalDoneResult, outputFormat)}`
           }
+
+          lastMsgCount = currentMsgCount
         }
 
         const messagesResult = await client.session.messages({
@@ -456,7 +503,7 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
 TASK: ${args.description}
 ${tokenline}
 DURATION: ${duration}
-✅ DELEGATION COMPLETE
+✅ TASK (session_id="${args.resume}") COMPLETE
 
 SESSION ID: ${args.resume}
 
@@ -596,9 +643,9 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
 
 const POLL_INTERVAL_MS = 500
 const MAX_POLL_TIME_MS = 10 * 60 * 1000
-const MIN_STABILITY_TIME_MS = 30000
-const STABILITY_POLLS_REQUIRED = 5
 const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
+const CHECKPOINT_TIME_MS = 5 * 60 * 1000
+const ERROR_LOOP_CHECK_INTERVAL_MS = 2 * 60 * 1000
 
         for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
           try {
@@ -629,15 +676,38 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
 
             const pollStart = Date.now()
             let lastMsgCount = 0
-            let stablePolls = 0
             let pollCount = 0
             let lastMsgChangeTime = Date.now()
+            let checkpointChecked = false
+            let needsRetry = false
+            let lastErrorLoopCheck = 0
 
             log("[delegate_task] Starting poll loop", { sessionID, agentToUse })
 
             while (Date.now() - pollStart < MAX_POLL_TIME_MS) {
               if (ctx.abort?.aborted) {
-                log("[delegate_task] Aborted by user", { sessionID })
+                log("[delegate_task] Aborted by user - checking for signal_done first", { sessionID })
+                try {
+                  const messagesOnAbort = await client.session.messages({ path: { id: sessionID } })
+                  const msgsOnAbort = ((messagesOnAbort as { data?: unknown }).data ?? messagesOnAbort) as Array<SessionMessage>
+                  const signalDoneOnAbort = findSignalDoneResult(msgsOnAbort)
+                  if (signalDoneOnAbort !== null) {
+                    log("[delegate_task] signal_done found on abort - returning result", { sessionID })
+                    subagentSessions.delete(sessionID)
+                    if (toastManager && taskId) toastManager.removeTask(taskId)
+                    return `⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(agentToUse)}
+TASK: ${args.description}
+✅ TASK (session_id="${sessionID}") COMPLETE (signal_done, recovered on abort)
+
+SESSION ID: ${sessionID}
+
+---
+
+${formatOutputByPreference(signalDoneOnAbort, outputFormat)}`
+                  }
+                } catch (err) {
+                  log("[delegate_task] Failed to check signal_done on abort", { sessionID, error: String(err) })
+                }
                 if (toastManager && taskId) toastManager.removeTask(taskId)
                 return `Task aborted.\n\nSession ID: ${sessionID}`
               }
@@ -659,7 +729,6 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
                   pollCount,
                   elapsed: Math.floor((Date.now() - pollStart) / 1000) + "s",
                   sessionStatus: sessionStatus?.type ?? "not_in_status",
-                  stablePolls,
                   lastMsgCount,
                 })
               }
@@ -691,7 +760,7 @@ const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
 TASK: ${args.description}
 ${tokenline}
 DURATION: ${duration}
-✅ DELEGATION COMPLETE (signal_done)
+✅ TASK (session_id="${sessionID}") COMPLETE (signal_done)
 
 SESSION ID: ${sessionID}
 
@@ -717,7 +786,6 @@ ${formatOutputByPreference(signalDoneResult, outputFormat)}`
               // No-progress timeout: catches rate limiting regardless of session status
               if (currentMsgCount !== lastMsgCount) {
                 lastMsgChangeTime = Date.now()
-                stablePolls = 0
               } else {
                 const timeSinceLastProgress = Date.now() - lastMsgChangeTime
                 if (!hasValidOutput && timeSinceLastProgress >= WORKING_NO_PROGRESS_TIMEOUT_MS) {
@@ -728,31 +796,92 @@ ${formatOutputByPreference(signalDoneResult, outputFormat)}`
                 }
               }
 
-              // BUG: stability detection disabled - unreliable, causes premature completion
-              // const elapsed = Date.now() - pollStart
-              // if (elapsed >= MIN_STABILITY_TIME_MS) {
-              //   if (currentMsgCount === lastMsgCount) {
-              //     stablePolls++
-              //     if (stablePolls >= STABILITY_POLLS_REQUIRED && hasValidOutput) {
-              //       log("[delegate_task] Poll complete - stable with output", { 
-              //         sessionID, pollCount, currentMsgCount 
-              //       })
-              //       break  // success
-              //     }
-              //   }
-              // }
-              
-              // Simple completion: just check for valid output after minimum time
+              // 5-minute checkpoint: if session idle without signal_done, mark for retry
+              // (signal_done is already checked every poll at line 703, so no need to check again)
               const elapsed = Date.now() - pollStart
-              if (elapsed >= MIN_STABILITY_TIME_MS && hasValidOutput) {
-                log("[delegate_task] Poll complete - has valid output", { sessionID, pollCount, currentMsgCount })
-                break
+              if (!checkpointChecked && elapsed >= CHECKPOINT_TIME_MS) {
+                checkpointChecked = true
+                log("[delegate_task] 5-minute checkpoint reached", { sessionID, status: sessionStatus?.type })
+                
+                if (sessionStatus?.type === "idle" || !sessionStatus) {
+                  log("[delegate_task] Session idle at checkpoint without signal_done - marking for retry", { sessionID })
+                  needsRetry = true
+                  break
+                }
+                log("[delegate_task] Session still busy at checkpoint - continuing", { sessionID, status: sessionStatus?.type })
               }
+              
+              // Error loop detection: check if busy session is stuck in error loop
+              if (sessionStatus?.type !== "idle" && elapsed - lastErrorLoopCheck >= ERROR_LOOP_CHECK_INTERVAL_MS) {
+                lastErrorLoopCheck = elapsed
+                const errorLoop = detectErrorLoop(msgs)
+                if (errorLoop.detected) {
+                  log("[delegate_task] Error loop detected", { sessionID, reason: errorLoop.reason })
+                  if (toastManager && taskId) toastManager.removeTask(taskId)
+                  subagentSessions.delete(sessionID)
+                  const recentOutput = errorLoop.recentOutputs?.join("\n---\n") ?? "(no output)"
+                  return `⚠️ ERROR LOOP DETECTED
+
+⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(agentToUse)}
+TASK: ${args.description}
+
+❌ Subagent appears stuck in an error loop.
+
+**Reason**: ${errorLoop.reason}
+**Session ID**: ${sessionID}
+
+**Recent outputs**:
+\`\`\`
+${recentOutput}
+\`\`\`
+
+**Actions for user**:
+1. Check session manually: \`session_read(session_id="${sessionID}")\`
+2. The subagent may be hitting a repeating error
+3. Review the error and fix the underlying issue
+
+This task requires manual intervention.`
+                }
+              }
+              
               lastMsgCount = currentMsgCount
             }
 
             if (Date.now() - pollStart >= MAX_POLL_TIME_MS) {
-              log("[delegate_task] Poll timeout reached", { sessionID, pollCount, lastMsgCount, stablePolls })
+              log("[delegate_task] Poll timeout reached", { sessionID, pollCount, lastMsgCount })
+              needsRetry = true
+            }
+
+            if (needsRetry && attempt < MAX_RETRY_ATTEMPTS) {
+              log("[delegate_task] Retrying delegation after checkpoint failure", { sessionID, attempt })
+              if (toastManager && taskId) toastManager.removeTask(taskId)
+              continue
+            }
+
+            if (needsRetry) {
+              log("[delegate_task] Retry also failed - escalating to user", { sessionID })
+              if (toastManager && taskId) toastManager.removeTask(taskId)
+              subagentSessions.delete(sessionID)
+              return `⚠️ ESCALATION REQUIRED
+
+⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(agentToUse)}
+TASK: ${args.description}
+
+❌ Subagent did not call signal_done after 5 minutes and retry failed.
+
+**Session ID**: ${sessionID}
+
+**What happened**:
+- Delegated task to ${agentToUse}
+- Waited 5 minutes, session went idle without signal_done
+- Retried delegation, still no signal_done
+
+**Actions for user**:
+1. Check session manually: \`session_read(session_id="${sessionID}")\`
+2. The subagent may have completed but forgot to call signal_done
+3. Review the session output and decide next steps
+
+This task requires manual intervention.`
             }
 
             lastError = null
@@ -862,7 +991,7 @@ ${formatOutputByPreference(signalDoneResult, outputFormat)}`
 TASK: ${args.description}
 ${tokenline}
 DURATION: ${duration}
-✅ DELEGATION COMPLETE
+✅ TASK (session_id="${sessionID}") COMPLETE
 
 SESSION ID: ${sessionID}
 

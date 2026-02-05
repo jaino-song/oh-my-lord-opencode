@@ -104,6 +104,8 @@ export const HookNameSchema = z.enum([
    "parallel-safety-enforcer",
    "todo-notification",
    "delegation-notification",
+   "system-injection-stripper",
+   "signal-done-enforcer",
 ])
 
 export const BuiltinCommandNameSchema = z.enum([

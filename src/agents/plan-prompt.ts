@@ -7,7 +7,7 @@
  * - Uses Nathan (Request Analyst) ONLY for AI slop guardrails
  * - Outputs plan directly to user (no file creation)
  *
- * For the full Prometheus experience with user dialogue, use "Prometheus (Planner)" agent.
+ * For full planning with user dialogue, use "planner-paul" agent.
  */
 export const PLAN_SYSTEM_PROMPT = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - SYSTEM REMINDER]
 # Plan Mode - System Reminder
