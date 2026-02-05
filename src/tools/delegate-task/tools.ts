@@ -22,8 +22,7 @@ type OpencodeClient = PluginInput["client"]
 
 const ORCHESTRATOR_AGENTS = ["Paul", "planner-paul", "Sisyphus"]
 
-const DEFAULT_OUTPUT_SUMMARY_TOKENS = 300
-const SKILL_SUMMARY_TOKENS = 300
+const DEFAULT_OUTPUT_SUMMARY_TOKENS = 800
 
 const capitalizeAgent = (s: string) => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-')
 
@@ -132,9 +131,8 @@ function formatOutputByPreference(content: string, outputFormat: "summary" | "fu
 }
 
 function summarizeSkillContent(content: string): string {
-  const { result, truncated } = truncateToTokenLimit(content, SKILL_SUMMARY_TOKENS, 0)
-  if (!truncated) return result
-  return `${result}\n\n[Skill content truncated to save context. Use a full skill load if needed.]`
+  // Skills are intentionally loaded - return full content without truncation
+  return content
 }
 
 interface MessagePart {

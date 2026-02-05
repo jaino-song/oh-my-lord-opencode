@@ -41,7 +41,7 @@ export function createDirectoryReadmeInjectorHook(ctx: PluginInput) {
   const sessionCaches = new Map<string, Set<string>>();
   const pendingBatchReads = new Map<string, string[]>();
   const truncator = createDynamicTruncator(ctx);
-  const MAX_CONTEXT_TOKENS = 500;
+  const MAX_CONTEXT_TOKENS = 2000;
 
   function getSessionCache(sessionID: string): Set<string> {
     if (!sessionCaches.has(sessionID)) {
@@ -100,7 +100,7 @@ export function createDirectoryReadmeInjectorHook(ctx: PluginInput) {
           preserveHeaderLines: 0,
         });
         const truncationNotice = truncated
-          ? `\n\n[Note: Content was truncated to save context window space. For full context, please read the file directly: ${readmePath}]`
+          ? `\n\n[Note: README truncated. Read directly for full content: ${readmePath}]`
           : "";
         output.output += `\n\n[Project README: ${readmePath}]\n${result}${truncationNotice}`;
         cache.add(readmeDir);

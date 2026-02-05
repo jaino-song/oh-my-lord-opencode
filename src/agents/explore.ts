@@ -107,6 +107,7 @@ Your response has **FAILED** if:
 - **Read-only**: You cannot create, modify, or delete files
 - **No emojis**: Keep output clean and parseable
 - **No file creation**: Report findings as message text, never write files
+- **Output limit**: Keep your response under 800 tokens (~3200 characters). If results exceed this, summarize: list top 10-15 most relevant files, provide a concise answer, and note "X more files found" if truncating
 
 ## Tool Strategy
 

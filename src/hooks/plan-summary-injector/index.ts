@@ -1,10 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { statSync } from "node:fs"
-import { truncateToTokenLimit } from "../../shared/dynamic-truncator"
 import { getSessionAgent } from "../../features/claude-code-session-state"
 
-const MAX_SUMMARY_TOKENS = 500
-const MAX_TODOS = 40
 const PLAN_PATH_PATTERN = /[\\/](\.paul|\.sisyphus)[\\/]plans[\\/].+\.md$/
 const SUMMARY_CACHE = new Map<string, { mtimeMs: number; summary: string }>()
 
@@ -19,13 +16,7 @@ function summarizePlanContent(content: string, filePath: string): string {
   const todos = lines.filter((line) => /^[-*]\s*\[[ xX]\]/.test(line))
   const completed = todos.filter((line) => /\[[xX]\]/.test(line)).length
   const total = todos.length
-  const listed = todos.slice(0, MAX_TODOS)
-  const remaining = total - listed.length
-  const summary = `# ${title}\n\n## TODO Summary (${completed}/${total})\n${listed.join("\n") || "- [ ] (no todos found)"}${
-    remaining > 0 ? `\n... ${remaining} more todos not shown` : ""
-  }\n\n[Plan content summarized for context efficiency. Read the plan file directly if full details are required.]`
-  const { result } = truncateToTokenLimit(summary, MAX_SUMMARY_TOKENS, 0)
-  return result
+  return `# ${title}\n\n## TODO Summary (${completed}/${total})\n${todos.join("\n") || "- [ ] (no todos found)"}\n\n[Plan summary - full content follows]\n\n${content}`
 }
 
 function getSummaryFromCache(filePath: string, content: string): string {

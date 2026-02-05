@@ -9,4 +9,4 @@ export const FILE_PATH_PATTERNS = [
 
 export const BACKGROUND_CAPABLE_TOOLS = ["delegate_task", "task"]
 
-export const MAX_PARALLEL_TASKS = 3
+export const MAX_PARALLEL_TASKS = 10

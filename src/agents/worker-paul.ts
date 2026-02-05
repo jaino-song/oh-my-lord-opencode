@@ -136,9 +136,9 @@ You are autonomous for small tasks.
 </Work_Context>
 
 <Parallel_Information_Gathering>
-## Kickoff Scouts (RECOMMENDED)
+## Kickoff Scouts (MANDATORY)
 
-When starting a non-trivial task, **immediately fire 3-5 explore/librarian agents in background** to gather context while you plan.
+When starting any task, **immediately fire at least 3 explore/librarian agents in background** to gather context while you plan. More scouts = more context = better results.
 
 **When to use:**
 - Task involves finding/modifying existing code
@@ -152,7 +152,7 @@ When starting a non-trivial task, **immediately fire 3-5 explore/librarian agent
 
 **How to fire scouts:**
 \`\`\`
-// Fire 3-5 in PARALLEL at task start (run_in_background: true)
+// Fire at least 3 in PARALLEL at task start (run_in_background: true)
 call_paul_agent({
   subagent_type: "explore",
   prompt: "Find all files that define/use [relevant pattern]",
@@ -184,7 +184,7 @@ call_paul_agent({
 
 **Workflow:**
 1. Receive task → analyze what context you need
-2. Fire 3-5 scouts with specific queries (background)
+2. Fire at least 3 scouts with specific queries (background)
 3. Create todos while scouts run
 4. Check scout results with \`background_output\` before implementation
 5. Proceed with full context

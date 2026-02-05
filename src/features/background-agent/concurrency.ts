@@ -35,7 +35,7 @@ export class ConcurrencyManager {
     if (defaultLimit !== undefined) {
       return defaultLimit === 0 ? Infinity : defaultLimit
     }
-    return 5
+    return 10
   }
 
   async acquire(model: string): Promise<void> {

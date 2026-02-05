@@ -7,7 +7,6 @@ import {
   clearInjectedPaths,
 } from "./storage";
 import { AGENTS_FILENAME } from "./constants";
-import { createDynamicTruncator } from "../../shared/dynamic-truncator";
 
 interface ToolExecuteInput {
   tool: string;
@@ -40,8 +39,6 @@ interface EventInput {
 export function createDirectoryAgentsInjectorHook(ctx: PluginInput) {
   const sessionCaches = new Map<string, Set<string>>();
   const pendingBatchReads = new Map<string, string[]>();
-  const truncator = createDynamicTruncator(ctx);
-  const MAX_CONTEXT_TOKENS = 500;
 
   function getSessionCache(sessionID: string): Set<string> {
     if (!sessionCaches.has(sessionID)) {
@@ -100,14 +97,7 @@ export function createDirectoryAgentsInjectorHook(ctx: PluginInput) {
 
       try {
         const content = readFileSync(agentsPath, "utf-8");
-        const { result, truncated } = await truncator.truncate(sessionID, content, {
-          targetMaxTokens: MAX_CONTEXT_TOKENS,
-          preserveHeaderLines: 0,
-        });
-        const truncationNotice = truncated
-          ? `\n\n[Note: Content was truncated to save context window space. For full context, please read the file directly: ${agentsPath}]`
-          : "";
-        output.output += `\n\n[Directory Context: ${agentsPath}]\n${result}${truncationNotice}`;
+        output.output += `\n\n[Directory Context: ${agentsPath}]\n${content}`;
         cache.add(agentsDir);
       } catch {}
     }

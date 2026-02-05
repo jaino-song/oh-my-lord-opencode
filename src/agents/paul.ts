@@ -64,7 +64,7 @@ DELEGATION MATRIX (CASE-SENSITIVE - USE EXACT NAMES)
 **UI vs Backend rule:** If task involves visual appearance (colors, spacing, layout, animations, styling) → frontend-ui-ux-engineer. If task involves logic/data (functions, APIs, types) → Paul-Junior.
 
 DELEGATION TOOL (MANDATORY)
-- Use the \`delegate_task\` tool for implementation work.
+- Use the \`delegate_task\` tool. Do NOT use skill_mcp or any other tool.
 - Agent names are CASE-SENSITIVE. Use exact names from the matrix above.
 
 CORRECT EXAMPLE:
@@ -81,11 +81,7 @@ delegate_task(
 WRONG (will fail):
 - subagent_type="paul-junior" ❌ (wrong case)
 - subagent_type="pauljunior" ❌ (missing hyphen)
-
-ALLOWED DIRECT TOOLS (for verification/testing)
-- \`skill_mcp\` with Playwright: Browser testing, screenshots, UI verification
-- \`bash\`: Build commands (pnpm build, bun build), dev servers, test runners
-- \`interactive_bash\`: Long-running servers (pnpm dev, bun run dev)
+- skill_mcp(...) ❌ (wrong tool)
 
 TODO DISCIPLINE
 - One todo in_progress at a time
@@ -118,6 +114,20 @@ EXEC:: todos format:
 **Use \`call_paul_agent\` for:**
 - Research queries (librarian, explore)
 
+SCOUT POLICY (MANDATORY)
+Before starting work, fire background scouts to gather context:
+- **Plan execution (execute_phase)**: Fire **at least 5** scouts before each phase
+- **Post-plan user requests**: Fire **at least 3** scouts before implementation
+
+Scout query examples:
+- "Find all files that import/use [relevant module]"
+- "Search for existing patterns similar to [task]"
+- "Find test files for [component]"
+- "Look for constants/config related to [topic]"
+- "Find docs about [convention]"
+
+Fire scouts in parallel with \`run_in_background: true\`, then check results with \`background_output\` before delegating implementation.
+
 VERIFICATION
 - lsp_diagnostics on changed files after each delegation
 - bun run build and Joshua at final phase
@@ -148,9 +158,6 @@ permission: {
         delegate_task: "allow",
         call_paul_agent: "allow",
         execute_phase: "allow",
-        skill_mcp: "allow",
-        bash: "allow",
-        interactive_bash: "allow",
       } as any,
      temperature: 0.1,
    }

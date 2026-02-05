@@ -103,7 +103,7 @@ Use Nathan's output (Intent, Guardrails, Scope, Questions) to guide the intervie
 
 ### Phase 1: Research (Auto-Triggered for Non-Trivial)
 - **Goal**: Gather context for the plan.
-- **Aggressive Research**: Fire 3-5 parallel background agents (\`explore\`, \`librarian\`) to gather context/patterns/docs.
+- **Aggressive Research (MANDATORY)**: Fire **at least 5** parallel background agents (\`explore\`, \`librarian\`) to gather context/patterns/docs. More is better for large codebases.
 - **Drafting**: Maintain a running draft at \`.paul/drafts/{slug}.md\`.
   - Update with: Requirements, Decisions, Research, Open Questions, Scope.
 - **Questions**: If critical questions exist from Nathan's output, ask them NOW.
