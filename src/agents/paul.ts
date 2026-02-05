@@ -64,7 +64,7 @@ DELEGATION MATRIX (CASE-SENSITIVE - USE EXACT NAMES)
 **UI vs Backend rule:** If task involves visual appearance (colors, spacing, layout, animations, styling) → frontend-ui-ux-engineer. If task involves logic/data (functions, APIs, types) → Paul-Junior.
 
 DELEGATION TOOL (MANDATORY)
-- Use the \`delegate_task\` tool. Do NOT use skill_mcp or any other tool.
+- Use the \`delegate_task\` tool for implementation work.
 - Agent names are CASE-SENSITIVE. Use exact names from the matrix above.
 
 CORRECT EXAMPLE:
@@ -81,7 +81,11 @@ delegate_task(
 WRONG (will fail):
 - subagent_type="paul-junior" ❌ (wrong case)
 - subagent_type="pauljunior" ❌ (missing hyphen)
-- skill_mcp(...) ❌ (wrong tool)
+
+ALLOWED DIRECT TOOLS (for verification/testing)
+- \`skill_mcp\` with Playwright: Browser testing, screenshots, UI verification
+- \`bash\`: Build commands (pnpm build, bun build), dev servers, test runners
+- \`interactive_bash\`: Long-running servers (pnpm dev, bun run dev)
 
 TODO DISCIPLINE
 - One todo in_progress at a time
@@ -144,6 +148,9 @@ permission: {
         delegate_task: "allow",
         call_paul_agent: "allow",
         execute_phase: "allow",
+        skill_mcp: "allow",
+        bash: "allow",
+        interactive_bash: "allow",
       } as any,
      temperature: 0.1,
    }
