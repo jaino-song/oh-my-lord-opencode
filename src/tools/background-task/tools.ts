@@ -306,7 +306,7 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Openc
     args: {
       task_id: tool.schema.string().describe("Task ID to get output from"),
       block: tool.schema.boolean().optional().describe("Wait for completion (default: false). System notifies when done, so blocking is rarely needed."),
-      timeout: tool.schema.number().optional().describe("Max wait time in ms (default: 60000, max: 600000)"),
+      timeout: tool.schema.number().optional().describe("Max wait time in ms (default: 180000, max: 600000)"),
     },
     async execute(args: BackgroundOutputArgs) {
       try {
@@ -316,7 +316,7 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Openc
         }
 
         const shouldBlock = args.block === true
-        const timeoutMs = Math.min(args.timeout ?? 60000, 600000)
+        const timeoutMs = Math.min(args.timeout ?? 180000, 600000)
 
         // Already completed: return result immediately (regardless of block flag)
         if (task.status === "completed") {

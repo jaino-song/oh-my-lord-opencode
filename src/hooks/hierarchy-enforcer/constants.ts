@@ -12,6 +12,7 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
     "Solomon (TDD Planner)",
     "Thomas (TDD Plan Consultant)",
     "Ezra (Plan Reviewer)",
+    "Elijah (Deep Reasoning Advisor)",
     "explore",
     "librarian"
   ],
