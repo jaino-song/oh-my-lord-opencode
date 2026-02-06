@@ -1,18 +1,11 @@
-import { tool, type ToolDefinition } from "@opencode-ai/plugin"
-import type { SignalDoneArgs } from "./types"
-import { SIGNAL_DONE_DESCRIPTION } from "./constants"
-
-type ToolContext = {
-  sessionID?: string
-}
+import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
 export const signal_done: ToolDefinition = tool({
-  description: SIGNAL_DONE_DESCRIPTION,
+  description: "Signal completion of a task with result. Called by subagents to explicitly mark task completion.",
   args: {
-    result: tool.schema.string().describe("Your complete response/analysis to return to the orchestrator"),
+    result: tool.schema.string().describe("The result/output to signal as complete"),
   },
-  async execute(args: SignalDoneArgs, toolContext?: ToolContext) {
-    const sessionID = toolContext?.sessionID ?? "unknown"
-    return `[session_id="${sessionID}" result="${args.result}"]`
+  execute: async (args) => {
+    return args.result
   },
 })
