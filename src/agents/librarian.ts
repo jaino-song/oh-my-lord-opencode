@@ -1,5 +1,6 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
+import { isGptModel } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
 const DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
@@ -29,7 +30,7 @@ export function createLibrarianAgent(model: string = DEFAULT_MODEL): AgentConfig
     "call_paul_agent",
   ])
 
-  return {
+  const base = {
     description:
       "Specialized codebase understanding agent for multi-repository analysis, searching remote codebases, retrieving official documentation, and finding implementation examples using GitHub CLI, Context7, and Web Search. MUST BE USED when users ask to look up code in remote repositories, explain library internals, or find usage examples in open source.",
     mode: "subagent" as const,
@@ -334,7 +335,13 @@ signal_done({ result: "Your research findings with evidence and permalinks" })
 This signals completion to the orchestrator. Do NOT output anything after calling signal_done.
 
 `,
+  } as AgentConfig
+
+  if (isGptModel(model)) {
+    return { ...base, reasoningEffort: "high" } as AgentConfig
   }
+
+  return { ...base, thinking: { type: "enabled", budgetTokens: 32000 } } as AgentConfig
 }
 
 export const librarianAgent = createLibrarianAgent()

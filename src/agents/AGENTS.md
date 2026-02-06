@@ -34,19 +34,19 @@ agents/
 ## AGENT MODELS
 | Agent | Default Model | Purpose |
 |-------|---------------|---------|
-| **Paul** | anthropic/claude-opus-4-5 | **Strict Plan Executor** (Internal). Executes formal plans only. Strictly delegates. |
-| **planner-paul** | anthropic/claude-opus-4-5 | **Smart Router & Architect**. Analyzes requests, routes to worker-paul (trivial) or creates plans for Paul (complex). |
-| **worker-paul** | anthropic/claude-opus-4-5 | **Trivial Task Handler**. Autonomous executor for small tasks (<50 lines, single file). No plan required. 32k thinking. |
-| Solomon | anthropic/claude-opus-4-5 | TDD test planning. Plans tests FIRST, then implementation. |
-| Sisyphus | anthropic/claude-opus-4-5 | Legacy Orchestrator. |
-| Elijah | anthropic/claude-opus-4-5 | Deep Reasoning Advisor. 5 modes: --debug, --architecture, --security, --performance, --stuck. 64k thinking tokens. |
-| Nathan | anthropic/claude-opus-4-5 | Request Analyst. Intent classification, guardrails, question prioritization before planning. |
-| librarian | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs research, GitHub examples. |
+| **Paul** | anthropic/claude-opus-4-6 | **Strict Plan Executor** (Internal). Executes formal plans only. Strictly delegates. Adaptive thinking. |
+| **planner-paul** | anthropic/claude-opus-4-6 | **Smart Router & Architect**. Analyzes requests, routes to worker-paul (trivial) or creates plans for Paul (complex). Adaptive thinking. |
+| **worker-paul** | anthropic/claude-opus-4-6 | **Trivial Task Handler**. Autonomous executor for small tasks (<50 lines, single file). Adaptive thinking. |
+| Solomon | anthropic/claude-opus-4-6 | TDD test planning. Plans tests FIRST, then implementation. Adaptive thinking. |
+| Sisyphus | anthropic/claude-opus-4-6 | Legacy Orchestrator. |
+| Elijah | anthropic/claude-opus-4-6 | Deep Reasoning Advisor. 5 modes: --debug, --architecture, --security, --performance, --stuck. Adaptive thinking. |
+| Nathan | anthropic/claude-opus-4-6 | Request Analyst. Intent classification, guardrails, question prioritization before planning. Adaptive thinking. |
+| librarian | anthropic/claude-sonnet-4-5 | Multi-repo analysis, docs research, GitHub examples. 32k thinking. |
 | explore | anthropic/claude-haiku-4-5 | Fast contextual grep. Fallbacks: opencode/gpt-5-nano. |
 | frontend-ui-ux | google/gemini-3-pro-preview | Production-grade UI/UX generation and styling. |
 | document-writer | google/gemini-3-pro-preview | Technical writing, guides, API documentation. |
-| Prometheus | anthropic/claude-opus-4-5 | Strategic planner. Interview mode, orchestrates Metis/Momus. |
-| Ezra | anthropic/claude-opus-4-5 | Plan Reviewer with confidence scoring, anti-pattern detection, review modes. |
+| Prometheus | anthropic/claude-opus-4-6 | Strategic planner. Interview mode, orchestrates Metis/Momus. |
+| Ezra | anthropic/claude-opus-4-6 | Plan Reviewer with confidence scoring, anti-pattern detection, review modes. Adaptive thinking. |
 | Timothy | anthropic/claude-sonnet-4-5 | Quick Plan Reviewer. |
 | oracle | openai/gpt-5.2 | **DEPRECATED** - Use Elijah instead. |
 | Metis | anthropic/claude-sonnet-4-5 | **DEPRECATED** - Use Nathan instead. |

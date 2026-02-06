@@ -26,6 +26,8 @@ const DEFAULT_OUTPUT_SUMMARY_TOKENS = 800
 
 const capitalizeAgent = (s: string) => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-')
 
+const stripParenthetical = (s: string) => s.replace(/\s*\(.*?\)\s*$/, "").toLowerCase()
+
 function parseModelString(model: string): { providerID: string; modelID: string } | undefined {
   const parts = model.split("/")
   if (parts.length >= 2) {
@@ -527,14 +529,21 @@ ${formattedOutput}`
           const caseInsensitiveMatch = callableAgents.find(
             (a) => a.name.toLowerCase() === agentName.toLowerCase()
           )
+          const normalizedMatch = callableAgents.find(
+            (a) => stripParenthetical(a.name) === stripParenthetical(agentName)
+          )
           
           if (exactMatch) {
             agentToUse = exactMatch.name
           } else if (caseInsensitiveMatch) {
             agentToUse = caseInsensitiveMatch.name
+          } else if (normalizedMatch) {
+            agentToUse = normalizedMatch.name
           } else {
             const isPrimaryAgent = agents.some(
               (a) => a.name.toLowerCase() === agentName.toLowerCase() && a.mode === "primary"
+            ) || agents.some(
+              (a) => stripParenthetical(a.name) === stripParenthetical(agentName) && a.mode === "primary"
             )
             if (isPrimaryAgent) {
               return `❌ Cannot call primary agent "${agentName}" via delegate_task. Primary agents are top-level orchestrators.`

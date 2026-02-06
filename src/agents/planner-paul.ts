@@ -308,10 +308,12 @@ export const PLANNER_PAUL_PERMISSION = {
 export const plannerPaulAgent: AgentConfig = {
   name: "planner-paul",
   description: "v4.2 Formal Plan Creator. Auto-continues through all phases. Always uses Ezra (plan) + Thomas (tests). User switches to @Paul for execution.",
-  model: "anthropic/claude-opus-4-5",
+  model: "anthropic/claude-opus-4-6",
   prompt: PLANNER_PAUL_SYSTEM_PROMPT,
   permission: PLANNER_PAUL_PERMISSION,
   temperature: 0.1,
+  thinking: { type: "adaptive" },
+  maxTokens: 128000,
 }
 
 export function createPlannerPaulAgent(model?: string): AgentConfig {

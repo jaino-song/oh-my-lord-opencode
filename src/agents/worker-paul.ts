@@ -357,7 +357,7 @@ function buildWorkerPaulPrompt(promptAppend?: string): string {
 const BLOCKED_TOOLS = ["task"]
 
 export const WORKER_PAUL_DEFAULTS = {
-  model: "anthropic/claude-opus-4-5",
+  model: "anthropic/claude-opus-4-6",
   temperature: 0.1,
 } as const
 
@@ -410,7 +410,8 @@ export function createWorkerPaulAgentWithOverrides(
 
   return {
     ...base,
-    thinking: { type: "enabled", budgetTokens: 32000 },
+    thinking: { type: "adaptive" },
+    maxTokens: 128000,
   } as AgentConfig
 }
 
@@ -471,7 +472,8 @@ export function createWorkerPaulAgent(
 
   return {
     ...base,
-    thinking: { type: "enabled", budgetTokens: 32000 },
+    thinking: { type: "adaptive" },
+    maxTokens: 128000,
   } as AgentConfig
 }
 
@@ -480,9 +482,9 @@ export const workerPaulAgent: AgentConfig = {
   // mode: "subagent" removed - this agent should be visible in the @ menu
   model: WORKER_PAUL_DEFAULTS.model,
   temperature: WORKER_PAUL_DEFAULTS.temperature,
-  maxTokens: 64000,
+  maxTokens: 128000,
   prompt: WORKER_PAUL_PROMPT,
   color: "#4A90E2",
-  thinking: { type: "enabled", budgetTokens: 32000 },
+  thinking: { type: "adaptive" },
   ...createAgentToolRestrictions(BLOCKED_TOOLS),
 }

@@ -151,8 +151,10 @@ export function createPaulAgent(
      name: "Paul",
      description: "Plan Executor (v4.2). Executes plans from planner-paul. Delegates to specialized agents, enforces TDD, supports phase-based parallelization. Cannot implement directly.",
      // No mode: "subagent" - Paul is user-selectable via @Paul
-     model: context.model ?? "anthropic/claude-opus-4-5",
+     model: context.model ?? "anthropic/claude-opus-4-6",
      prompt: dynamicPrompt,
+     thinking: { type: "adaptive" },
+     maxTokens: 128000,
 permission: {
         ...createAgentToolRestrictions(["task", "write", "edit"]).permission,
         delegate_task: "allow",

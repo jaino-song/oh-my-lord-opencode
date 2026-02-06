@@ -92,6 +92,7 @@ const HIGH_VARIANT_MAP: Record<string, string> = {
   "claude-sonnet-4-5": "claude-sonnet-4-5-high",
   "claude-opus-4": "claude-opus-4-high",
   "claude-opus-4-5": "claude-opus-4-5-high",
+  "claude-opus-4-6": "claude-opus-4-6-high",
   "claude-3-5-sonnet": "claude-3-5-sonnet-high",
   "claude-3-opus": "claude-3-opus-high",
   "claude-3-sonnet": "claude-3-sonnet-high",

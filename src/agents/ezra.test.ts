@@ -198,7 +198,7 @@ describe("createEzraAgent factory function", () => {
   test("createEzraAgent with default model returns Claude Opus config", () => {
     const agent = createEzraAgent()
 
-    expect(agent.model).toBe("anthropic/claude-opus-4-5")
+    expect(agent.model).toBe("anthropic/claude-opus-4-6")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
@@ -206,7 +206,7 @@ describe("createEzraAgent factory function", () => {
   test("createEzraAgent with default model has thinking enabled (Claude)", () => {
     const agent = createEzraAgent()
 
-    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+    expect(agent.thinking).toEqual({ type: "adaptive" })
     expect(agent.reasoningEffort).toBeUndefined()
   })
 
@@ -268,7 +268,7 @@ describe("EZRA_SYSTEM_PROMPT identity", () => {
 describe("ezraAgent default export", () => {
   test("ezraAgent is properly configured", () => {
     expect(ezraAgent).toBeDefined()
-    expect(ezraAgent.model).toBe("anthropic/claude-opus-4-5")
+    expect(ezraAgent.model).toBe("anthropic/claude-opus-4-6")
     expect(ezraAgent.prompt).toBe(EZRA_SYSTEM_PROMPT)
   })
 })

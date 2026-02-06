@@ -130,7 +130,7 @@ function buildPaulJuniorPrompt(promptAppend?: string): string {
 const BLOCKED_TOOLS = ["task", "delegate_task"]
 
 export const PAUL_JUNIOR_DEFAULTS = {
-  model: "anthropic/claude-opus-4-5",
+  model: "anthropic/claude-opus-4-6",
   temperature: 0.1,
 } as const
 
@@ -191,7 +191,8 @@ export function createPaulJuniorAgentWithOverrides(
 
   return {
     ...base,
-    thinking: { type: "enabled", budgetTokens: 64000 },
+    thinking: { type: "adaptive" },
+    maxTokens: 128000,
   } as AgentConfig
 }
 
@@ -252,6 +253,7 @@ export function createPaulJuniorAgent(
 
   return {
     ...base,
-    thinking: { type: "enabled", budgetTokens: 64000 },
+    thinking: { type: "adaptive" },
+    maxTokens: 128000,
   } as AgentConfig
 }

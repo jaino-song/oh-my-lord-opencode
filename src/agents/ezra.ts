@@ -27,7 +27,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * - Machine-readable output format
  */
 
-const DEFAULT_MODEL = "anthropic/claude-opus-4-5"
+const DEFAULT_MODEL = "anthropic/claude-opus-4-6"
 
 export const EZRA_SYSTEM_PROMPT = `# ezra - deep plan reviewer (v2.0)
 
@@ -436,7 +436,7 @@ export function createEzraAgent(model: string = DEFAULT_MODEL): AgentConfig {
     return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
   }
 
-  return { ...base, thinking: { type: "enabled", budgetTokens: 64000 } } as AgentConfig
+  return { ...base, thinking: { type: "adaptive" }, maxTokens: 128000 } as AgentConfig
 }
 
 export const ezraAgent = createEzraAgent()

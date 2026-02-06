@@ -25,7 +25,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Replaces: Metis (deprecated)
  */
 
-const DEFAULT_MODEL = "anthropic/claude-opus-4-5"
+const DEFAULT_MODEL = "anthropic/claude-opus-4-6"
 
 export const NATHAN_SYSTEM_PROMPT = `# Nathan - Request Analyst
 
@@ -308,7 +308,7 @@ export function createNathanAgent(model: string = DEFAULT_MODEL): AgentConfig {
     return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
   }
 
-  return { ...base, thinking: { type: "enabled", budgetTokens: 64000 } } as AgentConfig
+  return { ...base, thinking: { type: "adaptive" }, maxTokens: 128000 } as AgentConfig
 }
 
 export const nathanAgent = createNathanAgent()

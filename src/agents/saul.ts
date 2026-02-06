@@ -64,7 +64,7 @@ export function createSaulAgentWithOverrides(
 
   return {
     ...base,
-    thinking: { type: "enabled", budgetTokens: 16000 }, // Lower budget - less overhead
+    thinking: { type: "enabled", budgetTokens: 32000 },
   } as AgentConfig
 }
 
@@ -75,6 +75,6 @@ export const saulAgent: AgentConfig = {
   maxTokens: 64000,
   prompt: SAUL_PROMPT,
   color: "#8B4513", // Saddle brown
-  thinking: { type: "enabled", budgetTokens: 16000 },
+  thinking: { type: "enabled", budgetTokens: 32000 },
   permission: SAUL_RESTRICTIONS.permission,
 }

@@ -25,7 +25,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Replaces: Oracle (deprecated)
  */
 
-const DEFAULT_MODEL = "anthropic/claude-opus-4-5"
+const DEFAULT_MODEL = "anthropic/claude-opus-4-6"
 
 export const ELIJAH_SYSTEM_PROMPT = `# Elijah - Deep Reasoning Advisor
 
@@ -393,7 +393,7 @@ export function createElijahAgent(model: string = DEFAULT_MODEL): AgentConfig {
   }
 
   // Double the thinking budget for Elijah (64k vs Oracle's 32k)
-  return { ...base, thinking: { type: "enabled", budgetTokens: 64000 } } as AgentConfig
+  return { ...base, thinking: { type: "adaptive" }, maxTokens: 128000 } as AgentConfig
 }
 
 export const elijahAgent = createElijahAgent()

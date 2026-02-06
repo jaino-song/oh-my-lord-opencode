@@ -167,22 +167,22 @@ describe("feature-name", () => {
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
-| Paul | anthropic/claude-opus-4-5 | **Plan Executor** - Executes formal plans only (requires `.paul/plans/*.md`). User-selectable via @Paul. |
-| planner-paul | anthropic/claude-opus-4-5 | **Plan Creator (v4.2)** - Creates formal plans with auto-continue workflow. Always uses Ezra + Thomas. User switches to @Paul after. |
-| worker-paul | anthropic/claude-opus-4-5 | **Trivial Task Handler** - Standalone agent for small tasks. User-selectable via @worker-paul. |
-| Solomon | anthropic/claude-opus-4-5 | TDD test planning (called by planner-paul) |
+| Paul | anthropic/claude-opus-4-6 | **Plan Executor** - Executes formal plans only (requires `.paul/plans/*.md`). User-selectable via @Paul. |
+| planner-paul | anthropic/claude-opus-4-6 | **Plan Creator (v4.2)** - Creates formal plans with auto-continue workflow. Always uses Ezra + Thomas. User switches to @Paul after. |
+| worker-paul | anthropic/claude-opus-4-6 | **Trivial Task Handler** - Standalone agent for small tasks. User-selectable via @worker-paul. |
+| Solomon | anthropic/claude-opus-4-6 | TDD test planning (called by planner-paul) |
 | Timothy | anthropic/claude-sonnet-4-5 | Quick plan reviewer (simple plans, <30s) |
-| Ezra | anthropic/claude-opus-4-5 | Deep plan reviewer (complex plans, confidence scoring) |
-| Nathan | anthropic/claude-opus-4-5 | Request analyst (called by planner-paul) |
+| Ezra | anthropic/claude-opus-4-6 | Deep plan reviewer (complex plans, confidence scoring) |
+| Nathan | anthropic/claude-opus-4-6 | Request analyst (called by planner-paul) |
 | Joshua | openai/gpt-5.2 | Test runner (called by Paul) |
 | Peter | openai/gpt-5.2-codex | Unit test writer (called by Solomon or Paul) |
 | John | openai/gpt-5.2-codex | E2E test writer (called by Solomon or Paul) |
-| Paul-Junior | anthropic/claude-opus-4-5 | Backend implementation (called by Paul, NO delegation) |
+| Paul-Junior | anthropic/claude-opus-4-6 | Backend implementation (called by Paul, NO delegation) |
 | frontend-ui-ux-engineer | gemini-3-pro-preview | UI implementation (called by Paul for UI work) |
 | git-master | zai-coding-plan/glm-4.7 | Git operations (called by Paul) |
-| Sisyphus | claude-opus-4-5 | **Legacy escape hatch** - Bypasses all rules (use only if system deadlocks) |
+| Sisyphus | claude-opus-4-6 | **Legacy escape hatch** - Bypasses all rules (use only if system deadlocks) |
 | oracle | gpt-5.2 | High-IQ debugging, architecture |
-| librarian | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs |
+| librarian | anthropic/claude-sonnet-4-5 | Multi-repo analysis, docs |
 | explore | anthropic/claude-haiku-4-5 | Fast codebase exploration |
 | multimodal-looker | google/antigravity-gemini-3-flash | Image/PDF analysis |
 | document-writer | gemini-3-pro-preview | Technical docs |

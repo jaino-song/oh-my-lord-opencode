@@ -164,7 +164,7 @@ describe("createElijahAgent factory function", () => {
   test("createElijahAgent with default model returns Claude Opus config", () => {
     const agent = createElijahAgent()
 
-    expect(agent.model).toBe("anthropic/claude-opus-4-5")
+    expect(agent.model).toBe("anthropic/claude-opus-4-6")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
@@ -172,15 +172,15 @@ describe("createElijahAgent factory function", () => {
   test("createElijahAgent with default model has thinking enabled (Claude)", () => {
     const agent = createElijahAgent()
 
-    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+    expect(agent.thinking).toEqual({ type: "adaptive" })
     expect(agent.reasoningEffort).toBeUndefined()
   })
 
-  test("createElijahAgent with Claude model has 64k budgetTokens (not 32k)", () => {
-    const agent = createElijahAgent("anthropic/claude-opus-4-5")
+  test("createElijahAgent with Claude model has adaptive thinking", () => {
+    const agent = createElijahAgent("anthropic/claude-opus-4-6")
 
-    expect(agent.model).toBe("anthropic/claude-opus-4-5")
-    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+    expect(agent.model).toBe("anthropic/claude-opus-4-6")
+    expect(agent.thinking).toEqual({ type: "adaptive" })
     expect(agent.reasoningEffort).toBeUndefined()
   })
 
@@ -198,9 +198,9 @@ describe("createElijahAgent factory function", () => {
 })
 
 describe("Elijah vs Oracle config differences", () => {
-  test("default model uses Claude with thinking enabled", () => {
+  test("default model uses Claude with adaptive thinking", () => {
     const agent = createElijahAgent()
-    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+    expect(agent.thinking).toEqual({ type: "adaptive" })
   })
 
   test("GPT model uses high reasoningEffort", () => {
@@ -209,9 +209,9 @@ describe("Elijah vs Oracle config differences", () => {
     expect(agent.thinking).toBeUndefined()
   })
 
-  test("budgetTokens should be 64000 not 32000 for Claude", () => {
-    const agent = createElijahAgent("anthropic/claude-opus-4-5")
-    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+  test("Claude model uses adaptive thinking", () => {
+    const agent = createElijahAgent("anthropic/claude-opus-4-6")
+    expect(agent.thinking).toEqual({ type: "adaptive" })
   })
 })
 
@@ -288,7 +288,7 @@ describe("ELIJAH_PROMPT_METADATA", () => {
 describe("elijahAgent default export", () => {
   test("elijahAgent is properly configured", () => {
     expect(elijahAgent).toBeDefined()
-    expect(elijahAgent.model).toBe("anthropic/claude-opus-4-5")
+    expect(elijahAgent.model).toBe("anthropic/claude-opus-4-6")
     expect(elijahAgent.prompt).toBe(ELIJAH_SYSTEM_PROMPT)
   })
 

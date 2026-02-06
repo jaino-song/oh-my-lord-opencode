@@ -172,7 +172,7 @@ describe("createNathanAgent factory function", () => {
   test("createNathanAgent with default model returns Claude Opus config", () => {
     const agent = createNathanAgent()
 
-    expect(agent.model).toBe("anthropic/claude-opus-4-5")
+    expect(agent.model).toBe("anthropic/claude-opus-4-6")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
@@ -180,7 +180,7 @@ describe("createNathanAgent factory function", () => {
   test("createNathanAgent with default model has thinking enabled (Claude)", () => {
     const agent = createNathanAgent()
 
-    expect(agent.thinking).toEqual({ type: "enabled", budgetTokens: 64000 })
+    expect(agent.thinking).toEqual({ type: "adaptive" })
     expect(agent.reasoningEffort).toBeUndefined()
   })
 
@@ -200,9 +200,9 @@ describe("createNathanAgent factory function", () => {
   })
 
   test("createNathanAgent allows custom model override", () => {
-    const agent = createNathanAgent("anthropic/claude-opus-4-5")
+    const agent = createNathanAgent("anthropic/claude-opus-4-6")
 
-    expect(agent.model).toBe("anthropic/claude-opus-4-5")
+    expect(agent.model).toBe("anthropic/claude-opus-4-6")
   })
 })
 
@@ -245,7 +245,7 @@ describe("NATHAN_PROMPT_METADATA", () => {
 describe("nathanAgent default export", () => {
   test("nathanAgent is properly configured", () => {
     expect(nathanAgent).toBeDefined()
-    expect(nathanAgent.model).toBe("anthropic/claude-opus-4-5")
+    expect(nathanAgent.model).toBe("anthropic/claude-opus-4-6")
     expect(nathanAgent.prompt).toBe(NATHAN_SYSTEM_PROMPT)
   })
 
