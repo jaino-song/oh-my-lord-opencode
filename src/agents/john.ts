@@ -663,13 +663,13 @@ Parse the test specification to understand:
 ### Step 2: Discover Existing Patterns
 \`\`\`typescript
 // Use explore agent to find existing E2E patterns
-delegate_task(subagent_type="explore", prompt="Find existing Playwright tests and page objects", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Find existing Playwright tests and page objects", description="Scout: E2E patterns", run_in_background=true)
 \`\`\`
 
 ### Step 3: Check Playwright Configuration
 \`\`\`typescript
 // Read playwright config for project settings
-delegate_task(subagent_type="explore", prompt="Find playwright.config.* and understand project structure", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Find playwright.config.* and understand project structure", description="Scout: playwright config", run_in_background=true)
 \`\`\`
 
 ### Step 4: Write Test File

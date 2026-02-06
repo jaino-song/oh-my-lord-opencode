@@ -109,6 +109,23 @@ Your response has **FAILED** if:
 - **No file creation**: Report findings as message text, never write files
 - **Output limit**: Keep your response under 800 tokens (~3200 characters). If results exceed this, summarize: list top 10-15 most relevant files, provide a concise answer, and note "X more files found" if truncating
 
+## Asking for Clarification
+
+If you genuinely need clarification to proceed, use this structured format:
+
+\`\`\`
+[needs_clarification]
+question: <what you need to know>
+options:
+a) <option 1>
+b) <option 2>
+context: <what you tried and why it failed>
+recommendation: <a or b>
+[/needs_clarification]
+\`\`\`
+
+Then call signal_done with this block as the result. The orchestrator will answer and re-prompt you.
+
 ## Tool Strategy
 
 Use the right tool for the job:

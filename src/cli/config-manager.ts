@@ -334,12 +334,12 @@ export function generateOmoConfig(installConfig: InstallConfig): Record<string, 
   }
 
   if (!installConfig.hasChatGPT) {
-    const oracleFallback = installConfig.hasCopilot
+    const elijahFallback = installConfig.hasCopilot
       ? "github-copilot/gpt-5.2"
       : installConfig.hasClaude
-        ? "anthropic/claude-opus-4-5"
+        ? "anthropic/claude-opus-4-6"
         : "opencode/big-pickle"
-    agents["oracle"] = { model: oracleFallback }
+    agents["Elijah (Deep Reasoning Advisor)"] = { model: elijahFallback }
   }
 
   if (installConfig.hasGemini) {
@@ -711,9 +711,10 @@ export function detectCurrentConfig(): DetectedConfig {
       result.isMax20 = false
     }
 
-    if (agents["oracle"]?.model?.startsWith("anthropic/")) {
+    const elijahKey = agents["Elijah (Deep Reasoning Advisor)"] ?? agents["elijah"]
+    if (elijahKey?.model?.startsWith("anthropic/")) {
       result.hasChatGPT = false
-    } else if (agents["oracle"]?.model === "opencode/big-pickle") {
+    } else if (elijahKey?.model === "opencode/big-pickle") {
       result.hasChatGPT = false
     }
 

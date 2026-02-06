@@ -2,7 +2,7 @@ export const DELEGATE_TASK_DESCRIPTION = `Spawn agent task with direct agent sel
 
 REQUIRED: Provide subagent_type parameter to specify which agent to spawn.
 
-- subagent_type: Agent name directly (e.g., "oracle", "explore", "librarian", "paul-junior")
+- subagent_type: Agent name directly (e.g., "elijah", "explore", "librarian", "paul-junior")
 - run_in_background: true=async (returns task_id), false=sync (waits for result). MUST be explicitly set. Use run_in_background=true ONLY for parallel exploration with 5+ independent queries.
 - resume: Session ID to resume (from previous task output). Continues agent with FULL CONTEXT PRESERVED - saves tokens, maintains continuity.
 - skills: Array of skill names to prepend to prompt (e.g., ["playwright", "frontend-ui-ux"]). Skills will be resolved and their content prepended with a separator. Empty array [] is NOT allowed - use null if no skills needed.

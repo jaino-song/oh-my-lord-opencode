@@ -434,6 +434,43 @@ export function createPaulOrchestratorHook(
     return state
   }
 
+  async function injectPostPlanReminder(sessionID: string): Promise<void> {
+    const state = getState(sessionID)
+    const now = Date.now()
+    if (state.lastContinuationInjectedAt && now - state.lastContinuationInjectedAt < CONTINUATION_COOLDOWN_MS) {
+      return
+    }
+    state.lastContinuationInjectedAt = now
+
+    const prompt = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCODE - TODO CONTINUATION]
+You are handling an ad-hoc user request (no formal plan active).
+
+MANDATORY PROTOCOL:
+1. Create a todo list FIRST with todowrite — break the task into atomic steps
+2. Fire at least 3 explore scouts in parallel to gather context
+3. Wait for all scout results before proceeding
+4. Investigate thoroughly — find the ROOT CAUSE, not just symptoms
+5. Delegate implementation to the appropriate specialist
+6. Verify with lsp_diagnostics + tests
+
+Do NOT skip any step. Proceed now.`
+
+    try {
+      const currentAgent = getParentAgentName(sessionID, "Paul")
+      await ctx.client.session.prompt({
+        path: { id: sessionID },
+        body: {
+          agent: currentAgent,
+          parts: [{ type: "text", text: prompt }],
+        },
+        query: { directory: ctx.directory },
+      })
+      log(`[${HOOK_NAME}] Post-plan discipline reminder injected`, { sessionID })
+    } catch (err) {
+      log(`[${HOOK_NAME}] Post-plan reminder injection failed`, { sessionID, error: String(err) })
+    }
+  }
+
   async function injectContinuation(sessionID: string, planName: string, remaining: number, total: number, isUserQuestion: boolean = false): Promise<void> {
     const hasRunningBgTasks = backgroundManager
       ? backgroundManager.getTasksByParentSession(sessionID).some(t => t.status === "running")
@@ -576,7 +613,12 @@ export function createPaulOrchestratorHook(
 
 
          if (!boulderState) {
-          log(`[${HOOK_NAME}] No active boulder`, { sessionID })
+          if (isMainSession && lastMessageWasFromUser && isCallerOrchestrator(sessionID)) {
+            log(`[${HOOK_NAME}] No boulder, ad-hoc request from user — injecting discipline reminder`, { sessionID })
+            await injectPostPlanReminder(sessionID)
+          } else {
+            log(`[${HOOK_NAME}] No active boulder`, { sessionID })
+          }
           return
         }
 
@@ -587,7 +629,12 @@ export function createPaulOrchestratorHook(
 
         const progress = getPlanProgress(boulderState.active_plan)
         if (progress.isComplete) {
-          log(`[${HOOK_NAME}] Boulder complete`, { sessionID, plan: boulderState.plan_name })
+          if (isMainSession && lastMessageWasFromUser) {
+            log(`[${HOOK_NAME}] Boulder complete, ad-hoc request — injecting discipline reminder`, { sessionID })
+            await injectPostPlanReminder(sessionID)
+          } else {
+            log(`[${HOOK_NAME}] Boulder complete`, { sessionID, plan: boulderState.plan_name })
+          }
           return
         }
 

@@ -27,7 +27,7 @@ export { createThinkingBlockValidatorHook } from "./thinking-block-validator";
 export { createRalphLoopHook, type RalphLoopHook } from "./ralph-loop";
 export { createAutoSlashCommandHook } from "./auto-slash-command";
 export { createEditErrorRecoveryHook } from "./edit-error-recovery";
-export { createPlannerMdOnlyHook, createPrometheusMdOnlyHook } from "./planner-md-only";
+export { createPlannerMdOnlyHook } from "./planner-md-only";
 export { createTaskResumeInfoHook } from "./task-resume-info";
 export { createHitItHook } from "./hit-it";
 export { createPaulOrchestratorHook } from "./paul";

@@ -17,7 +17,7 @@ The tool pipeline is wired explicitly in `src/index.ts`.
 4. `directory-agents-injector`
 5. `directory-readme-injector`
 6. `rules-injector`
-7. `prometheus-md-only`
+7. `planner-md-only`
 8. `tdd-enforcement`
 9. `strict-workflow`
 10. `hierarchy-enforcer`
@@ -123,7 +123,7 @@ This is the set exported by `src/hooks/index.ts`.
 
 ---
 
-#### `planner-md-only` / `prometheus-md-only`
+#### `planner-md-only`
 **Purpose**: Restricts planner agents (planner-paul) to read-only operations on code files.
 
 **Enforcements**:
@@ -207,7 +207,7 @@ Use strict types, no `any`...
 ---
 
 #### `plan-summary-injector`
-**Purpose**: Summarizes plan files (`.paul/plans/*.md`, `.sisyphus/plans/*.md`) when read by Paul agent.
+**Purpose**: Summarizes plan files (`.paul/plans/*.md`) when read by Paul agent.
 
 **Behavior**:
 - Extracts title and todo list from plan
@@ -730,6 +730,39 @@ ctx.client.tui.showToast({
 - Checks npm registry for new version
 - Shows toast notification if update available
 - Respects `startup-toast` config flag
+
+---
+
+#### `system-injection-stripper`
+**Purpose**: Strips delegation/todo alert blocks from conversation history before agents see them.
+
+**Strips**:
+- `[DELEGATION ALERT - OH-MY-LORD-OPENCODE]` blocks
+- `[TODO ALERT - OH-MY-LORD-OPENCODE]` blocks
+
+**Preserves**: `[SYSTEM DIRECTIVE]` blocks (agents need those for TDD warnings, competency advice, etc.)
+
+**Behavior**:
+- Runs as `experimental.chat.messages.transform` hook
+- Cleans assistant message parts containing alert injections
+- Prevents notification pollution in agent context
+
+---
+
+#### `signal-done-enforcer`
+**Purpose**: Ensures subagents call `signal_done` before stopping, so orchestrators receive their output.
+
+**Behavior**:
+- Monitors subagent sessions (non-primary agents)
+- If agent attempts to stop without calling `signal_done`, injects a reminder
+- Tracks which sessions have already called `signal_done`
+
+**Reminder Injected**:
+```
+[DELEGATION VIOLATION ALERT]
+You have NOT called signal_done yet. This is MANDATORY for all subagents.
+Call signal_done NOW with your complete output.
+```
 
 ---
 

@@ -2,7 +2,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { statSync } from "node:fs"
 import { getSessionAgent } from "../../features/claude-code-session-state"
 
-const PLAN_PATH_PATTERN = /[\\/](\.paul|\.sisyphus)[\\/]plans[\\/].+\.md$/
+const PLAN_PATH_PATTERN = /[\\/]\.paul[\\/]plans[\\/].+\.md$/
 const SUMMARY_CACHE = new Map<string, { mtimeMs: number; summary: string }>()
 
 function isPlanPath(filePath: string): boolean {

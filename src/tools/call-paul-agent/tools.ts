@@ -61,7 +61,13 @@ export function createCallPaulAgent(
         return `Error: Invalid agent type "${args.subagent_type}". Only ${ALLOWED_AGENTS.join(", ")} are allowed.`
       }
 
-      if (args.run_in_background) {
+      const isResumingSession = !!args.session_id
+      const useBackground = !isResumingSession
+      if (!args.run_in_background && !isResumingSession) {
+        log(`[call_paul_agent] Auto-forcing background mode for ${args.subagent_type} (explore/librarian always run in background)`)
+      }
+
+      if (useBackground) {
         if (args.session_id) {
           return `Error: session_id is not supported in background mode. Use run_in_background=false to continue an existing session.`
         }

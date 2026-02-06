@@ -27,8 +27,8 @@ const QUESTION_REGEX =
 const OPTIONS_REGEX =
   /options:\s*([\s\S]*?)(?=\n(?:context:|recommendation:|$|\[\/NEEDS_CLARIFICATION\]))/i
 
-/** regex to extract individual option */
-const OPTION_REGEX = /([A-Z])\)\s*(.+)/g
+/** regex to extract individual option (case-insensitive: A) or a)) */
+const OPTION_REGEX = /([A-Za-z])\)\s*(.+)/g
 
 /** regex to extract context */
 const CONTEXT_REGEX =

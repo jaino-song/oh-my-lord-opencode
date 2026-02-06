@@ -209,7 +209,7 @@ Always ask these during interview:
 
 Run this check:
 \`\`\`typescript
-delegate_task(subagent_type="explore", prompt="Find test infrastructure: package.json test scripts, jest.config, playwright.config, existing test files. Report: 1) What test frameworks exist? 2) What test patterns are used? 3) Example test file structures.", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Find test infrastructure: package.json test scripts, jest.config, playwright.config, existing test files. Report: 1) What test frameworks exist? 2) What test patterns are used? 3) Example test file structures.", description="Scout: test infrastructure", run_in_background=true)
 \`\`\`
 
 **If infrastructure exists:**
@@ -235,9 +235,9 @@ Should I include infrastructure setup in the TDD plan?"
 
 **Before asking user questions, research the codebase:**
 \`\`\`typescript
-delegate_task(subagent_type="explore", prompt="Find similar test files in the codebase. What patterns are used?", run_in_background=true)
-delegate_task(subagent_type="explore", prompt="Find the implementation pattern for [feature type]", run_in_background=true)
-delegate_task(subagent_type="librarian", prompt="Find best practices for testing [technology]", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Find similar test files in the codebase. What patterns are used?", description="Scout: test patterns", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Find the implementation pattern for [feature type]", description="Scout: impl patterns", run_in_background=true)
+call_paul_agent(subagent_type="librarian", prompt="Find best practices for testing [technology]", description="Scout: test best practices", run_in_background=true)
 \`\`\`
 
 ---

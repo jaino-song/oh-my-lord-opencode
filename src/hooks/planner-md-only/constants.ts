@@ -20,8 +20,8 @@ export const PLAN_TRIGGER_PHRASES = [
   "write the plan",
 ]
 
-export const DRAFT_PATH_PATTERN = /[/\\]\.?(paul|sisyphus)[/\\]drafts[/\\]/i
-export const PLAN_PATH_PATTERN = /[/\\]\.?(paul|sisyphus)[/\\]plans[/\\]/i
+export const DRAFT_PATH_PATTERN = /[/\\]\.?paul[/\\]drafts[/\\]/i
+export const PLAN_PATH_PATTERN = /[/\\]\.?paul[/\\]plans[/\\]/i
 
 export const BLOCKED_TOOLS = ["Write", "Edit", "write", "edit"]
 
@@ -107,7 +107,7 @@ export const SAFE_BASH_PATTERNS = [
   /^file\s/,
   /^stat\s/,
   /^tree(\s|$)/,
-  /^mkdir\s+(-p\s+)?\.?(paul|sisyphus)\//,
+  /^mkdir\s+(-p\s+)?\.?paul\//,
 ]
 
 export const PLANNING_CONSULT_WARNING = `

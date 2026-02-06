@@ -61,9 +61,12 @@ export function createSignalDoneEnforcerHook(ctx: PluginInput) {
       }
     },
 
-    handler: async (input: { event: { type: string }; sessionID?: string }) => {
-      const { event, sessionID } = input
-      if (event.type !== "session.idle" || !sessionID) return
+    handler: async (input: { event: { type: string; properties?: Record<string, unknown> }; sessionID?: string }) => {
+      const { event } = input
+      if (event.type !== "session.idle") return
+      const props = event.properties as Record<string, unknown> | undefined
+      const sessionID = props?.sessionID as string | undefined
+      if (!sessionID) return
 
       const isSubagent = subagentSessions.has(sessionID)
       

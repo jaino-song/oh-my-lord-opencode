@@ -11,13 +11,14 @@ export const AGENT_NAME_MAP: Record<string, string> = {
   "Orchestrator-Sisyphus": "Paul",
   "Sisyphus-Junior": "Paul-Junior",
   "sisyphus-junior": "Paul-Junior",
-  "OmO-Plan": "Prometheus (Planner)",
-  "omo-plan": "Prometheus (Planner)",
-  "Planner-Sisyphus": "Prometheus (Planner)",
-  "planner-sisyphus": "Prometheus (Planner)",
-  prometheus: "Prometheus (Planner)",
+  "OmO-Plan": "planner-paul",
+  "omo-plan": "planner-paul",
+  "Planner-Sisyphus": "planner-paul",
+  "planner-sisyphus": "planner-paul",
+  prometheus: "planner-paul",
+  "Prometheus (Planner)": "planner-paul",
   build: "build",
-  oracle: "oracle",
+  oracle: "elijah",
   librarian: "librarian",
   explore: "explore",
   "frontend-ui-ux-engineer": "frontend-ui-ux-engineer",
@@ -28,13 +29,13 @@ export const AGENT_NAME_MAP: Record<string, string> = {
 export const BUILTIN_AGENT_NAMES = new Set([
   "Paul",
   "Paul-Junior",
-  "oracle",
+  "elijah",
   "librarian",
   "explore",
   "frontend-ui-ux-engineer",
   "document-writer",
   "multimodal-looker",
-  "Prometheus (Planner)",
+  "planner-paul",
   "build",
 ])
 
@@ -42,6 +43,7 @@ export const BUILTIN_AGENT_NAMES = new Set([
 export const HOOK_NAME_MAP: Record<string, string> = {
   // Legacy names (backward compatibility)
   "anthropic-auto-compact": "anthropic-context-window-limit-recovery",
+  "prometheus-md-only": "planner-md-only",
 }
 
 // Model to category mapping for auto-migration

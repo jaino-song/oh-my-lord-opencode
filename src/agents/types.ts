@@ -50,7 +50,6 @@ export function isGptModel(model: string): boolean {
 
 export type BuiltinAgentName =
   | "Saul"
-  | "oracle"
   | "librarian"
   | "explore"
   | "frontend-ui-ux-engineer"

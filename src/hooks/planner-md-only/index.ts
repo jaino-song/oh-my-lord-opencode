@@ -229,4 +229,4 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
   }
 }
 
-export { createPlannerMdOnlyHook as createPrometheusMdOnlyHook }
+

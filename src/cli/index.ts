@@ -36,7 +36,7 @@ Examples:
 
 Model Providers:
   Claude      Required for Paul (main orchestrator) and Librarian agents
-  ChatGPT     Powers the Oracle agent for debugging and architecture
+  ChatGPT     Powers the Elijah agent for debugging and architecture
   Gemini      Powers frontend, documentation, and multimodal agents
 `)
   .action(async (options) => {

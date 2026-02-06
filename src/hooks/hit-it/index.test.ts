@@ -439,12 +439,12 @@ describe("hit-it hook", () => {
 
       // #when - hit-it command is processed
       await hook["chat.message"](
-        { sessionID: "ses-prometheus-to-sisyphus" },
+        { sessionID: "ses-planner-to-paul" },
         output
       )
 
       // #then - clearSessionAgent should be called with the sessionID
-      expect(clearSpy).toHaveBeenCalledWith("ses-prometheus-to-sisyphus")
+      expect(clearSpy).toHaveBeenCalledWith("ses-planner-to-paul")
       clearSpy.mockRestore()
     })
   })

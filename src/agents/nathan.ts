@@ -22,7 +22,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * - Question prioritization (rank what to ask first)
  * - Scope boundary detection (identify IN/OUT before planning)
  *
- * Replaces: Metis (deprecated)
+ * Primary request analyst for pre-planning context
  */
 
 const DEFAULT_MODEL = "anthropic/claude-opus-4-6"

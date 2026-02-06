@@ -32,7 +32,7 @@ import {
   createTaskResumeInfoHook,
   createHitItHook,
   createPaulOrchestratorHook,
-  createPrometheusMdOnlyHook,
+  createPlannerMdOnlyHook,
   createTddEnforcementHook,
   createStrictWorkflowHook,
   createHierarchyEnforcerHook,
@@ -41,6 +41,7 @@ import {
   createDelegationNotificationHook,
   createSystemInjectionStripperHook,
   createSignalDoneEnforcerHook,
+  createClarificationHandlerHook,
 } from "./hooks";
 import { TokenAnalyticsManager, createTokenAnalyticsHook, createTokenReportTool } from "./features/token-analytics";
 import {
@@ -221,8 +222,8 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     ? createPaulOrchestratorHook(ctx)
     : null;
 
-  const prometheusMdOnly = isHookEnabled("prometheus-md-only")
-    ? createPrometheusMdOnlyHook(ctx)
+  const plannerMdOnly = isHookEnabled("planner-md-only")
+    ? createPlannerMdOnlyHook(ctx)
     : null;
 
   const tddEnforcement = isHookEnabled("tdd-enforcement")
@@ -262,6 +263,8 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
    const signalDoneEnforcer = isHookEnabled("signal-done-enforcer")
      ? createSignalDoneEnforcerHook(ctx)
      : null;
+
+   const clarificationHandler = createClarificationHandlerHook(ctx);
 
   // TEMPORARILY DISABLED - re-enable by uncommenting below
   // const todoContinuationEnforcer = isHookEnabled("todo-continuation-enforcer")
@@ -557,7 +560,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       await directoryAgentsInjector?.["tool.execute.before"]?.(input, output);
       await directoryReadmeInjector?.["tool.execute.before"]?.(input, output);
       await rulesInjector?.["tool.execute.before"]?.(input, output);
-      await prometheusMdOnly?.["tool.execute.before"]?.(input, output);
+      await plannerMdOnly?.["tool.execute.before"]?.(input, output);
       await tddEnforcement?.["tool.execute.before"]?.(input, output);
       await strictWorkflow?.["tool.execute.before"]?.(input, output);
       await hierarchyEnforcer?.["tool.execute.before"]?.(input, output);
@@ -630,6 +633,7 @@ await editErrorRecovery?.["tool.execute.after"](input, output);
         await delegationNotification?.["tool.execute.after"]?.(input, output);
         await parallelSafetyEnforcer?.["tool.execute.after"]?.(input, output);
         await signalDoneEnforcer?.["tool.execute.after"]?.(input, output);
+        await clarificationHandler?.["tool.execute.after"]?.(input, output);
       await taskResumeInfo["tool.execute.after"](input, output);
       await tokenAnalyticsHook["tool.execute.after"]?.(input, output);
     },

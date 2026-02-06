@@ -1,5 +1,4 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
-import { oracleAgent } from "./oracle"
 import { librarianAgent } from "./librarian"
 import { exploreAgent } from "./explore"
 import { frontendUiUxEngineerAgent } from "./frontend-ui-ux-engineer"
@@ -21,7 +20,6 @@ import { saulAgent } from "./saul"
 
 export const builtinAgents: Record<string, AgentConfig> = {
   Saul: saulAgent,
-  oracle: oracleAgent,
   librarian: librarianAgent,
   explore: exploreAgent,
   "frontend-ui-ux-engineer": frontendUiUxEngineerAgent,

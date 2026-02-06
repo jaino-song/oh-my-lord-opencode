@@ -17,7 +17,6 @@ const AgentPermissionSchema = z.object({
 })
 
 export const BuiltinAgentNameSchema = z.enum([
-  "oracle",
   "librarian",
   "explore",
   "frontend-ui-ux-engineer",
@@ -44,9 +43,7 @@ export const OverridableAgentNameSchema = z.enum([
   "plan",
   "Paul-Junior",
   "OpenCode-Builder",
-  "Prometheus (Planner)",
   "Paul",
-  "oracle",
   "librarian",
   "explore",
   "frontend-ui-ux-engineer",
@@ -95,7 +92,6 @@ export const HookNameSchema = z.enum([
   "edit-error-recovery",
   "delegate-task-retry",
    "planner-md-only",
-   "prometheus-md-only",
    "hit-it",
    "paul",
    "tdd-enforcement",
@@ -141,10 +137,6 @@ export const AgentOverridesSchema = z.object({
    plan: AgentOverrideConfigSchema.optional(),
     "Paul-Junior": AgentOverrideConfigSchema.optional(),
     "OpenCode-Builder": AgentOverrideConfigSchema.optional(),
-   "Prometheus (Planner)": AgentOverrideConfigSchema.optional(),
-   "Metis (Plan Consultant)": AgentOverrideConfigSchema.optional(),
-   "Momus (Plan Reviewer)": AgentOverrideConfigSchema.optional(),
-   oracle: AgentOverrideConfigSchema.optional(),
    librarian: AgentOverrideConfigSchema.optional(),
    explore: AgentOverrideConfigSchema.optional(),
    "frontend-ui-ux-engineer": AgentOverrideConfigSchema.optional(),

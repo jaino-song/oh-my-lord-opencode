@@ -5,7 +5,7 @@ import {
   buildRetryGuidance,
 } from "./index"
 
-describe("sisyphus-task-retry", () => {
+describe("delegate-task-retry", () => {
   describe("DELEGATE_TASK_ERROR_PATTERNS", () => {
     // #given error patterns are defined
     // #then should include all known delegate_task error types
@@ -62,7 +62,7 @@ describe("sisyphus-task-retry", () => {
     })
 
     it("should detect unknown agent error", () => {
-      const output = '❌ Unknown agent: "fake-agent". Available agents: explore, librarian, oracle'
+      const output = '❌ Unknown agent: "fake-agent". Available agents: explore, librarian, elijah'
       
       const result = detectDelegateTaskError(output)
       
@@ -107,13 +107,13 @@ describe("sisyphus-task-retry", () => {
     it("should provide fix for unknown agent with available list", () => {
       const errorInfo = { 
         errorType: "unknown_agent", 
-        originalOutput: '❌ Unknown agent: "fake". Available agents: explore, oracle' 
+        originalOutput: '❌ Unknown agent: "fake". Available agents: explore, elijah' 
       }
       
       const guidance = buildRetryGuidance(errorInfo)
       
       expect(guidance).toContain("explore")
-      expect(guidance).toContain("oracle")
+      expect(guidance).toContain("elijah")
     })
   })
 })

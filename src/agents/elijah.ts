@@ -4,7 +4,7 @@ import { isGptModel } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
 /**
- * Elijah - Deep Reasoning Advisor (Oracle 2.0)
+ * Elijah - Deep Reasoning Advisor
  *
  * Named after the biblical prophet Elijah who:
  * - Confronted problems directly (called out issues without hesitation)
@@ -22,7 +22,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * - Bottleneck analysis (--performance): USE method with metrics
  * - Fresh perspective (--stuck): Unblock when completely stuck
  *
- * Replaces: Oracle (deprecated)
+ * Primary deep reasoning agent for execution-phase problems
  */
 
 const DEFAULT_MODEL = "anthropic/claude-opus-4-6"
@@ -392,7 +392,7 @@ export function createElijahAgent(model: string = DEFAULT_MODEL): AgentConfig {
     return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
   }
 
-  // Double the thinking budget for Elijah (64k vs Oracle's 32k)
+  // Adaptive thinking for deep reasoning
   return { ...base, thinking: { type: "adaptive" }, maxTokens: 128000 } as AgentConfig
 }
 

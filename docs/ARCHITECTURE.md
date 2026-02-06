@@ -83,7 +83,7 @@ The hook surface is larger than the table below; see `docs/HOOKS.md` for the com
 | `strict-workflow` | Bun-only package management + Conventional Commits | Hard block |
 | `parallel-safety-enforcer` | Prevent conflicting concurrent edits | Hard block |
 | `paul-orchestrator` | Orchestrator role enforcement + continuation | Advisory |
-| `planner-md-only` / `prometheus-md-only` | Restrict planners to `.paul/` files | Hard block |
+| `planner-md-only` | Restrict planners to `.paul/` files | Hard block |
 
 **HARD BLOCK**: Throws error, prevents action entirely.
 

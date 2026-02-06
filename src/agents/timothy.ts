@@ -178,7 +178,7 @@ export const timothyPromptMetadata: AgentPromptMetadata = {
   ],
   avoidWhen: [
     "For TDD/test specification review (use Thomas instead)",
-    "For rigorous plan audit (use Momus instead)",
+    "For rigorous plan audit (use Ezra instead)",
     "Simple single-task requests",
   ],
   keyTrigger: "planner-paul creates implementation plan → Timothy reviews before Solomon",

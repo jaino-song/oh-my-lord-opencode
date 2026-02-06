@@ -360,18 +360,18 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     } as any
   }
 
-  test("should use planner-specific ultrawork message when agent is prometheus", async () => {
-    // #given - collector and prometheus agent
+  test("should use planner-specific ultrawork message when agent is planner-paul", async () => {
+    // #given - collector and planner agent
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
-    const sessionID = "prometheus-session"
+    const sessionID = "planner-session"
     const output = {
       message: {} as Record<string, unknown>,
       parts: [{ type: "text", text: "ultrawork plan this feature" }],
     }
 
-    // #when - ultrawork keyword detected with prometheus agent
-    await hook["chat.message"]({ sessionID, agent: "prometheus" }, output)
+    // #when - ultrawork keyword detected with planner agent
+    await hook["chat.message"]({ sessionID, agent: "planner-paul" }, output)
 
     // #then - should use planner-specific message with "YOU ARE A PLANNER" content
     const pending = collector.getPending(sessionID)
@@ -392,7 +392,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     }
 
     // #when - ultrawork keyword detected with planner agent
-    await hook["chat.message"]({ sessionID, agent: "Prometheus (Planner)" }, output)
+    await hook["chat.message"]({ sessionID, agent: "planner-paul" }, output)
 
     // #then - should use planner-specific message
     const pending = collector.getPending(sessionID)
@@ -444,19 +444,17 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   })
 
    test("should switch from planner to normal message when agent changes", async () => {
-     // #given - two sessions, one with prometheus, one with paul
+     // #given - two sessions, one with planner, one with paul
      const collector = new ContextCollector()
      const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
 
-     // First session with prometheus
-     const prometheusSessionID = "prometheus-first"
-     const prometheusOutput = {
+     const plannerSessionID = "planner-first"
+     const plannerOutput = {
        message: {} as Record<string, unknown>,
        parts: [{ type: "text", text: "ultrawork plan" }],
      }
-     await hook["chat.message"]({ sessionID: prometheusSessionID, agent: "prometheus" }, prometheusOutput)
+     await hook["chat.message"]({ sessionID: plannerSessionID, agent: "planner-paul" }, plannerOutput)
 
-     // Second session with paul
      const paulSessionID = "paul-second"
      const paulOutput = {
        message: {} as Record<string, unknown>,
@@ -465,9 +463,9 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
      await hook["chat.message"]({ sessionID: paulSessionID, agent: "Paul" }, paulOutput)
 
      // #then - each session should have the correct message type
-     const prometheusPending = collector.getPending(prometheusSessionID)
-     const prometheusEntry = prometheusPending.entries.find((e) => e.id === "keyword-ultrawork")
-     expect(prometheusEntry!.content).toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
+     const plannerPending = collector.getPending(plannerSessionID)
+     const plannerEntry = plannerPending.entries.find((e) => e.id === "keyword-ultrawork")
+     expect(plannerEntry!.content).toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
 
      const paulPending = collector.getPending(paulSessionID)
      const paulEntry = paulPending.entries.find((e) => e.id === "keyword-ultrawork")
@@ -475,12 +473,11 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   })
 
    test("should use session state agent over stale input.agent (bug fix)", async () => {
-     // #given - same session, agent switched from prometheus to paul in session state
+     // #given - same session, agent switched from planner to paul in session state
      const collector = new ContextCollector()
      const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
      const sessionID = "same-session-agent-switch"
 
-     // Simulate: session state was updated to paul (by index.ts updateSessionAgent)
      updateSessionAgent(sessionID, "Paul")
 
      const output = {
@@ -488,10 +485,10 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
        parts: [{ type: "text", text: "ultrawork implement this" }],
      }
 
-     // #when - hook receives stale input.agent="prometheus" but session state says "Paul"
-     await hook["chat.message"]({ sessionID, agent: "prometheus" }, output)
+     // #when - hook receives stale input.agent="planner-paul" but session state says "Paul"
+     await hook["chat.message"]({ sessionID, agent: "planner-paul" }, output)
 
-     // #then - should use Paul from session state, NOT prometheus from stale input
+     // #then - should use Paul from session state, not planner from stale input
      const pending = collector.getPending(sessionID)
      const ultraworkEntry = pending.entries.find((e) => e.id === "keyword-ultrawork")
      expect(ultraworkEntry).toBeDefined()
@@ -516,10 +513,10 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
       parts: [{ type: "text", text: "ultrawork plan this" }],
     }
 
-    // #when - hook receives input.agent="prometheus" with no session state
-    await hook["chat.message"]({ sessionID, agent: "prometheus" }, output)
+    // #when - hook receives input.agent="planner-paul" with no session state
+    await hook["chat.message"]({ sessionID, agent: "planner-paul" }, output)
 
-    // #then - should use prometheus from input.agent as fallback
+    // #then - should use planner-paul from input.agent as fallback
     const pending = collector.getPending(sessionID)
     const ultraworkEntry = pending.entries.find((e) => e.id === "keyword-ultrawork")
     expect(ultraworkEntry).toBeDefined()

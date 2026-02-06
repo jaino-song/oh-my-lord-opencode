@@ -42,7 +42,7 @@ In `src/index.ts`, the plugin wires hooks in a specific order.
 4. `directory-agents-injector`
 5. `directory-readme-injector`
 6. `rules-injector`
-7. `prometheus-md-only`
+7. `planner-md-only`
 8. `tdd-enforcement`
 9. `strict-workflow`
 10. `hierarchy-enforcer`

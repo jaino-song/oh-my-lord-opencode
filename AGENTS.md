@@ -83,7 +83,7 @@ Multi-model agent orchestration plugin for OpenCode. Implements Claude Code/AmpC
 ```
 oh-my-lord-opencode/
 ├── src/
-│   ├── agents/        # AI agents: Sisyphus, oracle, librarian, explore, etc.
+│   ├── agents/        # AI agents: Paul, Elijah, librarian, explore, etc.
 │   ├── hooks/         # 22+ lifecycle hooks (PreToolUse, PostToolUse, Stop)
 │   ├── tools/         # LSP, AST-Grep, session-manager, delegate-task
 │   ├── features/      # Claude Code compat, background-agent, skill-mcp
@@ -180,8 +180,7 @@ describe("feature-name", () => {
 | Paul-Junior | anthropic/claude-opus-4-6 | Backend implementation (called by Paul, NO delegation) |
 | frontend-ui-ux-engineer | gemini-3-pro-preview | UI implementation (called by Paul for UI work) |
 | git-master | zai-coding-plan/glm-4.7 | Git operations (called by Paul) |
-| Sisyphus | claude-opus-4-6 | **Legacy escape hatch** - Bypasses all rules (use only if system deadlocks) |
-| oracle | gpt-5.2 | High-IQ debugging, architecture |
+| Elijah | anthropic/claude-opus-4-6 | Deep reasoning advisor, architecture |
 | librarian | anthropic/claude-sonnet-4-5 | Multi-repo analysis, docs |
 | explore | anthropic/claude-haiku-4-5 | Fast codebase exploration |
 | multimodal-looker | google/antigravity-gemini-3-flash | Image/PDF analysis |
@@ -232,7 +231,7 @@ Phase 4: Setup EXEC:: todos
 - **Category Required** (HARD BLOCK): All delegations MUST specify `category` parameter (e.g., `category="unit-testing"`).
 - **TDD Mandatory** (HARD BLOCK): HARD BLOCKS if you try to write code before tests (not warnings - actual errors).
 - **No Coding for Orchestrators** (HARD BLOCK): Paul/planner-paul CANNOT write code directly - they MUST delegate.
-- **No Delegation for Subagents** (HARD BLOCK): Sisyphus-Junior cannot delegate to frontend-ui-ux-engineer. Paul must orchestrate.
+- **No Delegation for Subagents** (HARD BLOCK): Paul-Junior cannot delegate to frontend-ui-ux-engineer. Paul must orchestrate.
 - **Competency Routing** (ADVISORY WARNING): Wrong specialist for task triggers warning (not block) - allows proceeding with caution.
 
 ## ENFORCEMENT MODEL
@@ -251,8 +250,8 @@ These violations **throw errors** and stop execution:
 ### ADVISORY WARNINGS (Suggestions - Allow Proceeding)
 These violations **inject warnings** but allow proceeding:
 1. **Competency routing**: Task contains UI keywords but delegated to non-specialist
-   - Example: CSS changes delegated to Sisyphus-Junior triggers warning
-   - Paul can proceed if there's valid reason (e.g., Sisyphus-Junior → frontend-ui-ux-engineer internally)
+   - Example: CSS changes delegated to Paul-Junior triggers warning
+   - Paul can proceed if there's valid reason (e.g., Paul-Junior handles it or delegates internally)
 
 **Why Advisory Warnings?**
 - Prevents deadlocks on edge cases (e.g., "commit UI changes" has both Git + UI keywords)
@@ -306,7 +305,7 @@ recommendation: <a or b>
 - NEVER cross domain boundaries (planner-paul → Paul, Paul → worker-paul) - **BLOCKED**
 
 **Workflow (ADVISORY - Will Warn But Allow):**
-- AVOID delegating UI tasks to non-specialists (use frontend-ui-ux-engineer or Sisyphus-Junior)
+- AVOID delegating UI tasks to non-specialists (use frontend-ui-ux-engineer)
 - AVOID delegating testing tasks to non-test agents (prefer Peter/John/Joshua)
 - AVOID delegating git operations to non-git agents (prefer git-master)
 - AVOID delegating research to non-research agents (prefer librarian)

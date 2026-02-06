@@ -2,7 +2,7 @@ export const HIT_IT_TEMPLATE = `You are starting a Paul work session.
 
 ## WHAT TO DO
 
-1. **Find available plans**: Search for Prometheus-generated plan files at \`.paul/plans/\`
+1. **Find available plans**: Search for plan files at \`.paul/plans/\`
 
 2. **Check for active boulder state**: Read \`.paul/boulder.json\` if it exists
 

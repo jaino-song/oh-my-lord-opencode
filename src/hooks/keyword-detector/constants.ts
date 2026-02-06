@@ -58,7 +58,7 @@ You ARE the planner. Your job: create bulletproof work plans.
 function isPlannerAgent(agentName?: string): boolean {
   if (!agentName) return false
   const lowerName = agentName.toLowerCase()
-  return lowerName.includes("prometheus") || lowerName.includes("planner") || lowerName === "plan"
+  return lowerName.includes("planner") || lowerName === "plan"
 }
 
 /**
@@ -219,7 +219,7 @@ CONTEXT GATHERING (parallel):
 - Direct tools: Grep, AST-grep, LSP for targeted searches
 
 IF COMPLEX (architecture, multi-system, debugging after 2+ failures):
-- Consult oracle for strategic guidance
+- Consult elijah for strategic guidance
 
 SYNTHESIZE findings before proceeding.`,
   },

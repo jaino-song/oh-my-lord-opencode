@@ -26,9 +26,9 @@ Notes:
 
 | Agent | Alias | Model | Purpose | Visibility |
 |-------|-------|-------|---------|------------|
-| planner-paul | - | anthropic/claude-opus-4-5 | Planning + routing | User-selectable |
-| Paul | paul | anthropic/claude-opus-4-5 | Orchestrator | User-selectable |
-| worker-paul | - | anthropic/claude-opus-4-5 | Trivial executor | User-selectable |
+| planner-paul | - | anthropic/claude-opus-4-6 | Planning + routing | User-selectable |
+| Paul | paul | anthropic/claude-opus-4-6 | Orchestrator | User-selectable |
+| worker-paul | - | anthropic/claude-opus-4-6 | Trivial executor | User-selectable |
 | Saul | - | anthropic/claude-sonnet-4-5 | Bare model | User-selectable |
 
 ---
@@ -39,13 +39,11 @@ Called by planner-paul during planning phase (v4.2: always Ezra + Thomas).
 
 | Agent | Alias | Model | Purpose |
 |-------|-------|-------|---------|
-| Nathan (Request Analyst) | nathan | anthropic/claude-opus-4-5 | Phase 0: Impact-based triviality analysis |
-| Ezra (Plan Reviewer) | ezra | anthropic/claude-opus-4-5 | **Always used** - Deep plan review (confidence scoring) |
-| Solomon (TDD Planner) | solomon | anthropic/claude-opus-4-5 | Test planning |
+| Nathan (Request Analyst) | nathan | anthropic/claude-opus-4-6 | Phase 0: Impact-based triviality analysis |
+| Ezra (Plan Reviewer) | ezra | anthropic/claude-opus-4-6 | **Always used** - Deep plan review (confidence scoring) |
+| Solomon (TDD Planner) | solomon | anthropic/claude-opus-4-6 | Test planning |
 | Thomas (TDD Plan Consultant) | thomas | anthropic/claude-sonnet-4-5 | **Always used** - TDD plan audit |
 | Timothy (Implementation Plan Reviewer) | timothy | anthropic/claude-sonnet-4-5 | Quick plan review (used by Paul, not planner-paul) |
-| Metis (Plan Consultant) | - | anthropic/claude-sonnet-4-5 | Deprecated (kept for compat) |
-| Momus (Plan Reviewer) | - | anthropic/claude-sonnet-4-5 | Deprecated (kept for compat) |
 
 ---
 
@@ -55,7 +53,7 @@ Called by paul during execution phase.
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
-| Paul-Junior | anthropic/claude-opus-4-5 | Implementation agent |
+| Paul-Junior | anthropic/claude-opus-4-6 | Implementation agent |
 | frontend-ui-ux-engineer | google/gemini-3-pro-preview | UI/UX implementation |
 | ultrabrain | openai/o1 | Hard logic + security-critical implementation |
 | git-master | zai-coding-plan/glm-4.7 | Git operations |
@@ -80,7 +78,7 @@ Available to multiple agents for research tasks.
 |-------|-------|-------|---------|
 | explore | - | anthropic/claude-haiku-4-5 | Fast codebase search |
 | librarian | - | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs lookup |
-| Elijah (Deep Reasoning Advisor) | elijah | anthropic/claude-opus-4-5 | Deep debugging, architecture decisions |
+| Elijah (Deep Reasoning Advisor) | elijah | anthropic/claude-opus-4-6 | Deep debugging, architecture decisions |
 
 ---
 
@@ -93,13 +91,15 @@ Available to multiple agents for research tasks.
 
 ---
 
-## Deprecated Agents
+## Removed Agents
 
-| Agent | Replacement |
-|-------|-------------|
-| oracle | Elijah |
-| Metis | Nathan |
-| Momus | Ezra |
+| Agent | Replacement | Removed In |
+|-------|-------------|------------|
+| oracle | Elijah | v0.19.0 |
+| Metis | Nathan | v0.19.0 |
+| Momus | Ezra | v0.19.0 |
+| Prometheus | planner-paul | v0.19.0 |
+| Sisyphus | Paul | v0.19.0 |
 
 ---
 

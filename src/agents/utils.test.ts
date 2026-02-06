@@ -3,33 +3,16 @@ import { createBuiltinAgents } from "./utils"
 import type { AgentConfig } from "@opencode-ai/sdk"
 
 describe("createBuiltinAgents with model overrides", () => {
-  test("Oracle with default model has reasoningEffort", () => {
+  test("Elijah with default model has adaptive thinking", () => {
     // #given - no overrides
 
     // #when
     const agents = createBuiltinAgents()
 
     // #then
-    expect(agents.oracle.model).toBe("openai/gpt-5.2")
-    expect(agents.oracle.reasoningEffort).toBe("medium")
-    expect(agents.oracle.textVerbosity).toBe("high")
-    expect(agents.oracle.thinking).toBeUndefined()
-  })
-
-  test("Oracle with Claude model override has thinking, no reasoningEffort", () => {
-    // #given
-    const overrides = {
-      oracle: { model: "anthropic/claude-sonnet-4" },
-    }
-
-    // #when
-    const agents = createBuiltinAgents([], overrides)
-
-    // #then
-    expect(agents.oracle.model).toBe("anthropic/claude-sonnet-4")
-    expect(agents.oracle.thinking).toEqual({ type: "enabled", budgetTokens: 32000 })
-    expect(agents.oracle.reasoningEffort).toBeUndefined()
-    expect(agents.oracle.textVerbosity).toBeUndefined()
+    const elijah = agents["Elijah (Deep Reasoning Advisor)"]
+    expect(elijah.model).toBe("anthropic/claude-opus-4-6")
+    expect(elijah.thinking).toEqual({ type: "adaptive" })
   })
 
 })

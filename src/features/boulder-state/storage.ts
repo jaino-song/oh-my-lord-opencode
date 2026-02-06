@@ -7,7 +7,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from "node:fs"
 import { dirname, join, basename } from "node:path"
 import type { BoulderState, PlanProgress } from "./types"
-import { BOULDER_DIR, BOULDER_FILE, PROMETHEUS_PLANS_DIR } from "./constants"
+import { BOULDER_DIR, BOULDER_FILE, PLANS_DIR } from "./constants"
 
 const planProgressCache = new Map<string, { mtimeMs: number; progress: PlanProgress }>()
 
@@ -74,12 +74,8 @@ export function clearBoulderState(directory: string): boolean {
   }
 }
 
-/**
- * Find Prometheus plan files for this project.
- * Prometheus stores plans at: {project}/.paul/plans/{name}.md
- */
-export function findPrometheusPlans(directory: string): string[] {
-  const plansDir = join(directory, PROMETHEUS_PLANS_DIR)
+export function findPlannerPlans(directory: string): string[] {
+  const plansDir = join(directory, PLANS_DIR)
 
   if (!existsSync(plansDir)) {
     return []

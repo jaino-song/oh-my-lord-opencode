@@ -20,7 +20,7 @@ import { SIGNAL_DONE_TOOL_NAME } from "../signal-done"
 
 type OpencodeClient = PluginInput["client"]
 
-const ORCHESTRATOR_AGENTS = ["Paul", "planner-paul", "Sisyphus"]
+const ORCHESTRATOR_AGENTS = ["Paul", "planner-paul"]
 
 const DEFAULT_OUTPUT_SUMMARY_TOKENS = 800
 
@@ -242,8 +242,8 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
       description: tool.schema.string().describe("Short task description"),
       prompt: tool.schema.string().describe("Full detailed prompt for the agent"),
 
-      subagent_type: tool.schema.string().optional().describe("Agent name directly (e.g., 'oracle', 'explore'). Mutually exclusive with category."),
-      run_in_background: tool.schema.boolean().describe("Run in background. MUST be explicitly set. Use false for task delegation, true only for parallel exploration."),
+      subagent_type: tool.schema.string().optional().describe("Agent name directly (e.g., 'elijah', 'explore'). Mutually exclusive with category."),
+      run_in_background: tool.schema.boolean().describe("Run in background. MUST be explicitly set. NOTE: explore/librarian agents are auto-forced to background mode regardless of this value."),
       resume: tool.schema.string().optional().describe("Session ID to resume - continues previous agent session with full context"),
       skills: tool.schema.array(tool.schema.string()).nullable().describe("Array of skill names to prepend to the prompt. Use null if no skills needed. Empty array [] is NOT allowed."),
       output_format: tool.schema.enum(["summary", "full"]).optional().describe("Output format for sync results. 'summary' (default) truncates long outputs."),
@@ -558,6 +558,11 @@ ${formattedOutput}`
         } catch {
           // If we can't fetch agents, proceed anyway - the session.prompt will fail with a clearer error
         }
+
+      const RESEARCH_AGENTS = ["explore", "librarian"]
+      if (RESEARCH_AGENTS.includes(agentToUse.toLowerCase())) {
+        return `❌ Cannot use delegate_task for "${agentToUse}". Use call_paul_agent instead.\n\nExample:\ncall_paul_agent(subagent_type="${agentToUse}", prompt="...", description="...", run_in_background=true)`
+      }
 
       const systemContent = buildSystemContent(skillContent)
 

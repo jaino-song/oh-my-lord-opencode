@@ -26,7 +26,7 @@ describe("signal-done-enforcer", () => {
 
     // #then - session should be tracked as having called signal_done
     subagentSessions.add(TEST_SESSION)
-    await hook.handler({ event: { type: "session.idle" }, sessionID: TEST_SESSION })
+    await hook.handler({ event: { type: "session.idle", properties: { sessionID: TEST_SESSION } } })
     
     expect(promptMock).not.toHaveBeenCalled()
   })
@@ -41,7 +41,7 @@ describe("signal-done-enforcer", () => {
     subagentSessions.add(TEST_SESSION)
 
     // #when
-    await hook.handler({ event: { type: "session.idle" }, sessionID: TEST_SESSION })
+    await hook.handler({ event: { type: "session.idle", properties: { sessionID: TEST_SESSION } } })
 
     // #then
     expect(promptMock).toHaveBeenCalledTimes(1)
@@ -59,7 +59,7 @@ describe("signal-done-enforcer", () => {
     } as never)
 
     // #when - session is NOT in subagentSessions
-    await hook.handler({ event: { type: "session.idle" }, sessionID: TEST_SESSION })
+    await hook.handler({ event: { type: "session.idle", properties: { sessionID: TEST_SESSION } } })
 
     // #then
     expect(promptMock).not.toHaveBeenCalled()
@@ -75,7 +75,7 @@ describe("signal-done-enforcer", () => {
     subagentSessions.add(TEST_SESSION)
 
     // #when
-    await hook.handler({ event: { type: "session.start" }, sessionID: TEST_SESSION })
+    await hook.handler({ event: { type: "session.start", properties: { sessionID: TEST_SESSION } } })
 
     // #then
     expect(promptMock).not.toHaveBeenCalled()

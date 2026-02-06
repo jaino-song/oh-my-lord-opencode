@@ -7,7 +7,6 @@ import type {
   AgentPromptMetadata,
 } from "./types"
 import type { GitMasterConfig } from "../config/schema"
-import { createOracleAgent, ORACLE_PROMPT_METADATA } from "./oracle"
 import { createLibrarianAgent, LIBRARIAN_PROMPT_METADATA } from "./librarian"
 import { createExploreAgent, EXPLORE_PROMPT_METADATA } from "./explore"
 import { createFrontendUiUxEngineerAgent, FRONTEND_PROMPT_METADATA } from "./frontend-ui-ux-engineer"
@@ -48,7 +47,6 @@ const USER_SELECTABLE_AGENTS: BuiltinAgentName[] = [
 
 const agentSources: Record<BuiltinAgentName, AgentSource> = {
   Saul: saulAgent,
-  oracle: createOracleAgent,
   librarian: createLibrarianAgent,
   explore: createExploreAgent,
   "frontend-ui-ux-engineer": createFrontendUiUxEngineerAgent,
@@ -75,7 +73,6 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
  * (Delegation Table, Tool Selection, Key Triggers, etc.)
  */
 const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
-  oracle: ORACLE_PROMPT_METADATA,
   librarian: LIBRARIAN_PROMPT_METADATA,
   explore: EXPLORE_PROMPT_METADATA,
   "frontend-ui-ux-engineer": FRONTEND_PROMPT_METADATA,

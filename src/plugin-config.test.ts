@@ -81,22 +81,22 @@ describe("mergeConfigs", () => {
     it("should deep merge agents", () => {
       const base: OhMyOpenCodeConfig = {
         agents: {
-          oracle: { model: "openai/gpt-5.2" },
+          explore: { model: "anthropic/claude-haiku-4-5" },
         },
       };
 
       const override: OhMyOpenCodeConfig = {
         agents: {
-          oracle: { temperature: 0.5 },
-          explore: { model: "anthropic/claude-haiku-4-5" },
+          explore: { temperature: 0.3 },
+          librarian: { model: "anthropic/claude-sonnet-4-5" },
         },
       };
 
       const result = mergeConfigs(base, override);
 
-      expect(result.agents?.oracle?.model).toBe("openai/gpt-5.2");
-      expect(result.agents?.oracle?.temperature).toBe(0.5);
       expect(result.agents?.explore?.model).toBe("anthropic/claude-haiku-4-5");
+      expect(result.agents?.explore?.temperature).toBe(0.3);
+      expect(result.agents?.librarian?.model).toBe("anthropic/claude-sonnet-4-5");
     });
 
     it("should merge disabled arrays without duplicates", () => {

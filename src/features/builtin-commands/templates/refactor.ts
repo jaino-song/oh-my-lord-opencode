@@ -465,7 +465,7 @@ If ANY verification fails:
 4. **OPTIONS**:
    - Fix the issue and retry
    - Skip this step (if optional)
-   - Consult oracle agent for help
+   - Consult elijah agent for help
    - Ask user for guidance
 
 **NEVER proceed to next step with broken tests.**
@@ -600,7 +600,7 @@ Use \`ast_grep_search\` and \`ast_grep_replace\` for structural transformations.
 ## Agents
 - \`explore\`: Parallel codebase pattern discovery
 - \`plan\`: Detailed refactoring plan generation
-- \`oracle\`: Read-only consultation for complex architectural decisions and debugging
+- \`elijah\`: Read-only consultation for complex architectural decisions and debugging
 - \`librarian\`: **Use proactively** when encountering deprecated methods or library migration tasks. Query official docs and OSS examples for modern replacements.
 
 ## Deprecated Code & Library Migration

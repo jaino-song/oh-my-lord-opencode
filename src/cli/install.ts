@@ -51,12 +51,12 @@ function formatConfigSummary(config: InstallConfig): string {
   lines.push("")
 
   const paulModel = config.hasClaude ? "claude-opus-4-5" : (config.hasCopilot ? "github-copilot/claude-opus-4.5" : "big-pickle")
-  const oracleModel = config.hasChatGPT ? "gpt-5.2" : (config.hasCopilot ? "github-copilot/gpt-5.2" : (config.hasClaude ? "claude-opus-4-5" : "big-pickle"))
+  const elijahModel = config.hasChatGPT ? "gpt-5.2" : (config.hasCopilot ? "github-copilot/gpt-5.2" : (config.hasClaude ? "claude-opus-4-6" : "big-pickle"))
   const librarianModel = "zai-coding-plan/glm-4.7"
   const frontendModel = config.hasGemini ? "antigravity-gemini-3-pro-high" : (config.hasClaude ? "claude-opus-4-5" : "big-pickle")
 
   lines.push(`  ${SYMBOLS.bullet} Paul          ${SYMBOLS.arrow} ${color.cyan(paulModel)}`)
-  lines.push(`  ${SYMBOLS.bullet} Oracle       ${SYMBOLS.arrow} ${color.cyan(oracleModel)}`)
+  lines.push(`  ${SYMBOLS.bullet} Elijah       ${SYMBOLS.arrow} ${color.cyan(elijahModel)}`)
   lines.push(`  ${SYMBOLS.bullet} Librarian    ${SYMBOLS.arrow} ${color.cyan(librarianModel)}`)
   lines.push(`  ${SYMBOLS.bullet} Frontend     ${SYMBOLS.arrow} ${color.cyan(frontendModel)}`)
 
@@ -188,7 +188,7 @@ async function runTuiMode(detected: DetectedConfig): Promise<InstallConfig | nul
   const chatgpt = await p.select({
     message: "Do you have a ChatGPT Plus/Pro subscription?",
     options: [
-      { value: "no" as const, label: "No", hint: "Oracle will use fallback model" },
+      { value: "no" as const, label: "No", hint: "Elijah will use fallback model" },
       { value: "yes" as const, label: "Yes", hint: "GPT-5.2 for debugging and architecture" },
     ],
     initialValue: initial.chatgpt,

@@ -23,19 +23,19 @@ describe("migrateAgentNames", () => {
      // #when: Migrate agent names
      const { migrated, changed } = migrateAgentNames(agents)
 
-     // #then: Legacy names should be migrated to Paul/Prometheus
-     expect(changed).toBe(true)
-     expect(migrated["Paul"]).toEqual({ temperature: 0.5 })
-     expect(migrated["Prometheus (Planner)"]).toEqual({ prompt: "custom prompt" })
-     expect(migrated["omo"]).toBeUndefined()
-     expect(migrated["OmO"]).toBeUndefined()
-     expect(migrated["OmO-Plan"]).toBeUndefined()
+      // #then: Legacy names should be migrated to Paul/planner-paul
+      expect(changed).toBe(true)
+      expect(migrated["Paul"]).toEqual({ temperature: 0.5 })
+      expect(migrated["planner-paul"]).toEqual({ prompt: "custom prompt" })
+      expect(migrated["omo"]).toBeUndefined()
+      expect(migrated["OmO"]).toBeUndefined()
+      expect(migrated["OmO-Plan"]).toBeUndefined()
    })
 
   test("preserves current agent names unchanged", () => {
     // #given: Config with current agent names
     const agents = {
-      oracle: { model: "openai/gpt-5.2" },
+      elijah: { model: "anthropic/claude-opus-4-6" },
       librarian: { model: "google/gemini-3-flash" },
       explore: { model: "opencode/grok-code" },
     }
@@ -45,7 +45,7 @@ describe("migrateAgentNames", () => {
 
     // #then: Current names should remain unchanged
     expect(changed).toBe(false)
-    expect(migrated["oracle"]).toEqual({ model: "openai/gpt-5.2" })
+    expect(migrated["elijah"]).toEqual({ model: "anthropic/claude-opus-4-6" })
     expect(migrated["librarian"]).toEqual({ model: "google/gemini-3-flash" })
     expect(migrated["explore"]).toEqual({ model: "opencode/grok-code" })
   })
@@ -61,10 +61,10 @@ describe("migrateAgentNames", () => {
       // #when: Migrate agent names
       const { migrated, changed } = migrateAgentNames(agents)
 
-      // #then: Case-insensitive lookup should migrate correctly
-      expect(migrated["Paul"]).toEqual({ model: "openai/gpt-5.2" })
-      expect(migrated["Prometheus (Planner)"]).toEqual({ prompt: "test" })
-      expect(changed).toBe(true)
+       // #then: Case-insensitive lookup should migrate correctly
+       expect(migrated["Paul"]).toEqual({ model: "openai/gpt-5.2" })
+       expect(migrated["planner-paul"]).toEqual({ prompt: "test" })
+       expect(changed).toBe(true)
     })
 
   test("passes through unknown agent names unchanged", () => {
@@ -225,8 +225,8 @@ describe("migrateConfigFile", () => {
     expect(rawConfig.paul_agent).toEqual({ disabled: false })
      expect(rawConfig.omo_agent).toBeUndefined()
      const agents = rawConfig.agents as Record<string, unknown>
-     expect(agents["Paul"]).toBeDefined()
-     expect(agents["Prometheus (Planner)"]).toBeDefined()
+      expect(agents["Paul"]).toBeDefined()
+      expect(agents["planner-paul"]).toBeDefined()
      expect(rawConfig.disabled_hooks).toContain("anthropic-context-window-limit-recovery")
   })
 })
@@ -237,9 +237,9 @@ describe("migration maps", () => {
      // #then: Should contain all legacy → current mappings
      expect(AGENT_NAME_MAP["omo"]).toBe("Paul")
      expect(AGENT_NAME_MAP["OmO"]).toBe("Paul")
-     expect(AGENT_NAME_MAP["OmO-Plan"]).toBe("Prometheus (Planner)")
-     expect(AGENT_NAME_MAP["omo-plan"]).toBe("Prometheus (Planner)")
-     expect(AGENT_NAME_MAP["Planner-Sisyphus"]).toBe("Prometheus (Planner)")
+      expect(AGENT_NAME_MAP["OmO-Plan"]).toBe("planner-paul")
+      expect(AGENT_NAME_MAP["omo-plan"]).toBe("planner-paul")
+      expect(AGENT_NAME_MAP["Planner-Sisyphus"]).toBe("planner-paul")
   })
 
   test("HOOK_NAME_MAP contains anthropic-auto-compact migration", () => {
@@ -499,7 +499,7 @@ describe("migrateConfigFile with backup", () => {
     const rawConfig: Record<string, unknown> = {
       agents: {
         "multimodal-looker": { model: "anthropic/claude-haiku-4-5" },
-        oracle: { model: "openai/gpt-5.2" },
+        elijah: { model: "anthropic/claude-opus-4-6" },
         "my-custom-agent": { model: "google/gemini-3-pro-preview" },
       },
     }
@@ -515,7 +515,7 @@ describe("migrateConfigFile with backup", () => {
 
     const agents = rawConfig.agents as Record<string, Record<string, unknown>>
     expect(agents["multimodal-looker"].model).toBe("anthropic/claude-haiku-4-5")
-    expect(agents.oracle.model).toBe("openai/gpt-5.2")
+    expect(agents.elijah.model).toBe("anthropic/claude-opus-4-6")
     expect(agents["my-custom-agent"].model).toBe("google/gemini-3-pro-preview")
   })
 
@@ -525,7 +525,7 @@ describe("migrateConfigFile with backup", () => {
     const rawConfig: Record<string, unknown> = {
       agents: {
         "multimodal-looker": { category: "quick" },
-        oracle: { category: "ultrabrain" },
+        elijah: { category: "ultrabrain" },
       },
     }
 
@@ -540,7 +540,7 @@ describe("migrateConfigFile with backup", () => {
 
     const agents = rawConfig.agents as Record<string, Record<string, unknown>>
     expect(agents["multimodal-looker"].category).toBe("quick")
-    expect(agents.oracle.category).toBe("ultrabrain")
+    expect(agents.elijah.category).toBe("ultrabrain")
   })
 
    test("does not write when no migration needed", () => {
