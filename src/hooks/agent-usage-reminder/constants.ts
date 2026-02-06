@@ -32,13 +32,13 @@ export const REMINDER_MESSAGE = `
 
 You called a search/fetch tool directly without leveraging specialized agents.
 
-RECOMMENDED: Use delegate_task with explore/librarian agents for better results:
+RECOMMENDED: Use call_paul_agent with explore/librarian agents for better results:
 
 \`\`\`
 // Parallel exploration - fire multiple agents simultaneously
-delegate_task(subagent_type="explore", prompt="Find all files matching pattern X")
-delegate_task(subagent_type="explore", prompt="Search for implementation of Y") 
-delegate_task(subagent_type="librarian", prompt="Lookup documentation for Z")
+call_paul_agent(subagent_type="explore", prompt="Find all files matching pattern X", description="Scout: file patterns", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Search for implementation of Y", description="Scout: implementation of Y", run_in_background=true)
+call_paul_agent(subagent_type="librarian", prompt="Lookup documentation for Z", description="Scout: docs for Z", run_in_background=true)
 
 // Then continue your work while they run in background
 // System will notify you when each completes
@@ -50,5 +50,5 @@ WHY:
 - Specialized agents have domain expertise
 - Reduces context window usage in main session
 
-ALWAYS prefer: Multiple parallel delegate_task calls > Direct tool calls
+ALWAYS prefer: Multiple parallel call_paul_agent calls > Direct tool calls
 `;
