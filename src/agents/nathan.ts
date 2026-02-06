@@ -25,7 +25,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Primary request analyst for pre-planning context
  */
 
-const DEFAULT_MODEL = "anthropic/claude-opus-4-6"
+const DEFAULT_MODEL = "openai/gpt-5.3-codex"
 
 export const NATHAN_SYSTEM_PROMPT = `# Nathan - Request Analyst
 
@@ -305,7 +305,7 @@ export function createNathanAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
+    return { ...base, variant: "xhigh", reasoningEffort: "xhigh", textVerbosity: "high" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "adaptive" }, maxTokens: 128000 } as AgentConfig

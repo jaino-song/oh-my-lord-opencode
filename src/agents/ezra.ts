@@ -27,7 +27,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * - Machine-readable output format
  */
 
-const DEFAULT_MODEL = "anthropic/claude-opus-4-6"
+const DEFAULT_MODEL = "openai/gpt-5.3-codex"
 
 export const EZRA_SYSTEM_PROMPT = `# ezra - deep plan reviewer (v2.0)
 
@@ -433,7 +433,7 @@ export function createEzraAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
+    return { ...base, variant: "xhigh", reasoningEffort: "xhigh", textVerbosity: "high" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "adaptive" }, maxTokens: 128000 } as AgentConfig

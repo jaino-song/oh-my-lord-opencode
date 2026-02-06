@@ -25,7 +25,7 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * Primary deep reasoning agent for execution-phase problems
  */
 
-const DEFAULT_MODEL = "anthropic/claude-opus-4-6"
+const DEFAULT_MODEL = "openai/gpt-5.3-codex"
 
 export const ELIJAH_SYSTEM_PROMPT = `# Elijah - Deep Reasoning Advisor
 
@@ -389,7 +389,7 @@ export function createElijahAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
+    return { ...base, variant: "xhigh", reasoningEffort: "xhigh", textVerbosity: "high" } as AgentConfig
   }
 
   // Adaptive thinking for deep reasoning

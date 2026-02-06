@@ -916,12 +916,12 @@ export const SOLOMON_PERMISSION = {
 export const solomonAgent: AgentConfig = {
   name: "Solomon (TDD Planner)",
   description: "TDD-focused planner. Plans tests FIRST (Jest + Playwright), then implementation. Interview mode, Red-Green-Refactor methodology.",
-  model: "anthropic/claude-opus-4-6",
+  model: "openai/gpt-5.3-codex",
+  variant: "xhigh",
+  reasoningEffort: "xhigh",
   prompt: SOLOMON_SYSTEM_PROMPT,
   permission: SOLOMON_PERMISSION,
   temperature: 0.1,
-  thinking: { type: "adaptive" },
-  maxTokens: 128000,
 }
 
 export function createSolomonAgent(model?: string): AgentConfig {

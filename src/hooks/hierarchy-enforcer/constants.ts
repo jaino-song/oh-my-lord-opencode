@@ -21,8 +21,10 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
   // "Timothy (Implementation Plan Reviewer)": [],
 
   "Solomon (TDD Planner)": ["explore", "librarian"],
-  "Thomas (TDD Plan Consultant)": [],
+  "Thomas (TDD Plan Consultant)": ["explore", "librarian"],
   "Nathan (Request Analyst)": ["explore", "librarian"],
+  "Ezra (Plan Reviewer)": ["explore", "librarian"],
+  "Elijah (Deep Reasoning Advisor)": ["explore", "librarian"],
 
   "Paul": [
     "Joshua (Test Runner)",
@@ -39,9 +41,11 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
     "Thomas (TDD Plan Consultant)"
   ],
 
-  "Joshua (Test Runner)": [],
+  "Joshua (Test Runner)": ["explore", "librarian"],
   "Paul-Junior": ["explore", "librarian"],
   "frontend-ui-ux-engineer": ["explore", "librarian"],
+  "git-master": ["explore", "librarian"],
+  "document-writer": ["explore", "librarian"],
   
   // --override required for Paul/planner-paul/Paul-Junior/frontend-ui-ux-engineer
   "worker-paul": ["explore", "librarian", "git-master", "document-writer"]
