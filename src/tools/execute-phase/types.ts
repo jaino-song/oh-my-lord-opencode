@@ -1,5 +1,6 @@
 export interface ExecutePhaseArgs {
   phase: number
+  skills?: string[] | null
 }
 
 export interface PhaseTodo {

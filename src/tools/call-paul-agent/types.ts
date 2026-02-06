@@ -8,6 +8,7 @@ export interface CallPaulAgentArgs {
   subagent_type: string
   run_in_background: boolean
   session_id?: string
+  skills?: string[] | null
 }
 
 export interface CallPaulAgentSyncResult {
