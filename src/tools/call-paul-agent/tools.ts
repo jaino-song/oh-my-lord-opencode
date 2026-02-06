@@ -8,6 +8,12 @@ import { log, getAgentToolRestrictions } from "../../shared"
 import { consumeNewMessages } from "../../shared/session-cursor"
 import { findFirstMessageWithAgent, findNearestMessageWithFields, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { getSessionAgent } from "../../features/claude-code-session-state"
+import { resolveMultipleSkillsAsync } from "../../features/opencode-skill-loader/skill-content"
+
+function summarizeSkillContent(content: string): string {
+  // Skills are intentionally loaded - return full content without truncation
+  return content
+}
 
 function getMessageDir(sessionID: string): string | null {
   if (!existsSync(MESSAGE_STORAGE)) return null
@@ -52,10 +58,11 @@ export function createCallPaulAgent(
         .boolean()
         .describe("REQUIRED. true: run asynchronously (use background_output to get results), false: run synchronously and wait for completion"),
       session_id: tool.schema.string().describe("Existing Task session to continue").optional(),
+      skills: tool.schema.array(tool.schema.string()).nullable().describe("Array of skill names to prepend to the prompt. Use null if no skills needed. Optional.").optional(),
     },
     async execute(args: CallPaulAgentArgs, toolContext) {
       const toolCtx = toolContext as ToolContextWithMetadata
-       log(`[call_paul_agent] Starting with agent: ${args.subagent_type}, background: ${args.run_in_background}`)
+       log(`[call_paul_agent] Starting with agent: ${args.subagent_type}, background: ${args.run_in_background}, skills: ${args.skills ? args.skills.join(", ") : "none"}`)
 
       if (!ALLOWED_AGENTS.includes(args.subagent_type as typeof ALLOWED_AGENTS[number])) {
         return `Error: Invalid agent type "${args.subagent_type}". Only ${ALLOWED_AGENTS.join(", ")} are allowed.`
@@ -101,6 +108,18 @@ export function createCallPaulAgent(
       resolvedParentAgent: parentAgent,
     })
 
+    // Resolve skills if provided
+    let skillContent: string | undefined
+    if (args.skills && args.skills.length > 0) {
+      const { resolved, notFound } = await resolveMultipleSkillsAsync(args.skills)
+      if (notFound.length > 0) {
+        return `Error: Skills not found: ${notFound.join(", ")}`
+      }
+      const summarized = Array.from(resolved.values()).map(summarizeSkillContent)
+      skillContent = summarized.join("\n\n")
+      log(`[call_paul_agent] Resolved ${args.skills.length} skills for background task`)
+    }
+
     const task = await manager.launch({
       description: args.description,
       prompt: args.prompt,
@@ -108,6 +127,7 @@ export function createCallPaulAgent(
       parentSessionID: toolContext.sessionID,
       parentMessageID: toolContext.messageID,
       parentAgent,
+      skillContent,
     })
 
     toolContext.metadata?.({
@@ -122,6 +142,7 @@ Session ID: ${task.sessionID}
 Description: ${task.description}
 Agent: ${task.agent} (subagent)
 Status: ${task.status}
+${args.skills && args.skills.length > 0 ? `Skills: ${args.skills.join(", ")}` : ""}
 
 The system will notify you when the task completes.
 Use \`background_output\` tool with task_id="${task.id}" to check progress:
@@ -188,6 +209,21 @@ Use \`background_output\` tool with task_id="${task.id}" to check progress:
    log(`[call_paul_agent] Sending prompt to session ${sessionID}`)
    log(`[call_paul_agent] Prompt text:`, args.prompt.substring(0, 100))
 
+  // Resolve skills if provided
+  let skillContent: string | undefined
+  if (args.skills && args.skills.length > 0) {
+    const { resolved, notFound } = await resolveMultipleSkillsAsync(args.skills)
+    if (notFound.length > 0) {
+      return `Error: Skills not found: ${notFound.join(", ")}`
+    }
+    const summarized = Array.from(resolved.values()).map(summarizeSkillContent)
+    skillContent = summarized.join("\n\n")
+    log(`[call_paul_agent] Resolved ${args.skills.length} skills for sync task`)
+  }
+
+  // Prepend skill content to prompt if available
+  const finalPrompt = skillContent ? `${skillContent}\n\n${args.prompt}` : args.prompt
+
   try {
     await ctx.client.session.prompt({
       path: { id: sessionID },
@@ -198,7 +234,7 @@ Use \`background_output\` tool with task_id="${task.id}" to check progress:
           task: false,
           delegate_task: false,
         },
-        parts: [{ type: "text", text: args.prompt }],
+        parts: [{ type: "text", text: finalPrompt }],
       },
     })
    } catch (error) {

@@ -3,6 +3,7 @@ import type { ExecutePhaseArgs, PhaseInfo, PhaseTodo, PhaseResult } from "./type
 import { EXECUTE_PHASE_DESCRIPTION } from "./constants"
 import type { BackgroundManager } from "../../features/background-agent"
 import { log } from "../../shared/logger"
+import { resolveMultipleSkillsAsync } from "../../features/opencode-skill-loader/skill-content"
 
 type OpencodeClient = PluginInput["client"]
 
@@ -84,6 +85,11 @@ ${todo.content}
 Complete this task and call signal_done when finished.`
 }
 
+function summarizeSkillContent(content: string): string {
+  // Skills are intentionally loaded - return full content without truncation
+  return content
+}
+
 export interface ExecutePhaseToolOptions {
   manager: BackgroundManager
   client: OpencodeClient
@@ -97,6 +103,7 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
     description: EXECUTE_PHASE_DESCRIPTION,
     args: {
       phase: tool.schema.number().describe("Phase number to execute (e.g., 1, 2, 3)"),
+      skills: tool.schema.array(tool.schema.string()).nullable().describe("Array of skill names to prepend to all phase tasks. Use null if no skills needed. Optional.").optional(),
     },
     async execute(args: ExecutePhaseArgs, toolContext) {
       const ctx = toolContext as { sessionID: string; abort: AbortSignal }
@@ -121,10 +128,23 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
         return `✅ Phase ${args.phase} (${phaseInfo.title}) already complete. All tasks finished.`
       }
 
+      // Resolve skills if provided
+      let skillContent: string | undefined
+      if (args.skills && args.skills.length > 0) {
+        const { resolved, notFound } = await resolveMultipleSkillsAsync(args.skills)
+        if (notFound.length > 0) {
+          return `❌ Skills not found: ${notFound.join(", ")}`
+        }
+        const summarized = Array.from(resolved.values()).map(summarizeSkillContent)
+        skillContent = summarized.join("\n\n")
+        log(`[execute_phase] Resolved ${args.skills.length} skills for phase ${args.phase}`)
+      }
+
       log(`[execute_phase] Starting phase ${args.phase}`, {
         title: phaseInfo.title,
         mode: phaseInfo.mode,
         taskCount: pendingTodos.length,
+        hasSkills: !!skillContent,
       })
 
       const results: PhaseResult[] = []
@@ -152,7 +172,12 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
 
         for (const todo of pendingTodos) {
           const agent = todo.agentHint ?? "Paul-Junior"
-          const prompt = buildTaskPrompt(todo)
+          let prompt = buildTaskPrompt(todo)
+          
+          // Prepend skill content if available
+          if (skillContent) {
+            prompt = `${skillContent}\n\n${prompt}`
+          }
 
           try {
             const task = await manager.launch({
@@ -162,6 +187,7 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
               parentSessionID: ctx.sessionID,
               parentMessageID: "",
               parentAgent: "Paul",
+              skillContent,
             })
             tasks.push({ todo, taskId: task.id, sessionId: task.sessionID })
             log(`[execute_phase] Launched parallel task`, { taskId: task.id, agent, taskNumber: todo.taskNumber })
@@ -206,7 +232,12 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
       } else {
         for (const todo of pendingTodos) {
           const agent = todo.agentHint ?? "Paul-Junior"
-          const prompt = buildTaskPrompt(todo)
+          let prompt = buildTaskPrompt(todo)
+          
+          // Prepend skill content if available
+          if (skillContent) {
+            prompt = `${skillContent}\n\n${prompt}`
+          }
 
           try {
             const task = await manager.launch({
@@ -216,6 +247,7 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
               parentSessionID: ctx.sessionID,
               parentMessageID: "",
               parentAgent: "Paul",
+              skillContent,
             })
 
             log(`[execute_phase] Launched sequential task`, { taskId: task.id, agent, taskNumber: todo.taskNumber })
@@ -253,7 +285,11 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
       const failedCount = results.filter(r => r.status === "failed").length
 
       let output = `## Phase ${args.phase}: ${phaseInfo.title} (${phaseInfo.mode})\n\n`
-      output += `**Results:** ${successCount} succeeded, ${failedCount} failed\n\n`
+      output += `**Results:** ${successCount} succeeded, ${failedCount} failed\n`
+      if (args.skills && args.skills.length > 0) {
+        output += `**Skills:** ${args.skills.join(", ")}\n`
+      }
+      output += "\n"
 
       for (const result of results) {
         const icon = result.status === "success" ? "✅" : "❌"
@@ -267,7 +303,7 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
       if (failedCount > 0) {
         output += `\n⚠️ Some tasks failed. Review errors and retry with:\n`
         for (const result of results.filter(r => r.status === "failed")) {
-          output += `- delegate_task(resume="${result.sessionId}", prompt="fix: ...")\n`
+          output += `- execute_phase(phase=${args.phase}${args.skills ? `, skills=[${args.skills.map(s => `"${s}"`).join(", ")}]` : ""})\n`
         }
       }
 
