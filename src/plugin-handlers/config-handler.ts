@@ -248,7 +248,7 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     }
      if (agentResult["Paul"]) {
        const agent = agentResult["Paul"] as AgentWithPermission;
-       agent.permission = { ...agent.permission, task: "deny", call_paul_agent: "deny", delegate_task: "allow" };
+       agent.permission = { ...agent.permission, task: "deny", call_paul_agent: "allow", delegate_task: "allow" };
      }
 
     if (agentResult["Paul-Junior"]) {
@@ -257,7 +257,7 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     }
      if (agentResult["planner-paul"]) {
       const agent = agentResult["planner-paul"] as AgentWithPermission;
-      agent.permission = { ...agent.permission, call_paul_agent: "deny", delegate_task: "allow" };
+      agent.permission = { ...agent.permission, call_paul_agent: "allow", delegate_task: "allow" };
     }
 
     config.permission = {

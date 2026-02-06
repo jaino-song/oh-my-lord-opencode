@@ -45,12 +45,12 @@ Don't wait—these run async while main session works.
 
 \`\`\`
 // Fire all at once, collect results later
-delegate_task(subagent_type="explore", prompt="Project structure: PREDICT standard patterns for detected language → REPORT deviations only")
-delegate_task(subagent_type="explore", prompt="Entry points: FIND main files → REPORT non-standard organization")
-delegate_task(subagent_type="explore", prompt="Conventions: FIND config files (.eslintrc, pyproject.toml, .editorconfig) → REPORT project-specific rules")
-delegate_task(subagent_type="explore", prompt="Anti-patterns: FIND 'DO NOT', 'NEVER', 'ALWAYS', 'DEPRECATED' comments → LIST forbidden patterns")
-delegate_task(subagent_type="explore", prompt="Build/CI: FIND .github/workflows, Makefile → REPORT non-standard patterns")
-delegate_task(subagent_type="explore", prompt="Test patterns: FIND test configs, test structure → REPORT unique conventions")
+call_paul_agent(subagent_type="explore", prompt="Project structure: PREDICT standard patterns for detected language → REPORT deviations only", description="Scout: project structure", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Entry points: FIND main files → REPORT non-standard organization", description="Scout: entry points", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Conventions: FIND config files (.eslintrc, pyproject.toml, .editorconfig) → REPORT project-specific rules", description="Scout: conventions", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Anti-patterns: FIND 'DO NOT', 'NEVER', 'ALWAYS', 'DEPRECATED' comments → LIST forbidden patterns", description="Scout: anti-patterns", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Build/CI: FIND .github/workflows, Makefile → REPORT non-standard patterns", description="Scout: build/CI", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Test patterns: FIND test configs, test structure → REPORT unique conventions", description="Scout: test patterns", run_in_background=true)
 \`\`\`
 
 <dynamic-agents>
@@ -76,9 +76,9 @@ max_depth=$(find . -type d -not -path '*/node_modules/*' -not -path '*/.git/*' |
 Example spawning:
 \`\`\`
 // 500 files, 50k lines, depth 6, 15 large files → spawn 5+5+2+1 = 13 additional agents
-delegate_task(subagent_type="explore", prompt="Large file analysis: FIND files >500 lines, REPORT complexity hotspots")
-delegate_task(subagent_type="explore", prompt="Deep modules at depth 4+: FIND hidden patterns, internal conventions")
-delegate_task(subagent_type="explore", prompt="Cross-cutting concerns: FIND shared utilities across directories")
+call_paul_agent(subagent_type="explore", prompt="Large file analysis: FIND files >500 lines, REPORT complexity hotspots", description="Scout: large files", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Deep modules at depth 4+: FIND hidden patterns, internal conventions", description="Scout: deep modules", run_in_background=true)
+call_paul_agent(subagent_type="explore", prompt="Cross-cutting concerns: FIND shared utilities across directories", description="Scout: cross-cutting", run_in_background=true)
 // ... more based on calculation
 \`\`\`
 </dynamic-agents>

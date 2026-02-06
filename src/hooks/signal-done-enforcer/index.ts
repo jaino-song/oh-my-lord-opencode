@@ -1,5 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin"
-import { subagentSessions } from "../../features/claude-code-session-state"
+import { subagentSessions, callPaulAgentSessions } from "../../features/claude-code-session-state"
 import { SIGNAL_DONE_TOOL_NAME } from "../../tools/signal-done/constants"
 import { log } from "../../shared/logger"
 
@@ -71,6 +71,9 @@ export function createSignalDoneEnforcerHook(ctx: PluginInput) {
       const isSubagent = subagentSessions.has(sessionID)
       
       if (!isSubagent) return
+
+      // call_paul_agent sessions use polling for completion, not signal_done
+      if (callPaulAgentSessions.has(sessionID)) return
       
       if (sessionsWithSignalDone.has(sessionID)) {
         log(`[${HOOK_NAME}] Subagent completed with signal_done`, { sessionID })

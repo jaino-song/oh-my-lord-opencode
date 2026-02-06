@@ -1,4 +1,5 @@
 export const subagentSessions = new Set<string>()
+export const callPaulAgentSessions = new Set<string>()
 
 export let mainSessionID: string | undefined
 

@@ -5,6 +5,7 @@ import { ALLOWED_AGENTS, CALL_PAUL_AGENT_DESCRIPTION } from "./constants"
 import type { CallPaulAgentArgs } from "./types"
 import type { BackgroundManager } from "../../features/background-agent"
 import { log, getAgentToolRestrictions } from "../../shared"
+import { callPaulAgentSessions } from "../../features/claude-code-session-state"
 import { consumeNewMessages } from "../../shared/session-cursor"
 import { findFirstMessageWithAgent, findNearestMessageWithFields, MESSAGE_STORAGE } from "../../features/hook-message-injector"
 import { getSessionAgent } from "../../features/claude-code-session-state"
@@ -130,6 +131,8 @@ export function createCallPaulAgent(
       skillContent,
     })
 
+    callPaulAgentSessions.add(task.sessionID)
+
     toolContext.metadata?.({
       title: args.description,
       metadata: { sessionId: task.sessionID },
@@ -198,6 +201,7 @@ Use \`background_output\` tool with task_id="${task.id}" to check progress:
      }
 
      sessionID = createResult.data.id
+     callPaulAgentSessions.add(sessionID)
      log(`[call_paul_agent] Created session: ${sessionID}`)
   }
 

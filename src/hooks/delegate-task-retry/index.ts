@@ -45,7 +45,7 @@ export const DELEGATE_TASK_ERROR_PATTERNS: DelegateTaskErrorPattern[] = [
   {
     pattern: "Cannot call primary agent",
     errorType: "primary_agent",
-    fixHint: "Primary agents cannot be called via delegate_task. Use a subagent like 'explore', 'elijah', or 'librarian'",
+    fixHint: "Primary agents cannot be called via delegate_task. Use a subagent like 'Paul-Junior', 'elijah', or 'git-master'. For explore/librarian, use call_paul_agent instead.",
   },
   {
     pattern: "Skills not found",
