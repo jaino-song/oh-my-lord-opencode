@@ -20,7 +20,7 @@ const TASK_TTL_MS = 30 * 60 * 1000
 const MIN_STABILITY_TIME_MS = 10 * 1000
 const PROGRESS_TOAST_INTERVAL_MS = 10000
 const WORKING_TOAST_INTERVAL_MS = 15 * 1000
-const NO_PROGRESS_TIMEOUT_MS = 90 * 1000
+const NO_PROGRESS_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes - allows for extended model thinking/reasoning
 
 const capitalizeAgent = (s: string) => s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-')
 
@@ -1035,7 +1035,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve result.`
             if (!hasValidOutput && timeSinceLastProgress >= NO_PROGRESS_TIMEOUT_MS) {
               log("[background-agent] No progress timeout - possible rate limiting:", { taskId: task.id, timeSinceLastProgress })
               task.status = "error"
-              task.error = "No progress for 90s and no valid output - possible rate limiting or API stall"
+              task.error = "No progress for 10min and no valid output - possible rate limiting or API stall"
               task.completedAt = new Date()
               if (task.concurrencyKey) {
                 this.concurrencyManager.release(task.concurrencyKey)

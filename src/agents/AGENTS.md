@@ -33,10 +33,10 @@ agents/
 | **Paul** | anthropic/claude-opus-4-6 | **Strict Plan Executor** (Internal). Executes formal plans only. Strictly delegates. Adaptive thinking. |
 | **planner-paul** | anthropic/claude-opus-4-6 | **Smart Router & Architect**. Analyzes requests, routes to worker-paul (trivial) or creates plans for Paul (complex). Adaptive thinking. |
 | **worker-paul** | anthropic/claude-opus-4-6 | **Trivial Task Handler**. Autonomous executor for small tasks (<50 lines, single file). Adaptive thinking. |
-| Solomon | anthropic/claude-opus-4-6 | TDD test planning. Plans tests FIRST, then implementation. Adaptive thinking. |
-| Elijah | anthropic/claude-opus-4-6 | Deep Reasoning Advisor. 5 modes: --debug, --architecture, --security, --performance, --stuck. Adaptive thinking. |
-| Nathan | anthropic/claude-opus-4-6 | Request Analyst. Intent classification, guardrails, question prioritization before planning. Adaptive thinking. |
-| Ezra | anthropic/claude-opus-4-6 | Plan Reviewer with confidence scoring, anti-pattern detection, review modes. Adaptive thinking. |
+| Solomon | openai/gpt-5.3-codex | TDD test planning. Plans tests FIRST, then implementation. Medium variant. |
+| Elijah | openai/gpt-5.3-codex | Deep Reasoning Advisor (planning + execution). 7 modes: --plan-review, --verify-plan, --debug, --architecture, --security, --performance, --stuck. Medium variant. |
+| Nathan | openai/gpt-5.3-codex | Request Analyst. Intent classification, guardrails, question prioritization before planning. Medium variant. |
+| Ezra | openai/gpt-5.3-codex | Plan Reviewer with confidence scoring, anti-pattern detection, review modes. Medium variant. |
 | Timothy | anthropic/claude-sonnet-4-5 | Quick Plan Reviewer. |
 | librarian | anthropic/claude-sonnet-4-5 | Multi-repo analysis, docs research, GitHub examples. 32k thinking. |
 | explore | anthropic/claude-haiku-4-5 | Fast contextual grep. Fallbacks: opencode/gpt-5-nano. |

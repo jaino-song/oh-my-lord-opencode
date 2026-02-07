@@ -3,7 +3,7 @@ import { createBuiltinAgents } from "./utils"
 import type { AgentConfig } from "@opencode-ai/sdk"
 
 describe("createBuiltinAgents with model overrides", () => {
-  test("Elijah with default model has adaptive thinking", () => {
+  test("Elijah with default model has GPT reasoningEffort", () => {
     // #given - no overrides
 
     // #when
@@ -11,8 +11,8 @@ describe("createBuiltinAgents with model overrides", () => {
 
     // #then
     const elijah = agents["Elijah (Deep Reasoning Advisor)"]
-    expect(elijah.model).toBe("anthropic/claude-opus-4-6")
-    expect(elijah.thinking).toEqual({ type: "adaptive" })
+    expect(elijah.model).toBe("openai/gpt-5.3-codex")
+    expect(elijah.reasoningEffort).toBe("high")
   })
 
 })

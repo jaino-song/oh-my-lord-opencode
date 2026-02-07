@@ -78,7 +78,7 @@ describe("delegate_task", () => {
         app: { 
           agents: async () => ({ 
             data: [
-              { name: "explore", mode: "subagent" },
+              { name: "elijah", mode: "subagent" },
               { name: "Paul", mode: "primary" },
             ] 
           }) 
@@ -107,6 +107,53 @@ describe("delegate_task", () => {
         {
           description: "Test task",
           prompt: "Do something",
+          subagent_type: "elijah",
+          run_in_background: true,
+          skills: null,
+        },
+        toolContext
+      )
+      
+      expect(launchInput.agent).toBe("elijah")
+    })
+
+    test("blocks explore/librarian and redirects to call_paul_agent", async () => {
+      const { createDelegateTask } = require("./tools")
+      
+      const mockManager = { launch: async () => ({}) }
+      const mockClient = {
+        app: { 
+          agents: async () => ({ 
+            data: [
+              { name: "explore", mode: "subagent" },
+              { name: "librarian", mode: "subagent" },
+            ] 
+          }) 
+        },
+        config: { get: async () => ({}) },
+        session: {
+          create: async () => ({ data: { id: "test-session" } }),
+          prompt: async () => ({ data: {} }),
+          messages: async () => ({ data: [] }),
+        },
+      }
+      
+      const tool = createDelegateTask({
+        manager: mockManager,
+        client: mockClient,
+      })
+      
+      const toolContext = {
+        sessionID: "parent-session",
+        messageID: "parent-message",
+        agent: "Paul",
+        abort: new AbortController().signal,
+      }
+      
+      const result = await tool.execute(
+        {
+          description: "Test task",
+          prompt: "Do something",
           subagent_type: "explore",
           run_in_background: true,
           skills: null,
@@ -114,7 +161,8 @@ describe("delegate_task", () => {
         toolContext
       )
       
-      expect(launchInput.agent).toBe("explore")
+      expect(result).toContain("Cannot use delegate_task")
+      expect(result).toContain("call_paul_agent")
     })
   })
 })

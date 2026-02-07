@@ -169,19 +169,19 @@ describe("NATHAN_SYSTEM_PROMPT constraints", () => {
 })
 
 describe("createNathanAgent factory function", () => {
-  test("createNathanAgent with default model returns Claude Opus config", () => {
+  test("createNathanAgent with default model returns GPT 5.3 Codex config", () => {
     const agent = createNathanAgent()
 
-    expect(agent.model).toBe("anthropic/claude-opus-4-6")
+    expect(agent.model).toBe("openai/gpt-5.3-codex")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
 
-  test("createNathanAgent with default model has thinking enabled (Claude)", () => {
+  test("createNathanAgent with default model has reasoningEffort (GPT)", () => {
     const agent = createNathanAgent()
 
-    expect(agent.thinking).toEqual({ type: "adaptive" })
-    expect(agent.reasoningEffort).toBeUndefined()
+    expect(agent.reasoningEffort).toBe("high")
+    expect(agent.thinking).toBeUndefined()
   })
 
   test("createNathanAgent with GPT model has high reasoningEffort, no thinking", () => {
@@ -245,7 +245,7 @@ describe("NATHAN_PROMPT_METADATA", () => {
 describe("nathanAgent default export", () => {
   test("nathanAgent is properly configured", () => {
     expect(nathanAgent).toBeDefined()
-    expect(nathanAgent.model).toBe("anthropic/claude-opus-4-6")
+    expect(nathanAgent.model).toBe("openai/gpt-5.3-codex")
     expect(nathanAgent.prompt).toBe(NATHAN_SYSTEM_PROMPT)
   })
 

@@ -71,7 +71,7 @@ This is the set exported by `src/hooks/index.ts`.
 
 **v4.2 Changes**:
 - planner-paul can NO longer delegate to Paul/worker-paul (user switches manually)
-- Timothy removed from planner-paul's allowed delegates (always use Ezra)
+- Timothy removed from planner-paul's allowed delegates (always use Elijah + Ezra)
 - Plan review approval now requires Ezra (not Timothy)
 
 ---

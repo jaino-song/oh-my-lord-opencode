@@ -101,7 +101,7 @@ Override model, temperature, or other settings per agent.
 - `frontend-ui-ux-engineer`, `document-writer`, `multimodal-looker`
 - `Solomon (TDD Planner)`, `Peter (Test Writer)`, `John (E2E Test Writer)`
 - `Joshua (Test Runner)`, `Thomas (TDD Plan Consultant)`
-- `Prometheus (Planner)`, `Metis (Plan Consultant)`, `Momus (Plan Reviewer)`
+- `Nathan (Request Analyst)`, `Ezra (Plan Reviewer)`, `Elijah (Deep Reasoning Advisor)`
 - `Timothy (Implementation Plan Reviewer)`
 - `build`, `plan`, `Paul-Junior`, `OpenCode-Builder`
 

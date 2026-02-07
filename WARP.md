@@ -111,8 +111,8 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ### TDD-first agent architecture (conceptual overview)
 - The repository enforces a **TDD‑first workflow** at the agent level:
-  1. **Implementation planning** – `planner-paul` gathers requirements and produces implementation plans in `.paul/plans/{name}.md`, with mandatory review from `Thomas` (and optional `Momus`).
-  2. **Test planning** – `Solomon` reads implementation plans, interviews for test‑specific details, and writes test specifications to `.paul/plans/{name}-tests.md`, again reviewed by `Thomas` (and optionally `Momus`).
+  1. **Implementation planning** – `planner-paul` gathers requirements and produces implementation plans in `.paul/plans/{name}.md`, with mandatory review from `Elijah` (security/perf/arch), `Ezra` (plan quality), and `Thomas` (TDD).
+  2. **Test planning** – `Solomon` reads implementation plans, interviews for test‑specific details, and writes test specifications to `.paul/plans/{name}-tests.md`, again reviewed by `Thomas`.
   3. **Execution** – `Paul` orchestrates:
      - Test writing (RED): delegates to `Peter` (unit tests) and `John` (E2E tests).
      - Implementation (GREEN): delegates to `Sisyphus-Junior-*` agents by category (backend, frontend, quick fixes, etc.).

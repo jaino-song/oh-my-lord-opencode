@@ -23,7 +23,6 @@ import { createAgentToolRestrictions } from "../shared/permission-compat"
  * - Review modes: quick, standard, deep (default: deep)
  * - Structured anti-pattern detection library
  * - Complexity-specific checks for high-complexity plans
- * - Elijah (Deep Reasoning Advisor) escalation recommendations
  * - Machine-readable output format
  */
 
@@ -119,8 +118,7 @@ Detect the review mode from the input (default: deep):
 - Simulate execution of EVERY task step-by-step
 - Cross-reference ALL file paths (verify they exist)
 - Analyze task interdependencies for hidden conflicts
-- Recommend Elijah (Deep Reasoning Advisor) consultation if complexity detected
-- Return: **PASS** | **NEEDS_REVISION** | **REJECT** + Elijah recommendation
+- Return: **PASS** | **NEEDS_REVISION** | **REJECT**
 - Use for: Complex multi-system plans, critical implementations
 
 ---
@@ -219,25 +217,6 @@ These checks are **mandatory** in deep mode and **optional** in standard mode.
 
 ---
 
-## ELIJAH ESCALATION TRIGGERS
-
-Recommend Elijah (Deep Reasoning Advisor) consultation when ANY of these conditions are met:
-
-1. **High Complexity**: Plan has 15+ tasks with dense inter-dependencies
-2. **Architectural Uncertainty**: Multiple valid approaches exist with non-obvious tradeoffs
-3. **Cross-System Integration**: Changes span 3+ distinct systems/modules
-4. **Confidence Clustering**: Multiple issues scored 70-85 (uncertain severity)
-5. **Novel Patterns**: No existing codebase pattern to follow
-
-When triggered, include in output:
-\`\`\`
-### Elijah Escalation: YES
-**Reason**: [Specific trigger that was met]
-**Suggested consultation focus**: [What Elijah should analyze]
-\`\`\`
-
----
-
 ## INPUT VALIDATION (STEP 0 - DO THIS FIRST)
 
 **BEFORE reading any files**, validate the input prompt format.
@@ -288,11 +267,7 @@ Valid format: .paul/plans/plan.md or .paul/plans/plan.md
 - Verify file references exist
 - Check for hidden conflicts
 
-### Step 5: Elijah Escalation Check
-- Evaluate escalation triggers
-- If any met, prepare recommendation
-
-### Step 6: Generate Structured Output
+### Step 5: Generate Structured Output
 - Use exact format below
 - Match plan's language
 
@@ -356,8 +331,6 @@ Valid format: .paul/plans/plan.md or .paul/plans/plan.md
 
 ---
 
-### Elijah Escalation: [YES | NO]
-[If YES: Reason and suggested consultation focus]
 \`\`\`
 
 ---
@@ -424,7 +397,7 @@ export function createEzraAgent(model: string = DEFAULT_MODEL): AgentConfig {
 
   const base = {
     description:
-      "Deep plan reviewer for high-complexity plans. Thorough audit with confidence scoring, anti-pattern detection, and Elijah escalation. Default mode: deep.",
+      "Deep plan reviewer for high-complexity plans. Thorough audit with confidence scoring and anti-pattern detection. Default mode: deep.",
     mode: "subagent" as const,
     model,
     temperature: 0.1,
@@ -433,7 +406,7 @@ export function createEzraAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, variant: "xhigh", reasoningEffort: "xhigh", textVerbosity: "high" } as AgentConfig
+    return { ...base, variant: "medium", reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "adaptive" }, maxTokens: 128000 } as AgentConfig

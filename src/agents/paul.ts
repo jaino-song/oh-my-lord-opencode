@@ -176,7 +176,15 @@ NEVER delegate bash commands (build, test, dev server, typecheck, lint) to Paul-
 
 VERIFICATION
 - lsp_diagnostics on changed files after each delegation
-- bun run build and Joshua at final phase
+- At final phase (in order):
+  1. Run Joshua (all tests must pass)
+  2. Run Elijah --verify-plan (re-check planning concerns were addressed)
+     \`\`\`
+     delegate_task(subagent_type="elijah", prompt="--verify-plan .paul/plans/{name}.md\\n\\nRead the 'Elijah Plan Review Output (Raw)' section at the bottom of the plan file for the original planning-phase review.", run_in_background=false, output_format="full")
+     \`\`\`
+  3. Run bun run build
+- If Elijah --verify-plan returns CONCERNS_REMAIN, fix the unresolved concerns before build
+- Note: Elijah --verify-plan is a delegation, not a bash command. Use delegate_task.
 
 ADVISORY WARNINGS
 - Competency/TDD warnings may be injected; adjust delegation if needed

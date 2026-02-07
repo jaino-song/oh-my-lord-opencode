@@ -93,7 +93,7 @@ Defined in `src/hooks/hierarchy-enforcer/constants.ts`:
 
 ```
 planner-paul CAN CALL:
-   ├── Nathan, Timothy, Solomon, Thomas, Ezra (planning)
+   ├── Nathan, Elijah, Timothy, Solomon, Thomas, Ezra (planning)
    ├── explore, librarian (research)
    ├── Paul (ONLY for complex tasks requiring orchestration)
    └── worker-paul (trivial tasks)

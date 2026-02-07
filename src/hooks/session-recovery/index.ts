@@ -157,28 +157,55 @@ export function detectErrorType(error: unknown): RecoveryErrorType {
   return null
 }
 
-function extractToolUseIds(parts: MessagePart[]): string[] {
-  return parts.filter((p): p is ToolUsePart => p.type === "tool_use" && !!p.id).map((p) => p.id)
+function extractOrphanedCallId(error: unknown): string | null {
+  const message = getErrorMessage(error)
+  const match = message.match(/tool_use.*?ids.*?without.*?tool_result.*?:\s*(\S+)/)
+  return match ? match[1].replace(/[.,]$/, "") : null
+}
+
+function hasToolParts(parts: MessagePart[]): boolean {
+  return parts.some((p) => p.type === "tool_use" || p.type === "tool")
 }
 
 async function recoverToolResultMissing(
   _client: Client,
-  _sessionID: string,
-  failedAssistantMsg: MessageData
+  sessionID: string,
+  _failedAssistantMsg: MessageData,
+  allMessages?: MessageData[],
+  error?: unknown
 ): Promise<boolean> {
-  const messageID = failedAssistantMsg.info?.id
-  if (!messageID) {
-    return false
+  const orphanedCallId = error ? extractOrphanedCallId(error) : null
+  const messages = allMessages ?? []
+
+  let anyRecovered = false
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i]
+    if (msg.info?.role !== "assistant") continue
+
+    const messageID = msg.info?.id
+    if (!messageID) continue
+
+    const storedParts = readParts(messageID)
+    if (storedParts.length === 0) continue
+    if (!hasToolParts(storedParts)) continue
+
+    if (orphanedCallId) {
+      const hasOrphan = storedParts.some((p) => {
+        const raw = p as Record<string, unknown>
+        return raw.callID === orphanedCallId || raw.id === orphanedCallId
+      })
+      if (hasOrphan) {
+        if (removeToolUseParts(messageID)) anyRecovered = true
+        break
+      }
+    } else {
+      if (removeToolUseParts(messageID)) anyRecovered = true
+      break
+    }
   }
 
-  const storedParts = readParts(messageID)
-  const toolUseIds = extractToolUseIds(storedParts)
-
-  if (toolUseIds.length === 0) {
-    return false
-  }
-
-  return removeToolUseParts(messageID)
+  return anyRecovered
 }
 
 async function recoverThinkingBlockOrder(
@@ -333,9 +360,11 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
     const sessionID = info.sessionID
     const assistantMsgID = info.id
 
-    if (!sessionID || !assistantMsgID) return false
-    if (processingErrors.has(assistantMsgID)) return false
-    processingErrors.add(assistantMsgID)
+    if (!sessionID) return false
+    
+    const dedupeKey = assistantMsgID ?? `session-${sessionID}`
+    if (processingErrors.has(dedupeKey)) return false
+    processingErrors.add(dedupeKey)
 
     try {
       if (onAbortCallback) {
@@ -350,7 +379,21 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
       })
       const msgs = (messagesResp as { data?: MessageData[] }).data
 
-      const failedMsg = msgs?.find((m) => m.info?.id === assistantMsgID)
+      // Find the failed message by ID, or fall back to last assistant message
+      let failedMsg = assistantMsgID
+        ? msgs?.find((m) => m.info?.id === assistantMsgID)
+        : undefined
+      
+      if (!failedMsg) {
+        // session.error often doesn't include messageID — find last assistant message
+        for (let i = (msgs?.length ?? 0) - 1; i >= 0; i--) {
+          if (msgs![i].info?.role === "assistant") {
+            failedMsg = msgs![i]
+            break
+          }
+        }
+      }
+
       if (!failedMsg) {
         return false
       }
@@ -380,7 +423,7 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
       let success = false
 
       if (errorType === "tool_result_missing") {
-        success = await recoverToolResultMissing(ctx.client, sessionID, failedMsg)
+        success = await recoverToolResultMissing(ctx.client, sessionID, failedMsg, msgs, info.error)
         if (success && experimental?.auto_resume) {
           const lastUser = findLastUserMessage(msgs ?? [])
           const resumeConfig = extractResumeConfig(lastUser, sessionID)
@@ -407,7 +450,7 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
     console.error("[session-recovery] Recovery failed:", err)
     return false
   } finally {
-    processingErrors.delete(assistantMsgID)
+    processingErrors.delete(dedupeKey)
 
     // Always notify recovery complete, regardless of success or failure
     if (sessionID && onRecoveryCompleteCallback) {

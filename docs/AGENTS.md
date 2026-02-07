@@ -35,11 +35,12 @@ Notes:
 
 ## Planning Assistants
 
-Called by planner-paul during planning phase (v4.2: always Ezra + Thomas).
+Called by planner-paul during planning phase (v4.2: always Elijah + Ezra + Thomas).
 
 | Agent | Alias | Model | Purpose |
 |-------|-------|-------|---------|
 | Nathan (Request Analyst) | nathan | anthropic/claude-opus-4-6 | Phase 0: Impact-based triviality analysis |
+| Elijah (Deep Reasoning Advisor) | elijah | anthropic/claude-opus-4-6 | **Always used** - Plan security/performance/architecture audit |
 | Ezra (Plan Reviewer) | ezra | anthropic/claude-opus-4-6 | **Always used** - Deep plan review (confidence scoring) |
 | Solomon (TDD Planner) | solomon | anthropic/claude-opus-4-6 | Test planning |
 | Thomas (TDD Plan Consultant) | thomas | anthropic/claude-sonnet-4-5 | **Always used** - TDD plan audit |
@@ -78,7 +79,7 @@ Available to multiple agents for research tasks.
 |-------|-------|-------|---------|
 | explore | - | anthropic/claude-haiku-4-5 | Fast codebase search |
 | librarian | - | zai-coding-plan/glm-4.7 | Multi-repo analysis, docs lookup |
-| Elijah (Deep Reasoning Advisor) | elijah | anthropic/claude-opus-4-6 | Deep debugging, architecture decisions |
+| Elijah (Deep Reasoning Advisor) | elijah | anthropic/claude-opus-4-6 | Deep plan review + execution debugging, architecture decisions |
 
 ---
 
@@ -115,7 +116,7 @@ Note on tool naming:
 
 ```
 planner-paul (planning only)
-├── Nathan, Solomon, Thomas, Ezra (planning assistants)
+├── Nathan, Elijah, Solomon, Thomas, Ezra (planning assistants)
 └── explore, librarian (research)
 
 Paul (execution)

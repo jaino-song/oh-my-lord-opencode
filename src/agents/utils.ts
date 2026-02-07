@@ -274,5 +274,24 @@ export function createBuiltinAgents(
     result["Saul"] = saulConfig
   }
 
+   // Register lowercase aliases so OpenCode resolves "ezra" → same config as "Ezra (Plan Reviewer)"
+   const LOWERCASE_ALIASES: Record<string, string> = {
+     "ezra": "Ezra (Plan Reviewer)",
+     "nathan": "Nathan (Request Analyst)",
+     "elijah": "Elijah (Deep Reasoning Advisor)",
+     "solomon": "Solomon (TDD Planner)",
+     "joshua": "Joshua (Test Runner)",
+     "peter": "Peter (Test Writer)",
+     "john": "John (E2E Test Writer)",
+     "thomas": "Thomas (TDD Plan Consultant)",
+     "timothy": "Timothy (Implementation Plan Reviewer)",
+   }
+
+   for (const [alias, canonical] of Object.entries(LOWERCASE_ALIASES)) {
+     if (result[canonical] && !result[alias]) {
+       result[alias] = { ...result[canonical], hidden: true }
+     }
+   }
+
    return result
 }

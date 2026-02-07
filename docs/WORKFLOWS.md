@@ -31,9 +31,10 @@ planner-paul (auto-continues through all phases):
   Phase 1: Research (parallel explore/librarian)
   Phase 2: Creates plan in .paul/plans/auth.md
   Phase 3: Review chain (ALL MANDATORY):
-           1. Ezra deep review (loop until PASS)
-           2. Solomon creates test specs
-           3. Thomas TDD review (loop until approved)
+           1. Elijah deep review - security/perf/arch (loop until PASS)
+           2. Ezra deep review (loop until PASS)
+           3. Solomon creates test specs
+           4. Thomas TDD review (loop until approved)
   Phase 4: Sets up EXEC:: todos
            → "Plan ready. Switch to @Paul to execute." → STOPS
 
@@ -174,7 +175,7 @@ Note: TDD enforcement is file-pattern-based (see `src/hooks/tdd-enforcement/cons
 
 1. **Start with planner-paul** - Let Nathan analyze impact first
 2. **Be specific** - Clear requirements = better plans
-3. **Trust the review chain** - Ezra + Thomas ensure quality
+3. **Trust the review chain** - Elijah + Ezra + Thomas ensure quality
 4. **Switch agents manually** - planner-paul stops after planning
 5. **Use worker-paul for isolated fixes** - Only for files with no dependents
 6. **Check .paul/plans/** - Plans are saved for reference

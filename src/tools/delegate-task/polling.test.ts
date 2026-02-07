@@ -5,7 +5,7 @@ import type { SessionMessage } from "../../shared/session-validation"
 const POLL_INTERVAL_MS = 500
 const MIN_STABILITY_TIME_MS = 30000
 const STABILITY_POLLS_REQUIRED = 5
-const NO_PROGRESS_TIMEOUT_MS = 90000
+const NO_PROGRESS_TIMEOUT_MS = 10 * 60 * 1000
 
 describe("delegate_task polling logic", () => {
   describe("hasValidOutputFromMessages integration", () => {
@@ -77,8 +77,8 @@ describe("delegate_task polling logic", () => {
   })
 
   describe("no-progress timeout (rate limit detection)", () => {
-    test("timeout triggers after 90s of no message progress", () => {
-      // #given - 90 seconds elapsed with no new messages
+    test("timeout triggers after 10min of no message progress", () => {
+      // #given - 10 minutes elapsed with no new messages
       const lastMsgChangeTime = Date.now() - NO_PROGRESS_TIMEOUT_MS
       const hasValidOutput = false
 

@@ -555,8 +555,9 @@ ${formattedOutput}`
               .join(", ")
             return `❌ Unknown agent: "${agentName}". Available agents: ${availableAgents}`
           }
-        } catch {
-          // If we can't fetch agents, proceed anyway - the session.prompt will fail with a clearer error
+        } catch (agentLookupError) {
+          log("[delegate_task] Failed to fetch agents for validation", { error: String(agentLookupError), agentName })
+          return `❌ Could not validate agent "${agentName}" — agent registry unavailable. Retry the delegation.`
         }
 
       const RESEARCH_AGENTS = ["explore", "librarian"]
@@ -654,8 +655,8 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
         let lastError: unknown = null
 
 const POLL_INTERVAL_MS = 500
-const MAX_POLL_TIME_MS = 10 * 60 * 1000
-const WORKING_NO_PROGRESS_TIMEOUT_MS = 90000
+const MAX_POLL_TIME_MS = 20 * 60 * 1000
+const WORKING_NO_PROGRESS_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes - allows for extended model thinking/reasoning
 const CHECKPOINT_TIME_MS = 5 * 60 * 1000
 const ERROR_LOOP_CHECK_INTERVAL_MS = 2 * 60 * 1000
 
@@ -696,7 +697,8 @@ const ERROR_LOOP_CHECK_INTERVAL_MS = 2 * 60 * 1000
 
             log("[delegate_task] Starting poll loop", { sessionID, agentToUse })
 
-            while (Date.now() - pollStart < MAX_POLL_TIME_MS) {
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
               if (ctx.abort?.aborted) {
                 log("[delegate_task] Aborted by user - checking for signal_done first", { sessionID })
                 try {
@@ -804,7 +806,7 @@ ${formatOutputByPreference(signalDoneResult, outputFormat)}`
                   log("[delegate_task] No progress timeout", { 
                     sessionID, timeSinceLastProgress, currentMsgCount, status: sessionStatus?.type ?? "undefined", hasValidOutput 
                   })
-                  throw new Error(`No progress for 90s and no valid output - possible rate limiting or API stall`)
+                  throw new Error(`No progress for 10min and no valid output - possible rate limiting or API stall`)
                 }
               }
 
@@ -859,10 +861,12 @@ This task requires manual intervention.`
               lastMsgCount = currentMsgCount
             }
 
-            if (Date.now() - pollStart >= MAX_POLL_TIME_MS) {
-              log("[delegate_task] Poll timeout reached", { sessionID, pollCount, lastMsgCount })
-              needsRetry = true
-            }
+            // MAX_POLL_TIME_MS disabled: other timeout mechanisms (no-progress, checkpoint, error loop)
+            // cover all failure modes. Hard ceiling was killing legitimate long-running agents.
+            // if (Date.now() - pollStart >= MAX_POLL_TIME_MS) {
+            //   log("[delegate_task] Poll timeout reached", { sessionID, pollCount, lastMsgCount })
+            //   needsRetry = true
+            // }
 
             if (needsRetry && attempt < MAX_RETRY_ATTEMPTS) {
               log("[delegate_task] Retrying delegation after checkpoint failure", { sessionID, attempt })

@@ -307,7 +307,7 @@ export function createThomasAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, variant: "xhigh", reasoningEffort: "xhigh" } as AgentConfig
+    return { ...base, variant: "medium", reasoningEffort: "medium" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "enabled", budgetTokens: 32000 } } as AgentConfig

@@ -90,7 +90,6 @@ describe("EZRA_SYSTEM_PROMPT review modes", () => {
 
     expect(prompt.toLowerCase()).toMatch(/deep.*mode|--deep/)
     expect(prompt.toLowerCase()).toMatch(/simulat/)
-    expect(prompt.toLowerCase()).toMatch(/elijah/)
   })
 })
 
@@ -154,24 +153,45 @@ describe("EZRA_SYSTEM_PROMPT structured output", () => {
     expect(prompt.toLowerCase()).toMatch(/issue/)
   })
 
-  test("should include Elijah escalation recommendation in output", () => {
-    const prompt = EZRA_SYSTEM_PROMPT
+})
 
-    expect(prompt).toMatch(/Elijah Escalation.*YES.*NO|Elijah Escalation:\s*\[YES\s*\|\s*NO\]/i)
+describe("EZRA_SYSTEM_PROMPT no Elijah escalation", () => {
+  test("should NOT contain Elijah Escalation Triggers section", () => {
+    // #given - the updated Ezra prompt without escalation triggers
+    // #when - checking for removed section
+    // #then - escalation triggers section is gone
+    expect(EZRA_SYSTEM_PROMPT).not.toMatch(/ELIJAH ESCALATION TRIGGERS/i)
+  })
+
+  test("should NOT contain Elijah Escalation YES/NO in output format", () => {
+    // #given - the updated Ezra prompt
+    // #when - checking output format for removed escalation line
+    // #then - Elijah Escalation output line is gone
+    expect(EZRA_SYSTEM_PROMPT).not.toMatch(/Elijah Escalation:\s*\[YES\s*\|\s*NO\]/i)
+  })
+
+  test("should NOT reference Elijah in deep mode description", () => {
+    // #given - the updated Ezra prompt
+    // #when - checking deep mode for Elijah references
+    // #then - no Elijah recommendation in deep mode
+    expect(EZRA_SYSTEM_PROMPT).not.toMatch(/Recommend Elijah/i)
+  })
+
+  test("deep mode should still support simulation", () => {
+    // #given - the updated Ezra prompt
+    // #when - checking deep mode still has simulation
+    // #then - simulation is preserved
+    expect(EZRA_SYSTEM_PROMPT.toLowerCase()).toMatch(/deep.*mode|--deep/)
+    expect(EZRA_SYSTEM_PROMPT.toLowerCase()).toMatch(/simulat/)
   })
 })
 
-describe("EZRA_SYSTEM_PROMPT Elijah escalation triggers", () => {
-  test("should recommend Elijah for plans with 15+ tasks", () => {
-    const prompt = EZRA_SYSTEM_PROMPT
-
-    expect(prompt).toMatch(/15\+/)
-  })
-
-  test("should recommend Elijah for dense dependencies", () => {
-    const prompt = EZRA_SYSTEM_PROMPT
-
-    expect(prompt.toLowerCase()).toMatch(/dense.*depend|inter-depend/)
+describe("EZRA_SYSTEM_PROMPT Ezra description without Elijah", () => {
+  test("Ezra description should NOT mention Elijah escalation", () => {
+    // #given - the updated Ezra agent
+    // #when - checking description
+    // #then - no Elijah escalation in description
+    expect(ezraAgent.description?.toLowerCase()).not.toMatch(/elijah.*escalation/)
   })
 })
 
@@ -195,19 +215,19 @@ describe("EZRA_SYSTEM_PROMPT ADHD context retention", () => {
 })
 
 describe("createEzraAgent factory function", () => {
-  test("createEzraAgent with default model returns Claude Opus config", () => {
+  test("createEzraAgent with default model returns GPT 5.3 Codex config", () => {
     const agent = createEzraAgent()
 
-    expect(agent.model).toBe("anthropic/claude-opus-4-6")
+    expect(agent.model).toBe("openai/gpt-5.3-codex")
     expect(agent.mode).toBe("subagent")
     expect(agent.temperature).toBe(0.1)
   })
 
-  test("createEzraAgent with default model has thinking enabled (Claude)", () => {
+  test("createEzraAgent with default model has reasoningEffort (GPT)", () => {
     const agent = createEzraAgent()
 
-    expect(agent.thinking).toEqual({ type: "adaptive" })
-    expect(agent.reasoningEffort).toBeUndefined()
+    expect(agent.reasoningEffort).toBe("high")
+    expect(agent.thinking).toBeUndefined()
   })
 
   test("createEzraAgent with GPT model has high reasoningEffort, no thinking", () => {
@@ -268,7 +288,7 @@ describe("EZRA_SYSTEM_PROMPT identity", () => {
 describe("ezraAgent default export", () => {
   test("ezraAgent is properly configured", () => {
     expect(ezraAgent).toBeDefined()
-    expect(ezraAgent.model).toBe("anthropic/claude-opus-4-6")
+    expect(ezraAgent.model).toBe("openai/gpt-5.3-codex")
     expect(ezraAgent.prompt).toBe(EZRA_SYSTEM_PROMPT)
   })
 })

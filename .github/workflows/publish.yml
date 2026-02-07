@@ -1,0 +1,347 @@
+name: publish
+run-name: "release ${{ inputs.version || inputs.bump }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Bump major, minor, or patch"
+        required: true
+        type: choice
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+      version:
+        description: "Override version (e.g., 0.12.0). Takes precedence over bump."
+        required: false
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  # ===========================================================================
+  # Gate: Tests must pass before release
+  # ===========================================================================
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        env:
+          BUN_INSTALL_ALLOW_SCRIPTS: "@ast-grep/napi"
+
+      - name: Run tests
+        run: bun test
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        env:
+          BUN_INSTALL_ALLOW_SCRIPTS: "@ast-grep/napi"
+
+      - name: Type check
+        run: bun run typecheck
+
+  # ===========================================================================
+  # Release: Version bump, build, tag, GitHub release
+  # ===========================================================================
+  release:
+    runs-on: ubuntu-latest
+    needs: [test, typecheck]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: git fetch --force --tags
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        env:
+          BUN_INSTALL_ALLOW_SCRIPTS: "@ast-grep/napi"
+
+      # -----------------------------------------------------------------------
+      # Step 1: Calculate new version
+      # -----------------------------------------------------------------------
+      - name: Calculate version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+
+          if [ -z "$VERSION" ]; then
+            # Get latest release tag from GitHub (not npm)
+            PREV_TAG=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName // empty' 2>/dev/null || echo "")
+            
+            if [ -z "$PREV_TAG" ]; then
+              # No previous release — read from package.json
+              PREV=$(jq -r '.version' package.json)
+              echo "No previous GitHub release found, using package.json: $PREV"
+            else
+              # Strip 'v' prefix
+              PREV="${PREV_TAG#v}"
+              echo "Previous release: $PREV_TAG ($PREV)"
+            fi
+
+            # Strip prerelease suffix for clean bump
+            BASE="${PREV%%-*}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE"
+
+            case "${{ inputs.bump }}" in
+              major) VERSION="$((MAJOR+1)).0.0" ;;
+              minor) VERSION="${MAJOR}.$((MINOR+1)).0" ;;
+              *)     VERSION="${MAJOR}.${MINOR}.$((PATCH+1))" ;;
+            esac
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $VERSION"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # Step 2: Check if tag already exists (idempotent)
+      # -----------------------------------------------------------------------
+      - name: Check if already released
+        id: check
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::warning::Tag v${VERSION} already exists. Skipping."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -----------------------------------------------------------------------
+      # Step 3: Update version in all package.json files
+      # -----------------------------------------------------------------------
+      - name: Update versions
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Main package.json — version field
+          jq --arg v "$VERSION" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+
+          # Main package.json — optionalDependencies versions
+          jq --arg v "$VERSION" '
+            .optionalDependencies = (
+              .optionalDependencies | to_entries | map(.value = $v) | from_entries
+            )
+          ' package.json > tmp.json && mv tmp.json package.json
+
+          # Platform package.json files
+          for platform in darwin-arm64 darwin-x64 linux-x64 linux-arm64 linux-x64-musl linux-arm64-musl windows-x64; do
+            PKG="packages/${platform}/package.json"
+            if [ -f "$PKG" ]; then
+              jq --arg v "$VERSION" '.version = $v' "$PKG" > tmp.json && mv tmp.json "$PKG"
+              echo "Updated: $PKG"
+            fi
+          done
+
+          echo "All package.json files updated to $VERSION"
+
+      # -----------------------------------------------------------------------
+      # Step 4: Build
+      # -----------------------------------------------------------------------
+      - name: Build
+        if: steps.check.outputs.skip != 'true'
+        run: bun run build
+
+      - name: Verify build output
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          test -f dist/index.js || (echo "ERROR: dist/index.js not found!" && exit 1)
+          test -f dist/index.d.ts || (echo "ERROR: dist/index.d.ts not found!" && exit 1)
+          echo "Build output verified."
+
+      # -----------------------------------------------------------------------
+      # Step 5: Git commit, tag, push
+      # -----------------------------------------------------------------------
+      - name: Commit and tag
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add package.json assets/oh-my-lord-opencode.schema.json
+          for platform in darwin-arm64 darwin-x64 linux-x64 linux-arm64 linux-x64-musl linux-arm64-musl windows-x64; do
+            git add "packages/${platform}/package.json" 2>/dev/null || true
+          done
+
+          git diff --cached --quiet || git commit -m "release: v${VERSION}"
+          git tag -a "v${VERSION}" -m "Release v${VERSION}"
+          git push origin HEAD --tags
+
+      # -----------------------------------------------------------------------
+      # Step 6: Generate categorized changelog
+      # -----------------------------------------------------------------------
+      - name: Generate changelog
+        if: steps.check.outputs.skip != 'true'
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Find previous tag
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^v${VERSION}$" | head -1)
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found, using initial commit"
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD | head -1)
+          fi
+
+          echo "Comparing ${PREV_TAG}..v${VERSION}"
+
+          COMMITS=$(git log "${PREV_TAG}..v${VERSION}" --format="%s" 2>/dev/null || echo "")
+
+          FEATURES=""
+          FIXES=""
+          REFACTOR=""
+          DOCS=""
+          OTHER=""
+
+          re_skip='^(chore|ci|release|test|ignore)'
+          re_feat_scoped='^feat\(([^)]+)\): (.+)$'
+          re_fix_scoped='^fix\(([^)]+)\): (.+)$'
+          re_refactor_scoped='^refactor\(([^)]+)\): (.+)$'
+          re_docs_scoped='^docs\(([^)]+)\): (.+)$'
+
+          while IFS= read -r commit; do
+            [ -z "$commit" ] && continue
+            [[ "$commit" =~ $re_skip ]] && continue
+
+            if [[ "$commit" =~ ^feat ]]; then
+              if [[ "$commit" =~ $re_feat_scoped ]]; then
+                FEATURES="${FEATURES}\n- **${BASH_REMATCH[1]}**: ${BASH_REMATCH[2]}"
+              else
+                MSG="${commit#feat: }"
+                FEATURES="${FEATURES}\n- ${MSG}"
+              fi
+            elif [[ "$commit" =~ ^fix ]]; then
+              if [[ "$commit" =~ $re_fix_scoped ]]; then
+                FIXES="${FIXES}\n- **${BASH_REMATCH[1]}**: ${BASH_REMATCH[2]}"
+              else
+                MSG="${commit#fix: }"
+                FIXES="${FIXES}\n- ${MSG}"
+              fi
+            elif [[ "$commit" =~ ^refactor ]]; then
+              if [[ "$commit" =~ $re_refactor_scoped ]]; then
+                REFACTOR="${REFACTOR}\n- **${BASH_REMATCH[1]}**: ${BASH_REMATCH[2]}"
+              else
+                MSG="${commit#refactor: }"
+                REFACTOR="${REFACTOR}\n- ${MSG}"
+              fi
+            elif [[ "$commit" =~ ^docs ]]; then
+              if [[ "$commit" =~ $re_docs_scoped ]]; then
+                DOCS="${DOCS}\n- **${BASH_REMATCH[1]}**: ${BASH_REMATCH[2]}"
+              else
+                MSG="${commit#docs: }"
+                DOCS="${DOCS}\n- ${MSG}"
+              fi
+            else
+              OTHER="${OTHER}\n- ${commit}"
+            fi
+          done <<< "$COMMITS"
+
+          {
+            echo "## What's Changed"
+            echo ""
+            if [ -n "$FEATURES" ]; then
+              echo "### Features"
+              echo -e "$FEATURES"
+              echo ""
+            fi
+            if [ -n "$FIXES" ]; then
+              echo "### Bug Fixes"
+              echo -e "$FIXES"
+              echo ""
+            fi
+            if [ -n "$REFACTOR" ]; then
+              echo "### Refactoring"
+              echo -e "$REFACTOR"
+              echo ""
+            fi
+            if [ -n "$DOCS" ]; then
+              echo "### Documentation"
+              echo -e "$DOCS"
+              echo ""
+            fi
+            if [ -n "$OTHER" ]; then
+              echo "### Other Changes"
+              echo -e "$OTHER"
+              echo ""
+            fi
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${VERSION}"
+          } > /tmp/changelog.md
+
+          cat /tmp/changelog.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # Step 7: Create GitHub release
+      # -----------------------------------------------------------------------
+      - name: Create GitHub release
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release view "v${VERSION}" >/dev/null 2>&1 || \
+            gh release create "v${VERSION}" \
+              --title "v${VERSION}" \
+              --notes-file /tmp/changelog.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # Step 8: Clean up draft release
+      # -----------------------------------------------------------------------
+      - name: Delete draft release
+        if: steps.check.outputs.skip != 'true'
+        run: gh release delete next --yes 2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # Step 9: Merge to master
+      # -----------------------------------------------------------------------
+      - name: Merge to master
+        if: steps.check.outputs.skip != 'true'
+        continue-on-error: true
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git stash --include-untracked || true
+          git checkout master
+          git reset --hard "v${VERSION}"
+          git push -f origin master || echo "::warning::Failed to push to master"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

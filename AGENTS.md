@@ -168,7 +168,7 @@ describe("feature-name", () => {
 | Agent | Model | Purpose |
 |-------|-------|---------|
 | Paul | anthropic/claude-opus-4-6 | **Plan Executor** - Executes formal plans only (requires `.paul/plans/*.md`). User-selectable via @Paul. |
-| planner-paul | anthropic/claude-opus-4-6 | **Plan Creator (v4.2)** - Creates formal plans with auto-continue workflow. Always uses Ezra + Thomas. User switches to @Paul after. |
+| planner-paul | anthropic/claude-opus-4-6 | **Plan Creator (v4.2)** - Creates formal plans with auto-continue workflow. Always uses Elijah (security/perf/arch) + Ezra + Thomas. User switches to @Paul after. |
 | worker-paul | anthropic/claude-opus-4-6 | **Trivial Task Handler** - Standalone agent for small tasks. User-selectable via @worker-paul. |
 | Solomon | anthropic/claude-opus-4-6 | TDD test planning (called by planner-paul) |
 | Timothy | anthropic/claude-sonnet-4-5 | Quick plan reviewer (simple plans, <30s) |
@@ -180,7 +180,7 @@ describe("feature-name", () => {
 | Paul-Junior | anthropic/claude-opus-4-6 | Backend implementation (called by Paul, NO delegation) |
 | frontend-ui-ux-engineer | gemini-3-pro-preview | UI implementation (called by Paul for UI work) |
 | git-master | zai-coding-plan/glm-4.7 | Git operations (called by Paul) |
-| Elijah | anthropic/claude-opus-4-6 | Deep reasoning advisor, architecture |
+| Elijah | anthropic/claude-opus-4-6 | Deep reasoning advisor (planning + execution) |
 | librarian | anthropic/claude-sonnet-4-5 | Multi-repo analysis, docs |
 | explore | anthropic/claude-haiku-4-5 | Fast codebase exploration |
 | multimodal-looker | google/antigravity-gemini-3-flash | Image/PDF analysis |
@@ -212,9 +212,10 @@ Phase 1: Research (parallel explore/librarian)
 Phase 2: Plan Generation → .paul/plans/{name}.md
     ↓
 Phase 3: Review Chain (ALL MANDATORY):
-    1. Ezra deep review (loop until PASS)
-    2. Solomon test planning → {name}-tests.md
-    3. Thomas TDD review (loop until approved)
+    1. Elijah deep review - security/perf/arch (loop until PASS)
+    2. Ezra deep review (loop until PASS)
+    3. Solomon test planning → {name}-tests.md
+    4. Thomas TDD review (loop until approved)
     ↓
 Phase 4: Setup EXEC:: todos
     ↓

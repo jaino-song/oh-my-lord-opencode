@@ -29,7 +29,7 @@
 | Type | Role | Can Delegate? | Examples |
 |------|------|---------------|----------|
 | **Orchestrator** | Coordinate and delegate work | YES | Paul, Sisyphus |
-| **Subagent** | Execute specialized tasks | NO | Oracle, Explore, Peter |
+| **Subagent** | Execute specialized tasks | NO | Elijah, Explore, Peter |
 
 ### Agent Categories
 
@@ -41,7 +41,7 @@ type AgentCategory = "exploration" | "specialist" | "advisor" | "utility"
 |----------|---------|---------------|----------|
 | `exploration` | Search, research, discovery | FREE/CHEAP models | explore, librarian |
 | `specialist` | Domain-specific implementation | Varies by domain | frontend-ui-ux, document-writer, peter, john |
-| `advisor` | Consultation, review, planning | EXPENSIVE models | oracle, momus, ezra, thomas, timothy |
+| `advisor` | Consultation, review, planning | EXPENSIVE models | elijah, ezra, thomas, timothy |
 | `utility` | Specific utility functions | CHEAP models | multimodal-looker |
 
 ### Cost Classification
@@ -255,7 +255,7 @@ const allowlist = createAgentToolAllowlist([
 
 ### Standard Permission Sets by Agent Type
 
-#### Read-Only Advisor (Oracle, Momus, Ezra, Thomas)
+#### Read-Only Advisor (Elijah, Ezra, Thomas)
 ```typescript
 const restrictions = createAgentToolRestrictions([
   "write",         // Cannot write files

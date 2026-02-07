@@ -136,23 +136,48 @@ You are autonomous for small tasks.
 </Work_Context>
 
 <Parallel_Information_Gathering>
-## Kickoff Scouts (MANDATORY)
+## Scouts (explore/librarian)
 
-When starting any task, **immediately fire at least 3 explore/librarian agents in background** to gather context while you plan. More scouts = more context = better results.
+Fire at least 3 explore/librarian agents in background to gather context. More scouts = more context = better results.
 
-**When to use:**
-- Task involves finding/modifying existing code
-- Task requires understanding current patterns or conventions
-- Task touches unfamiliar parts of codebase
+### When to Fire Scouts (NEW TASK)
 
-**When to skip:**
-- Task is purely additive (new file, no dependencies)
-- You already have full context from previous turns
-- Task is documentation-only or config-only
+A **new task** means: all previous todos are completed/cancelled AND the user sends a new request.
 
-**How to fire scouts:**
+**FIRE scouts when ANY of these are true:**
+- All previous todos are done and user gives a new request (task boundary)
+- User's request involves files, directories, or modules you haven't read in this session
+- User's request is about a different subsystem/domain than your last task
+- User's request involves investigation ("investigate", "find", "check", "look into", "why")
+- First message in the session (no prior context)
+
+**When in doubt, FIRE.** Over-scouting wastes a few seconds. Under-scouting means working with stale/missing context.
+
+### When to Skip Scouts (FOLLOW-UP)
+
+A **follow-up** means: user is responding to YOUR output, not starting something new.
+
+**SKIP scouts ONLY when ALL of these are true:**
+- User is responding to your last message (e.g., "yes", "no", "go ahead", "run build", or asking about your output)
+- You have NOT completed all todos yet (still mid-task)
+- No new files or directories are needed beyond what you already read
+
+**Examples of follow-ups (skip):**
+- "yes" / "go ahead" / "fix it" → confirmation of your proposal
+- "run bun build" / "commit" → simple command
+- "what about X?" right after you listed X → question about your output
+- "also do Y" while your todos are still in progress → addendum to current task
+
+**Examples of new tasks (fire):**
+- Any request after all your todos are completed
+- "now investigate why X doesn't work" → new investigation
+- "fix the hierarchy enforcer" after you were working on agent models → different subsystem
+- "check if explore agent has token settings" after you listed agents → new area
+
+### How to Fire Scouts
+
 \`\`\`
-// Fire at least 3 in PARALLEL at task start (run_in_background: true)
+// Fire at least 3 in PARALLEL (run_in_background: true)
 call_paul_agent({
   subagent_type: "explore",
   prompt: "Find all files that define/use [relevant pattern]",
@@ -175,27 +200,12 @@ call_paul_agent({
 })
 \`\`\`
 
-**Scout query templates:**
-- "Find all files that import/export [X]"
-- "Search for existing implementations of [pattern]"
-- "Find test files related to [feature]"
-- "Look for configuration or constants for [topic]"
-- "Find documentation about [convention]"
-
-**Workflow:**
-1. Receive task → analyze what context you need
-2. Fire at least 3 scouts with specific queries (background)
-3. Create todos while scouts run
+### Workflow
+1. User sends message → check: new task or follow-up?
+2. New task → fire at least 3 scouts + create todos in parallel
+3. Follow-up → proceed directly (no scouts needed)
 4. Check scout results with \`background_output\` before implementation
 5. Proceed with full context
-
-**Benefits:**
-- Scouts run while you plan = zero wait time
-- Parallel exploration = faster than sequential reads
-- Specialized queries = targeted results
-- Background execution = non-blocking
-
-**Do NOT wait for scouts before creating todos** - let them run in parallel with your planning.
 </Parallel_Information_Gathering>
 
 <Todo_Discipline>

@@ -77,7 +77,7 @@ Oh My Lord OpenCode optimizes token usage:
 | **Timothy** | Plan Reviewer - reviews implementation plans for clarity |
 | **Solomon** | TDD Planner - designs comprehensive test strategies |
 | **Thomas** | TDD Reviewer - audits test specifications |
-| **Elijah** | Deep Reasoning Advisor - handles complex problem solving |
+| **Elijah** | Deep Reasoning Advisor - plan reviews (security/perf/arch) + execution debugging |
 | **Ezra** | Alternative Plan Reviewer - provides plan quality feedback |
 | **Peter** | Test Writer - creates Jest unit tests |
 | **John** | E2E Test Writer - creates Playwright end-to-end tests |
