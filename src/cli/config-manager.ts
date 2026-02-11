@@ -108,42 +108,47 @@ export async function fetchLatestVersion(packageName: string): Promise<string | 
   }
 }
 
-interface NpmDistTags {
-  latest?: string
-  beta?: string
-  next?: string
-  [tag: string]: string | undefined
+const GITHUB_REPO = "jaino-song/oh-my-lord-opencode"
+const GITHUB_FETCH_TIMEOUT_MS = 5000
+
+interface GitHubReleaseInfo {
+  tag_name: string
+  prerelease: boolean
+  draft: boolean
 }
 
-const NPM_FETCH_TIMEOUT_MS = 5000
-
-export async function fetchNpmDistTags(packageName: string): Promise<NpmDistTags | null> {
+export async function fetchGitHubLatestVersion(): Promise<string | null> {
   try {
-    const res = await fetch(`https://registry.npmjs.org/-/package/${packageName}/dist-tags`, {
-      signal: AbortSignal.timeout(NPM_FETCH_TIMEOUT_MS),
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases`, {
+      signal: AbortSignal.timeout(GITHUB_FETCH_TIMEOUT_MS),
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": PACKAGE_NAME,
+      },
     })
     if (!res.ok) return null
-    const data = await res.json() as NpmDistTags
-    return data
+    const releases = await res.json() as GitHubReleaseInfo[]
+    const latest = releases.find(r => !r.draft && !r.prerelease)
+    return latest?.tag_name.replace(/^v/, "") ?? null
   } catch {
     return null
   }
 }
 
+/** @deprecated Kept for backward compatibility — use fetchGitHubLatestVersion instead */
+export async function fetchNpmDistTags(_packageName: string): Promise<{ latest?: string; [tag: string]: string | undefined } | null> {
+  const version = await fetchGitHubLatestVersion()
+  if (!version) return null
+  return { latest: version }
+}
+
 const PACKAGE_NAME = "oh-my-lord-opencode"
 
-const PRIORITIZED_TAGS = ["latest", "beta", "next"] as const
-
 export async function getPluginNameWithVersion(currentVersion: string): Promise<string> {
-  const distTags = await fetchNpmDistTags(PACKAGE_NAME)
+  const latestVersion = await fetchGitHubLatestVersion()
 
-  if (distTags) {
-    const allTags = new Set([...PRIORITIZED_TAGS, ...Object.keys(distTags)])
-    for (const tag of allTags) {
-      if (distTags[tag] === currentVersion) {
-        return `${PACKAGE_NAME}@${tag}`
-      }
-    }
+  if (latestVersion && latestVersion === currentVersion) {
+    return `${PACKAGE_NAME}@latest`
   }
 
   return `${PACKAGE_NAME}@${currentVersion}`

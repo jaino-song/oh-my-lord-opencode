@@ -17,6 +17,9 @@ interface Todo {
 const PHASE_MARKER_REGEX = /^\[P(\d+)\]\s*===\s*PHASE\s+\d+:\s*(.+?)\s*\((Parallel|Sequential)\)\s*===$/i
 const TASK_REGEX = /^\[P(\d+)\.(\d+)\]\s*(.+?)\s*(?:\(Agent:\s*([^)]+)\))?$/i
 
+const UI_HINT_REGEX = /\b(css|tailwind|style|styles|color|colors|background|border|margin|padding|flex|grid|animation|transition|responsive|mobile|layout|spacing|font|hover|shadow|ui|ux|component|components|tsx|jsx)\b/i
+const GIT_HINT_REGEX = /\b(git|commit|rebase|squash|branch|merge|checkout|push|pull|cherry-pick|cherrypick|stash|tag)\b/i
+
 function parsePhaseMarker(content: string): { phase: number; title: string; mode: "parallel" | "sequential" } | null {
   const cleaned = content.replace(/^EXEC::\s*/i, "").trim()
   const match = cleaned.match(PHASE_MARKER_REGEX)
@@ -38,6 +41,28 @@ function parseTask(content: string): { phase: number; taskNum: string; descripti
     description: match[3].trim(),
     agent: match[4]?.trim(),
   }
+}
+
+export function inferAgentFromTodoContent(content: string): string {
+  const cleaned = content.replace(/^EXEC::\s*/i, "").trim()
+
+  if (GIT_HINT_REGEX.test(cleaned)) {
+    return "git-master"
+  }
+
+  if (UI_HINT_REGEX.test(cleaned)) {
+    return "frontend-ui-ux-engineer"
+  }
+
+  return "Paul-Junior"
+}
+
+function resolveAgent(todo: PhaseTodo): string {
+  const hint = todo.agentHint?.trim()
+  if (hint) {
+    return hint
+  }
+  return inferAgentFromTodoContent(todo.content)
 }
 
 function extractPhaseInfo(todos: Todo[], targetPhase: number): PhaseInfo | null {
@@ -168,10 +193,10 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
       }
 
       if (phaseInfo.mode === "parallel") {
-        const tasks: Array<{ todo: PhaseTodo; taskId: string; sessionId: string }> = []
+        const tasks: Array<{ todo: PhaseTodo; taskId: string; sessionId: string; agent: string }> = []
 
         for (const todo of pendingTodos) {
-          const agent = todo.agentHint ?? "Paul-Junior"
+          const agent = resolveAgent(todo)
           let prompt = buildTaskPrompt(todo)
           
           // Prepend skill content if available
@@ -189,7 +214,7 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
               parentAgent: "Paul",
               skillContent,
             })
-            tasks.push({ todo, taskId: task.id, sessionId: task.sessionID })
+            tasks.push({ todo, taskId: task.id, sessionId: task.sessionID, agent })
             log(`[execute_phase] Launched parallel task`, { taskId: task.id, agent, taskNumber: todo.taskNumber })
           } catch (error) {
             results.push({
@@ -203,14 +228,14 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
           }
         }
 
-        const waitPromises = tasks.map(async ({ todo, taskId, sessionId }) => {
+        const waitPromises = tasks.map(async ({ todo, taskId, sessionId, agent }) => {
           try {
             const result = await waitForTask(taskId)
             results.push({
               taskId,
               todoId: todo.id,
               taskNumber: todo.taskNumber,
-              agent: todo.agentHint ?? "Paul-Junior",
+              agent,
               status: result.status === "completed" ? "success" : "failed",
               result: result.result ?? result.error ?? "No output",
               sessionId,
@@ -220,7 +245,7 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
               taskId,
               todoId: todo.id,
               taskNumber: todo.taskNumber,
-              agent: todo.agentHint ?? "Paul-Junior",
+              agent,
               status: "failed",
               result: `Timeout or error: ${error instanceof Error ? error.message : String(error)}`,
               sessionId,
@@ -231,7 +256,7 @@ export function createExecutePhase(options: ExecutePhaseToolOptions): ToolDefini
         await Promise.all(waitPromises)
       } else {
         for (const todo of pendingTodos) {
-          const agent = todo.agentHint ?? "Paul-Junior"
+          const agent = resolveAgent(todo)
           let prompt = buildTaskPrompt(todo)
           
           // Prepend skill content if available

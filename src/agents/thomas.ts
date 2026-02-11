@@ -293,7 +293,7 @@ const thomasRestrictions = createAgentToolRestrictions([
   "delegate_task",
 ])
 
-const DEFAULT_MODEL = "openai/gpt-5.3-codex"
+const DEFAULT_MODEL = "zai-coding-plan/glm-4.7"
 
 export function createThomasAgent(model: string = DEFAULT_MODEL): AgentConfig {
   const base = {

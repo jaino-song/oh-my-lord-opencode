@@ -406,7 +406,7 @@ export function createEzraAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, variant: "medium", reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
+    return { ...base, variant: "xhigh", reasoningEffort: "high" } as AgentConfig
   }
 
   return { ...base, thinking: { type: "adaptive" }, maxTokens: 128000 } as AgentConfig

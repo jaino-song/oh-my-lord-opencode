@@ -1,8 +1,9 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentPromptMetadata } from "./types"
+import { isGptModel } from "./types"
 import { createAgentToolRestrictions } from "../shared/permission-compat"
 
-const DEFAULT_MODEL = "google/antigravity-gemini-3-pro-high"
+const DEFAULT_MODEL = "openai/gpt-5.3-codex"
 
 export const FRONTEND_PROMPT_METADATA: AgentPromptMetadata = {
   cost: "CHEAP",
@@ -23,7 +24,7 @@ export function createFrontendUiUxEngineerAgent(
 ): AgentConfig {
   const restrictions = createAgentToolRestrictions([])
 
-  return {
+  const base: AgentConfig = {
     description:
       "A designer-turned-developer who crafts stunning UI/UX even without design mockups. Code may be a bit messy, but the visual output is always fire.",
     mode: "subagent" as const,
@@ -171,6 +172,12 @@ signal_done({ result: "Completed: [brief summary of UI changes]. Files: [list of
 This signals completion to the orchestrator. Do NOT output anything after calling signal_done.
 </completion>`,
   }
+
+  if (isGptModel(model)) {
+    return { ...base, reasoningEffort: "high" } as AgentConfig
+  }
+
+  return base
 }
 
 export const frontendUiUxEngineerAgent = createFrontendUiUxEngineerAgent()

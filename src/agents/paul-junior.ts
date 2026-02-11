@@ -144,7 +144,7 @@ function buildPaulJuniorPrompt(promptAppend?: string): string {
 const BLOCKED_TOOLS = ["task", "delegate_task"]
 
 export const PAUL_JUNIOR_DEFAULTS = {
-  model: "anthropic/claude-opus-4-6",
+  model: "openai/gpt-5.3-codex",
   temperature: 0.1,
 } as const
 

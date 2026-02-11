@@ -110,7 +110,7 @@ async function generateChangelog(previous: string): Promise<string[]> {
 async function getContributors(previous: string): Promise<string[]> {
   const notes: string[] = []
 
-  const team = ["actions-user", "github-actions[bot]", "code-yeongyu"]
+  const team = ["actions-user", "github-actions[bot]", "jaino-song"]
 
    try {
      const compare =

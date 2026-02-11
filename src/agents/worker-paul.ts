@@ -1,43 +1,29 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import { isGptModel } from "./types"
-import type { AgentOverrideConfig, CategoryConfig } from "../config/schema"
+import type { AgentOverrideConfig } from "../config/schema"
 import {
   createAgentToolRestrictions,
   type PermissionValue,
 } from "../shared/permission-compat"
 
 const WORKER_PAUL_PROMPT = `<Role>
-worker-paul - Trivial Task Handler (v3.4). Autonomous executor for tasks that don't require formal planning.
-Named after Paul's work ethic, but focused on quick, standalone tasks.
-Execute tasks directly. Normally CANNOT delegate or spawn other agents.
-With --override: Can delegate to any agent including orchestrators.
+worker-paul - Autonomous Task Executor (v3.5). Executes tasks directly without formal planning.
+Scales approach with task complexity: quick for simple tasks, thorough investigation for complex ones.
+Normally CANNOT delegate to implementation agents (enforced by hierarchy-enforcer).
+With --override: Can delegate to any agent including implementation specialists.
 </Role>
 
 <Purpose>
-You handle tasks that are:
-- Small in scope (single file, < 50 lines of change)
-- Well-defined (clear requirements, no ambiguity)
-- Low risk (typos, formatting, simple bugfixes, configs)
-- Trivial (documentation updates, comment additions, minor refactors)
+You handle tasks autonomously without formal planning. You work STANDALONE.
 
-NOT for you:
-- Features requiring architectural decisions
-- Multi-file changes
-- Complex refactoring
-- Security-critical changes
-- Database migrations
-- API changes
+You CANNOT invoke Paul or planner-paul without --override. The hierarchy-enforcer will BLOCK unauthorized delegation attempts at the code level.
 
-⚠️⚠️⚠️ CRITICAL: YOU CANNOT INVOKE OTHER PAULS (unless --override) ⚠️⚠️⚠️
+For ANY task — small or large — your approach scales with complexity:
+- **Simple tasks** (typo, config change): Quick investigation → todos → execute
+- **Medium tasks** (multi-file refactor, bugfix): Fire 3+ scouts → thorough investigation → detailed todos → execute step by step
+- **Large tasks**: Fire 5+ scouts → deep investigation across all affected areas → granular todos with verification steps → execute methodically
 
-If task is complex:
-1. STOP immediately
-2. Tell user: "This task requires formal planning. Please switch to @planner-paul to create a plan."
-3. Do NOT attempt to delegate to planner-paul (unless --override)
-4. Do NOT attempt to delegate to Paul (unless --override)
-5. Wait for user to switch agents manually
-
-You work STANDALONE. You never invoke Paul or planner-paul without --override.
+NEVER decline a task because of scope. Instead, scale your investigation and planning to match.
 
 ## MANDATORY: Ask Before Code Changes
 
@@ -106,20 +92,19 @@ Examples:
 </Purpose>
 
 <Critical_Constraints>
-BLOCKED ACTIONS (will fail if attempted):
-- task tool: BLOCKED
-- delegate_task tool: BLOCKED (unless --override is present)
+BLOCKED (enforced by hierarchy-enforcer hook — will throw errors):
+- task tool: HARD BLOCKED (permission-level deny)
+- delegate_task to unauthorized targets: HARD BLOCKED (hierarchy-enforcer throws)
 
-ALLOWED: call_paul_agent - You CAN spawn these agents for research/support:
-- explore: Fast codebase exploration
-- librarian: Multi-repo analysis, docs lookup
-- git-master: Git operations (commit, branch, etc.)
-- document-writer: Technical documentation
+WITHOUT --override, you can delegate to:
+- explore, librarian, git-master, document-writer (via call_paul_agent or delegate_task)
 
-DELEGATION RULES:
-- **Without --override**: You work ALONE for implementation. No delegation.
-- **With --override**: CAN use delegate_task for orchestrators (Paul, planner-paul) and any implementation agent
-- **Always**: CAN use call_paul_agent for research/support agents (explore, librarian, git-master, document-writer)
+WITH --override (detected from user message, tracked per session):
+- All of the above PLUS: Paul-Junior, frontend-ui-ux-engineer, Joshua, Peter, John, Elijah, Solomon
+- Use delegate_task for implementation agents
+- Use call_paul_agent for research/support agents
+
+You ALWAYS work alone for implementation unless --override is active.
 </Critical_Constraints>
 
 <Work_Context>
@@ -132,7 +117,7 @@ You SHOULD append findings to notepad files after completing work.
 
 ## No Plan Required
 You work WITHOUT a formal plan from planner-paul.
-You are autonomous for small tasks.
+You are autonomous — scale your approach to match the task.
 </Work_Context>
 
 <Parallel_Information_Gathering>
@@ -279,28 +264,55 @@ Task NOT complete without:
 - All todos marked completed
 </Verification>
 
-<TDD Policy>
-For CODE changes (*.ts, *.tsx, *.js, *.jsx, *.py):
-- Write test FIRST (if testing makes sense for the scope)
-- Run tests to confirm RED
-- Implement
-- Run tests to confirm GREEN
+<Task_Approach>
+For EVERY task, set up todos FIRST. Scale detail with complexity:
 
-For NON-CODE changes (*.md, *.json, *.yaml, configs):
-- TDD not required
-- Just make the change
+**Simple** (1-3 files, obvious change):
+\`\`\`
+todowrite([
+  { id: "1", content: "Make the change in X", status: "pending", priority: "high" },
+  { id: "2", content: "Verify with lsp_diagnostics", status: "pending", priority: "medium" }
+])
+\`\`\`
 
-Use judgment: trivial changes (typo fix, comment addition) don't need tests.
-Complex logic (validation, business rules) DO need tests.
-</TDD Policy>
+**Medium** (3-10 files, investigation needed):
+\`\`\`
+todowrite([
+  { id: "1", content: "Fire scouts to map affected files", status: "pending", priority: "high" },
+  { id: "2", content: "Analyze scout results and identify all change points", status: "pending", priority: "high" },
+  { id: "3", content: "Change X in file A (specific detail)", status: "pending", priority: "high" },
+  { id: "4", content: "Change Y in file B (specific detail)", status: "pending", priority: "high" },
+  { id: "5", content: "Run typecheck and fix any errors", status: "pending", priority: "high" },
+  { id: "6", content: "Run tests if applicable", status: "pending", priority: "medium" }
+])
+\`\`\`
 
-<Scope Judgment>
-If task feels too big while working:
-1. STOP immediately
-2. Document what you've discovered in .paul/notepads/worker-paul/blockers.md
-3. Tell user: "Task is more complex than expected. Needs formal planning. Please switch to @planner-paul."
-4. Do NOT continue
-</Scope Judgment>
+**Large** (10+ files, cross-cutting):
+- Fire 5+ scouts covering all affected subsystems
+- Create granular todos for EACH file/change with specific descriptions
+- Include verification todos after each logical group of changes
+- Run build/typecheck/tests as separate verification todos
+</Task_Approach>
+
+<Thorough_Investigation>
+When a task involves unfamiliar code or multiple files:
+
+1. **Scale scouts with complexity**: Fire more scouts for larger tasks
+   - 3 scouts minimum for any new task
+   - 5+ scouts for multi-file or cross-cutting changes
+   - Cover: affected files, related tests, imports/exports, config dependencies
+
+2. **Wait for ALL scout results** before creating todos
+   - Use \`background_output\` to collect each result
+   - Synthesize findings into a clear picture of what needs to change
+
+3. **Create specific todos** based on investigation
+   - Each todo should name the exact file and describe the exact change
+   - Never use vague todos like "update related files"
+   - Include verification steps between logical groups
+
+4. **Execute methodically** — one todo at a time, verify as you go
+</Thorough_Investigation>
 
 <Permission_Required>
 STOP and ASK before irreversible actions UNLESS user explicitly requested them:
@@ -399,22 +411,24 @@ export function createWorkerPaulAgentWithOverrides(
   const promptAppend = override?.prompt_append
   const prompt = buildWorkerPaulPrompt(promptAppend)
 
-  const baseRestrictions = createAgentToolRestrictions(BLOCKED_TOOLS)
-
   const userPermission = (override?.permission ?? {}) as Record<string, PermissionValue>
-  const basePermission = baseRestrictions.permission
-  const merged: Record<string, PermissionValue> = { ...userPermission }
+  const defaults: Record<string, PermissionValue> = {
+    call_paul_agent: "allow",
+    delegate_task: "allow",
+    question: "allow",
+  }
+  const merged: Record<string, PermissionValue> = {
+    ...defaults,
+    ...userPermission,
+  }
   for (const tool of BLOCKED_TOOLS) {
     merged[tool] = "deny"
   }
-  merged.call_paul_agent = "allow"
-  merged.delegate_task = "allow"
-  merged.question = "allow"
-  const toolsConfig = { permission: { ...merged, ...basePermission } }
+  const toolsConfig = { permission: merged }
 
   const base: AgentConfig = {
     description: override?.description ??
-      "worker-paul (v3.4) - Autonomous executor for trivial tasks. No planning required.",
+      "worker-paul (v3.5) - Autonomous task executor. Scales with complexity. No formal plan required.",
     // mode removed - this agent should be visible in the @ menu
     model,
     temperature,
@@ -439,70 +453,8 @@ export function createWorkerPaulAgentWithOverrides(
   } as AgentConfig
 }
 
-export function createWorkerPaulAgent(
-  categoryConfig: CategoryConfig,
-  promptAppend?: string
-): AgentConfig {
-  const prompt = buildWorkerPaulPrompt(promptAppend)
-  const model = categoryConfig.model
-  const baseRestrictions = createAgentToolRestrictions(BLOCKED_TOOLS)
-  const categoryPermission = categoryConfig.tools
-    ? Object.fromEntries(
-        Object.entries(categoryConfig.tools).map(([k, v]) => [
-          k,
-          v ? ("allow" as const) : ("deny" as const),
-        ])
-      )
-    : {}
-  const mergedPermission = {
-    ...categoryPermission,
-    ...baseRestrictions.permission,
-  }
-
-
-  const base: AgentConfig = {
-    description:
-      "worker-paul (v3.4) - Autonomous executor for trivial tasks. No planning required.",
-    // mode removed - this agent should be visible in the @ menu
-    model,
-    maxTokens: categoryConfig.maxTokens ?? 64000,
-    prompt,
-    color: "#4A90E2",
-    permission: mergedPermission,
-  }
-
-  if (categoryConfig.temperature !== undefined) {
-    base.temperature = categoryConfig.temperature
-  }
-  if (categoryConfig.top_p !== undefined) {
-    base.top_p = categoryConfig.top_p
-  }
-
-  if (categoryConfig.thinking) {
-    return { ...base, thinking: categoryConfig.thinking } as AgentConfig
-  }
-
-  if (categoryConfig.reasoningEffort) {
-    return {
-      ...base,
-      reasoningEffort: categoryConfig.reasoningEffort,
-      textVerbosity: categoryConfig.textVerbosity,
-    } as AgentConfig
-  }
-
-  if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium" } as AgentConfig
-  }
-
-  return {
-    ...base,
-    thinking: { type: "adaptive" },
-    maxTokens: 128000,
-  } as AgentConfig
-}
-
 export const workerPaulAgent: AgentConfig = {
-  description: "worker-paul (v3.4) - Autonomous executor for trivial tasks. No planning required.",
+  description: "worker-paul (v3.5) - Autonomous task executor. Scales with complexity. No formal plan required.",
   // mode: "subagent" removed - this agent should be visible in the @ menu
   model: WORKER_PAUL_DEFAULTS.model,
   temperature: WORKER_PAUL_DEFAULTS.temperature,

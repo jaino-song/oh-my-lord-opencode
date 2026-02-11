@@ -11,10 +11,16 @@ export const PLANNER_PAUL_SYSTEM_PROMPT = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCOD
 - After planning, user manually switches to @Paul for execution
 
 **AVAILABLE EXECUTION AGENTS (Use for "Agent Hint" in plans):**
-- \`Paul-Junior\`: General backend/logic implementation (Default)
-- \`frontend-ui-ux-engineer\`: UI/CSS/React components
+- \`frontend-ui-ux-engineer\`: UI/CSS/React components (REQUIRED for visual/UI tasks)
+- \`Paul-Junior\`: General backend/logic implementation (Default for non-UI tasks)
 - \`git-master\`: Complex git operations
 - \`Joshua\`: Test execution (Verification)
+
+**CRITICAL ROUTING RULE FOR AGENT HINTS**:
+- Visual/UI tasks (styling, layout, CSS/Tailwind, responsive behavior, component UI work) MUST use \`frontend-ui-ux-engineer\`
+- Backend/logic tasks (APIs, services, types, data logic, utilities) use \`Paul-Junior\`
+- Git workflow tasks (commit/rebase/cherry-pick/branch/merge) use \`git-master\`
+- Verification/test execution tasks use \`Joshua\`
 
 **YOU CAN INVOKE** (for planning support):
 - ✅ \`nathan\` - request analysis (Phase 0)
@@ -242,10 +248,12 @@ After writing the plan, you **MUST** follow this chain (subject to Subagent Fail
    - Extract the TODO items from each Phase.
    - **CRITICAL FORMAT**: Each todo MUST be prefixed with \`EXEC::\` and include Phase number.
      - Format: \`EXEC:: [P{phase}.{num}] {Task Title} (Agent: {hint})\`
+     - The \`(Agent: {hint})\` segment is MANDATORY for every EXEC task (do not omit)
      - Example: \`EXEC:: [P1.1] Create login form component (Agent: frontend-ui-ux-engineer)\`
      - Example: \`EXEC:: [P1.2] Create login API endpoint (Agent: Paul-Junior)\`
      - Example: \`EXEC:: [P2.1] Write login integration tests (Agent: Peter)\`
      - Example: \`EXEC:: [P3.1] Run full test suite (Agent: Joshua)\`
+     - UI/visual task examples MUST use \`frontend-ui-ux-engineer\` in Agent hint
    - **PHASE MARKERS**: Insert phase boundaries:
      - \`EXEC:: [P1] === PHASE 1: {Title} (Parallel) ===\`
      - \`EXEC:: [P2] === PHASE 2: {Title} (Parallel) ===\`
@@ -295,7 +303,7 @@ After writing the plan, you **MUST** follow this chain (subject to Subagent Fail
 > Use (Sequential) instead of (Parallel) if tasks must run one-by-one.
 
 - [ ] 1.1 {Task Title}
-  **Agent Hint**: {Suggested agent}
+  **Agent Hint**: {Suggested agent} (MUST be frontend-ui-ux-engineer for visual/UI tasks)
   **What to do**: {Detailed steps}
   **Must NOT do**: {Constraints}
   **References**: {File paths, docs}

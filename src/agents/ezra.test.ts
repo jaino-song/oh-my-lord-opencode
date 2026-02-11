@@ -227,6 +227,7 @@ describe("createEzraAgent factory function", () => {
     const agent = createEzraAgent()
 
     expect(agent.reasoningEffort).toBe("high")
+    expect(agent.variant).toBe("xhigh")
     expect(agent.thinking).toBeUndefined()
   })
 
@@ -235,7 +236,8 @@ describe("createEzraAgent factory function", () => {
 
     expect(agent.model).toBe("openai/gpt-5.2")
     expect(agent.reasoningEffort).toBe("high")
-    expect(agent.textVerbosity).toBe("high")
+    expect(agent.variant).toBe("xhigh")
+    expect(agent.textVerbosity).toBeUndefined()
     expect(agent.thinking).toBeUndefined()
   })
 

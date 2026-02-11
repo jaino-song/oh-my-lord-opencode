@@ -1,7 +1,16 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test"
 
-import { ANTIGRAVITY_PROVIDER_CONFIG, getPluginNameWithVersion, fetchNpmDistTags, generateOmoConfig } from "./config-manager"
+import { ANTIGRAVITY_PROVIDER_CONFIG, getPluginNameWithVersion, fetchNpmDistTags, fetchGitHubLatestVersion, generateOmoConfig } from "./config-manager"
 import type { InstallConfig } from "./types"
+
+function mockGitHubReleases(releases: Array<{ tag_name: string; prerelease?: boolean; draft?: boolean }>) {
+  globalThis.fetch = mock(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(releases.map(r => ({ tag_name: r.tag_name, prerelease: r.prerelease ?? false, draft: r.draft ?? false }))),
+    } as Response)
+  ) as unknown as typeof fetch
+}
 
 describe("getPluginNameWithVersion", () => {
   const originalFetch = globalThis.fetch
@@ -10,68 +19,26 @@ describe("getPluginNameWithVersion", () => {
     globalThis.fetch = originalFetch
   })
 
-  test("returns @latest when current version matches latest tag", async () => {
-    // #given npm dist-tags with latest=2.14.0
-    globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ latest: "2.14.0", beta: "3.0.0-beta.3" }),
-      } as Response)
-    ) as unknown as typeof fetch
+  test("returns @latest when current version matches latest GitHub release", async () => {
+    // #given GitHub latest release is v2.14.0
+    mockGitHubReleases([{ tag_name: "v2.14.0" }])
 
     // #when current version is 2.14.0
     const result = await getPluginNameWithVersion("2.14.0")
 
-     // #then should use @latest tag
-     expect(result).toBe("oh-my-lord-opencode@latest")
+    // #then should use @latest tag
+    expect(result).toBe("oh-my-lord-opencode@latest")
   })
 
-  test("returns @beta when current version matches beta tag", async () => {
-    // #given npm dist-tags with beta=3.0.0-beta.3
-    globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ latest: "2.14.0", beta: "3.0.0-beta.3" }),
-      } as Response)
-    ) as unknown as typeof fetch
+  test("returns pinned version when current version does not match latest", async () => {
+    // #given GitHub latest release is v2.14.0
+    mockGitHubReleases([{ tag_name: "v2.14.0" }])
 
-    // #when current version is 3.0.0-beta.3
-    const result = await getPluginNameWithVersion("3.0.0-beta.3")
+    // #when current version is older
+    const result = await getPluginNameWithVersion("2.13.0")
 
-     // #then should use @beta tag
-     expect(result).toBe("oh-my-lord-opencode@beta")
-  })
-
-  test("returns @next when current version matches next tag", async () => {
-    // #given npm dist-tags with next=3.1.0-next.1
-    globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ latest: "2.14.0", beta: "3.0.0-beta.3", next: "3.1.0-next.1" }),
-      } as Response)
-    ) as unknown as typeof fetch
-
-    // #when current version is 3.1.0-next.1
-    const result = await getPluginNameWithVersion("3.1.0-next.1")
-
-     // #then should use @next tag
-     expect(result).toBe("oh-my-lord-opencode@next")
-  })
-
-  test("returns pinned version when no tag matches", async () => {
-    // #given npm dist-tags with beta=3.0.0-beta.3
-    globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ latest: "2.14.0", beta: "3.0.0-beta.3" }),
-      } as Response)
-    ) as unknown as typeof fetch
-
-    // #when current version is old beta 3.0.0-beta.2
-    const result = await getPluginNameWithVersion("3.0.0-beta.2")
-
-     // #then should pin to specific version
-     expect(result).toBe("oh-my-lord-opencode@3.0.0-beta.2")
+    // #then should pin to specific version
+    expect(result).toBe("oh-my-lord-opencode@2.13.0")
   })
 
   test("returns pinned version when fetch fails", async () => {
@@ -81,91 +48,112 @@ describe("getPluginNameWithVersion", () => {
     // #when current version is 3.0.0-beta.3
     const result = await getPluginNameWithVersion("3.0.0-beta.3")
 
-     // #then should fall back to pinned version (current version)
-     expect(result).toBe("oh-my-lord-opencode@3.0.0-beta.3")
+    // #then should fall back to pinned version
+    expect(result).toBe("oh-my-lord-opencode@3.0.0-beta.3")
   })
 
-  test("returns pinned version when npm returns non-ok response", async () => {
-    // #given npm returns 404
+  test("returns pinned version when GitHub returns non-ok response", async () => {
+    // #given GitHub returns 404
     globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: false,
-        status: 404,
-      } as Response)
+      Promise.resolve({ ok: false, status: 404 } as Response)
     ) as unknown as typeof fetch
 
     // #when current version is 2.14.0
     const result = await getPluginNameWithVersion("2.14.0")
 
-     // #then should fall back to pinned version
-     expect(result).toBe("oh-my-lord-opencode@2.14.0")
+    // #then should fall back to pinned version
+    expect(result).toBe("oh-my-lord-opencode@2.14.0")
   })
 
-  test("prioritizes latest over other tags when version matches multiple", async () => {
-    // #given version matches both latest and beta (during release promotion)
-    globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ beta: "3.0.0", latest: "3.0.0", next: "3.1.0-alpha.1" }),
-      } as Response)
-    ) as unknown as typeof fetch
+  test("skips prerelease and draft releases when finding latest", async () => {
+    // #given GitHub has prerelease and draft before stable
+    mockGitHubReleases([
+      { tag_name: "v3.1.0-beta.1", prerelease: true },
+      { tag_name: "v3.0.1", draft: true },
+      { tag_name: "v3.0.0" },
+    ])
 
-    // #when current version matches both
+    // #when current version is 3.0.0
     const result = await getPluginNameWithVersion("3.0.0")
 
-     // #then should prioritize @latest
-     expect(result).toBe("oh-my-lord-opencode@latest")
+    // #then should match the stable release
+    expect(result).toBe("oh-my-lord-opencode@latest")
   })
 })
 
-describe("fetchNpmDistTags", () => {
+describe("fetchGitHubLatestVersion", () => {
   const originalFetch = globalThis.fetch
 
   afterEach(() => {
     globalThis.fetch = originalFetch
   })
 
-  test("returns dist-tags on success", async () => {
-    // #given npm returns dist-tags
-    globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ latest: "2.14.0", beta: "3.0.0-beta.3" }),
-      } as Response)
-    ) as unknown as typeof fetch
+  test("returns latest stable version from GitHub releases", async () => {
+    // #given GitHub returns releases
+    mockGitHubReleases([
+      { tag_name: "v3.0.0-beta.1", prerelease: true },
+      { tag_name: "v2.14.0" },
+    ])
 
-     // #when fetching dist-tags
-     const result = await fetchNpmDistTags("oh-my-lord-opencode")
+    // #when fetching latest version
+    const result = await fetchGitHubLatestVersion()
 
-     // #then should return the tags
-     expect(result).toEqual({ latest: "2.14.0", beta: "3.0.0-beta.3" })
-   })
+    // #then should return the stable version
+    expect(result).toBe("2.14.0")
+  })
 
-   test("returns null on network failure", async () => {
-     // #given network failure
-     globalThis.fetch = mock(() => Promise.reject(new Error("Network error"))) as unknown as typeof fetch
+  test("returns null on network failure", async () => {
+    // #given network failure
+    globalThis.fetch = mock(() => Promise.reject(new Error("Network error"))) as unknown as typeof fetch
 
-     // #when fetching dist-tags
-     const result = await fetchNpmDistTags("oh-my-lord-opencode")
+    // #when fetching latest version
+    const result = await fetchGitHubLatestVersion()
 
     // #then should return null
     expect(result).toBeNull()
   })
 
   test("returns null on non-ok response", async () => {
-    // #given npm returns 404
+    // #given GitHub returns 403
     globalThis.fetch = mock(() =>
-      Promise.resolve({
-        ok: false,
-        status: 404,
-      } as Response)
+      Promise.resolve({ ok: false, status: 403 } as Response)
     ) as unknown as typeof fetch
 
-     // #when fetching dist-tags
-     const result = await fetchNpmDistTags("oh-my-lord-opencode")
+    // #when fetching latest version
+    const result = await fetchGitHubLatestVersion()
 
-     // #then should return null
-     expect(result).toBeNull()
+    // #then should return null
+    expect(result).toBeNull()
+  })
+})
+
+describe("fetchNpmDistTags (deprecated shim)", () => {
+  const originalFetch = globalThis.fetch
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+  })
+
+  test("returns latest version wrapped as dist-tags", async () => {
+    // #given GitHub latest release is v2.14.0
+    mockGitHubReleases([{ tag_name: "v2.14.0" }])
+
+    // #when fetching via deprecated shim
+    const result = await fetchNpmDistTags("oh-my-lord-opencode")
+
+    // #then should return { latest: "2.14.0" }
+    expect(result).toEqual({ latest: "2.14.0" })
+  })
+
+  test("returns null on network failure", async () => {
+    // #given network failure
+    globalThis.fetch = mock(() => Promise.reject(new Error("Network error"))) as unknown as typeof fetch
+
+    // #when fetching via deprecated shim
+    const result = await fetchNpmDistTags("oh-my-lord-opencode")
+
+    // #then should return null
+    expect(result).toBeNull()
   })
 })
 

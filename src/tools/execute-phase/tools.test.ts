@@ -1,4 +1,5 @@
 import { describe, test, expect } from "bun:test"
+import { inferAgentFromTodoContent } from "./tools"
 import type { ExecutePhaseArgs } from "./types"
 
 describe("execute-phase skills parameter", () => {
@@ -76,5 +77,51 @@ describe("execute-phase skills parameter", () => {
     expect(allArgs[0].phase).toBe(1)
     expect(allArgs[4].phase).toBe(5)
     expect(allArgs.every(arg => arg.skills?.includes("git-master"))).toBe(true)
+  })
+})
+
+describe("execute-phase agent inference", () => {
+  test("should route UI tasks to frontend-ui-ux-engineer", () => {
+    // #given
+    const todoContent = "EXEC:: [P2.3] Update button spacing and tailwind classes"
+
+    // #when
+    const agent = inferAgentFromTodoContent(todoContent)
+
+    // #then
+    expect(agent).toBe("frontend-ui-ux-engineer")
+  })
+
+  test("should route git tasks to git-master", () => {
+    // #given
+    const todoContent = "EXEC:: [P1.5] Create git checkpoint commit"
+
+    // #when
+    const agent = inferAgentFromTodoContent(todoContent)
+
+    // #then
+    expect(agent).toBe("git-master")
+  })
+
+  test("should prioritize git tasks over UI keywords", () => {
+    // #given
+    const todoContent = "EXEC:: [P7.9] Commit UI layout tweaks"
+
+    // #when
+    const agent = inferAgentFromTodoContent(todoContent)
+
+    // #then
+    expect(agent).toBe("git-master")
+  })
+
+  test("should default to Paul-Junior for non-UI non-git tasks", () => {
+    // #given
+    const todoContent = "EXEC:: [P3.1] Implement API service validation"
+
+    // #when
+    const agent = inferAgentFromTodoContent(todoContent)
+
+    // #then
+    expect(agent).toBe("Paul-Junior")
   })
 })

@@ -47,9 +47,18 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
   "git-master": ["explore", "librarian"],
   "document-writer": ["explore", "librarian"],
   
-  // --override required for Paul/planner-paul/Paul-Junior/frontend-ui-ux-engineer
   "worker-paul": ["explore", "librarian", "git-master", "document-writer"]
 }
+
+export const WORKER_PAUL_OVERRIDE_TARGETS: string[] = [
+  "Paul-Junior",
+  "frontend-ui-ux-engineer",
+  "Joshua (Test Runner)",
+  "Peter (Test Writer)",
+  "John (E2E Test Writer)",
+  "Elijah (Deep Reasoning Advisor)",
+  "Solomon (TDD Planner)",
+]
 
 export const APPROVAL_REQUIREMENTS: Record<string, string[]> = {
   "implement": ["Joshua (Test Runner)"],

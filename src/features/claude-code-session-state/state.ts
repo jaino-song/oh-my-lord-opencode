@@ -30,3 +30,18 @@ export function getSessionAgent(sessionID: string): string | undefined {
 export function clearSessionAgent(sessionID: string): void {
   sessionAgentMap.delete(sessionID)
 }
+
+// --override session tracking
+const overrideSessions = new Set<string>()
+
+export function setSessionOverride(sessionID: string): void {
+  overrideSessions.add(sessionID)
+}
+
+export function hasSessionOverride(sessionID: string): boolean {
+  return overrideSessions.has(sessionID)
+}
+
+export function clearSessionOverride(sessionID: string): void {
+  overrideSessions.delete(sessionID)
+}

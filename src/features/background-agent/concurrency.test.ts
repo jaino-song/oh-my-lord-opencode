@@ -60,7 +60,7 @@ describe("ConcurrencyManager.getConcurrencyLimit", () => {
     expect(limit).toBe(2)
   })
 
-  test("should return default 5 when no config provided", () => {
+  test("should return default 10 when no config provided", () => {
     // #given
     const manager = new ConcurrencyManager()
 
@@ -68,10 +68,10 @@ describe("ConcurrencyManager.getConcurrencyLimit", () => {
     const limit = manager.getConcurrencyLimit("anthropic/claude-sonnet-4-5")
 
     // #then
-    expect(limit).toBe(5)
+    expect(limit).toBe(10)
   })
 
-  test("should return default 5 when config exists but no concurrency settings", () => {
+  test("should return default 10 when config exists but no concurrency settings", () => {
     // #given
     const config: BackgroundTaskConfig = {}
     const manager = new ConcurrencyManager(config)
@@ -80,7 +80,7 @@ describe("ConcurrencyManager.getConcurrencyLimit", () => {
     const limit = manager.getConcurrencyLimit("anthropic/claude-sonnet-4-5")
 
     // #then
-    expect(limit).toBe(5)
+    expect(limit).toBe(10)
   })
 
   test("should prioritize model-specific over provider-specific over default", () => {

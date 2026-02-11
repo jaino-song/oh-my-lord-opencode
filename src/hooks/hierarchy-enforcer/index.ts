@@ -1,10 +1,11 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { getParentAgentName } from "../../features/agent-context"
 import { existsSync, writeFileSync } from "node:fs"
-import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS, SYNC_DELEGATION_REQUIRED } from "./constants"
+import { HOOK_NAME, AGENT_RELATIONSHIPS, BYPASS_AGENTS, SYNC_DELEGATION_REQUIRED, WORKER_PAUL_OVERRIDE_TARGETS } from "./constants"
 import { getApprovalPath } from "./approval-state"
 import { log } from "../../shared/logger"
 import { showToast, type ToastClient } from "../shared/notification"
+import { hasSessionOverride, setSessionOverride } from "../../features/claude-code-session-state"
 
 function normalizeAgentName(agentArg: string | undefined): string | null {
   if (!agentArg) return null
@@ -63,6 +64,20 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
   const client = ctx.client as unknown as ToastClient
 
   return {
+    "message.submit.before": async (
+      input: { sessionID: string },
+      output: { message: string }
+    ): Promise<void> => {
+      if (!output.message) return
+      const currentAgent = getParentAgentName(input.sessionID, "User")
+      if (currentAgent.toLowerCase() !== "worker-paul") return
+
+      if (/--override\b/i.test(output.message)) {
+        setSessionOverride(input.sessionID)
+        log(`[${HOOK_NAME}] --override detected for worker-paul session`, { sessionID: input.sessionID })
+      }
+    },
+
     "tool.execute.before": async (
       input: { tool: string; sessionID: string; callID: string },
       output: { args: Record<string, unknown>; message?: string }
@@ -83,7 +98,12 @@ export function createHierarchyEnforcerHook(ctx: PluginInput) {
       const relationshipKey = Object.keys(AGENT_RELATIONSHIPS).find(
         k => k.toLowerCase() === currentAgent.toLowerCase()
       )
-      const allowedTargets = relationshipKey ? AGENT_RELATIONSHIPS[relationshipKey] : []
+      let allowedTargets = relationshipKey ? AGENT_RELATIONSHIPS[relationshipKey] : []
+
+      if (currentAgent.toLowerCase() === "worker-paul" && hasSessionOverride(input.sessionID)) {
+        allowedTargets = [...allowedTargets, ...WORKER_PAUL_OVERRIDE_TARGETS]
+        log(`[${HOOK_NAME}] --override active for worker-paul, expanded targets`, { sessionID: input.sessionID })
+      }
       
       const isAllowed = allowedTargets.some(allowed => {
         const normalizedAllowed = normalizeAgentName(allowed)

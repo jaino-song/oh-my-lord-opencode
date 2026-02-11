@@ -1,11 +1,11 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
-import type { NpmDistTags, OpencodeConfig, PackageJson, UpdateCheckResult } from "./types"
+import type { GitHubRelease, OpencodeConfig, PackageJson, UpdateCheckResult } from "./types"
 import {
   PACKAGE_NAME,
-  NPM_REGISTRY_URL,
-  NPM_FETCH_TIMEOUT,
+  GITHUB_RELEASES_URL,
+  GITHUB_FETCH_TIMEOUT,
   INSTALLED_PACKAGE_JSON,
   USER_OPENCODE_CONFIG,
   USER_OPENCODE_CONFIG_JSONC,
@@ -233,18 +233,31 @@ export function updatePinnedVersion(configPath: string, oldEntry: string, newVer
 
 export async function getLatestVersion(channel: string = "latest"): Promise<string | null> {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), NPM_FETCH_TIMEOUT)
+  const timeoutId = setTimeout(() => controller.abort(), GITHUB_FETCH_TIMEOUT)
 
   try {
-    const response = await fetch(NPM_REGISTRY_URL, {
+    const response = await fetch(GITHUB_RELEASES_URL, {
       signal: controller.signal,
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": PACKAGE_NAME,
+      },
     })
 
     if (!response.ok) return null
 
-    const data = (await response.json()) as NpmDistTags
-    return data[channel] ?? data.latest ?? null
+    const releases = (await response.json()) as GitHubRelease[]
+    if (!releases.length) return null
+
+    const includePrerelease = channel !== "latest"
+
+    for (const release of releases) {
+      if (release.draft) continue
+      if (!includePrerelease && release.prerelease) continue
+      return release.tag_name.replace(/^v/, "")
+    }
+
+    return null
   } catch {
     return null
   } finally {

@@ -1,3 +1,10 @@
+export interface GitHubRelease {
+  tag_name: string
+  prerelease: boolean
+  draft: boolean
+}
+
+/** @deprecated Use GitHubRelease instead — kept for config-manager compatibility during migration */
 export interface NpmDistTags {
   latest: string
   [key: string]: string

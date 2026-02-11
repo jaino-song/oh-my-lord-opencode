@@ -3,8 +3,9 @@ import * as os from "node:os"
 import * as fs from "node:fs"
 
 export const PACKAGE_NAME = "oh-my-lord-opencode"
-export const NPM_REGISTRY_URL = `https://registry.npmjs.org/-/package/${PACKAGE_NAME}/dist-tags`
-export const NPM_FETCH_TIMEOUT = 5000
+export const GITHUB_REPO = "jaino-song/oh-my-lord-opencode"
+export const GITHUB_RELEASES_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases`
+export const GITHUB_FETCH_TIMEOUT = 5000
 
 /**
  * OpenCode plugin cache directory

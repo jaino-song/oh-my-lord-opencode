@@ -315,7 +315,13 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Openc
         }
 
         const shouldBlock = args.block === true
-        const timeoutMs = 180000
+
+        // Scout agents (explore/librarian) get a 3-minute timeout.
+        // All other agents (Joshua, Peter, etc.) have no artificial timeout here —
+        // they rely on their own no-progress (10min) and checkpoint (5min) timeouts.
+        const SCOUT_AGENTS = ["explore", "librarian"]
+        const isScoutAgent = SCOUT_AGENTS.includes(task.agent)
+        const timeoutMs = isScoutAgent ? 180_000 : 0
 
         // Already completed: return result immediately (regardless of block flag)
         if (task.status === "completed") {
@@ -335,7 +341,7 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Openc
         // Blocking: poll until completion or timeout
         const startTime = Date.now()
 
-        while (Date.now() - startTime < timeoutMs) {
+        while (timeoutMs === 0 || Date.now() - startTime < timeoutMs) {
           await delay(1000)
 
           const currentTask = manager.getTask(args.task_id)
@@ -352,7 +358,7 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Openc
           }
         }
 
-        // Timeout exceeded: return current status
+        // Timeout exceeded (only reachable for scout agents with finite timeoutMs)
         const finalTask = manager.getTask(args.task_id)
         if (!finalTask) {
           return `Task was deleted: ${args.task_id}`

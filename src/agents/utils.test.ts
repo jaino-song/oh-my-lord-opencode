@@ -15,6 +15,63 @@ describe("createBuiltinAgents with model overrides", () => {
     expect(elijah.reasoningEffort).toBe("high")
   })
 
+  test("frontend-ui-ux-engineer uses GPT-5.3 Codex with high reasoning", () => {
+    // #given - no overrides
+
+    // #when
+    const agents = createBuiltinAgents()
+
+    // #then
+    const frontend = agents["frontend-ui-ux-engineer"]
+    expect(frontend.model).toBe("openai/gpt-5.3-codex")
+    expect(frontend.reasoningEffort).toBe("high")
+  })
+
+  test("librarian defaults to Gemini 3 Flash", () => {
+    // #given - no overrides
+
+    // #when
+    const agents = createBuiltinAgents()
+
+    // #then
+    const librarian = agents["librarian"]
+    expect(librarian.model).toBe("google/antigravity-gemini-3-flash")
+  })
+
+  test("Paul-Junior uses GPT-5.3 Codex with high reasoning", () => {
+    // #given - no overrides
+
+    // #when
+    const agents = createBuiltinAgents()
+
+    // #then
+    const junior = agents["Paul-Junior"]
+    expect(junior.model).toBe("openai/gpt-5.3-codex")
+    expect(junior.reasoningEffort).toBe("high")
+  })
+
+  test("Ezra defaults to xhigh variant", () => {
+    // #given - no overrides
+
+    // #when
+    const agents = createBuiltinAgents()
+
+    // #then
+    const ezra = agents["Ezra (Plan Reviewer)"]
+    expect(ezra.variant).toBe("xhigh")
+  })
+
+  test("Thomas defaults to GLM 4.7", () => {
+    // #given - no overrides
+
+    // #when
+    const agents = createBuiltinAgents()
+
+    // #then
+    const thomas = agents["Thomas (TDD Plan Consultant)"]
+    expect(thomas.model).toBe("zai-coding-plan/glm-4.7")
+  })
+
 })
 
 describe("buildAgent with skills", () => {
