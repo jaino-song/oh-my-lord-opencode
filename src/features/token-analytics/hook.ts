@@ -1,6 +1,8 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { TokenAnalyticsManager } from "./manager"
-import { getSessionAgent } from "../../features/claude-code-session-state"
+import { getSessionAgent, getMainSessionID } from "../../features/claude-code-session-state"
+import { subagentSessions } from "../../features/claude-code-session-state/state"
+import { generateCompactTokenSummary, generateIdleTokenSummary, generateCompactionTokenSummary } from "./reporter"
 
 interface AssistantMessageInfo {
   role: "assistant"
@@ -38,6 +40,32 @@ interface EventInput {
   }
 }
 
+type PromptClient = {
+  session?: {
+    prompt?: (opts: {
+      path: { id: string }
+      body: { noReply?: boolean; parts: Array<{ type: string; text: string }> }
+    }) => Promise<unknown>
+  }
+}
+
+async function injectNotification(
+  ctx: PluginInput,
+  sessionID: string,
+  text: string
+): Promise<void> {
+  const promptClient = ctx.client as unknown as PromptClient
+  if (!promptClient.session?.prompt) return
+
+  await promptClient.session.prompt({
+    path: { id: sessionID },
+    body: {
+      noReply: true,
+      parts: [{ type: "text", text }],
+    },
+  }).catch(() => {})
+}
+
 export function createTokenAnalyticsHook(
   ctx: PluginInput,
   manager: TokenAnalyticsManager
@@ -60,23 +88,30 @@ export function createTokenAnalyticsHook(
 
       if (assistantMessages.length === 0) return
 
-      const lastAssistant = assistantMessages[assistantMessages.length - 1]
-      
-      const agent = getSessionAgent(sessionID) ?? "unknown"
-      const model = lastAssistant.model ?? "unknown"
-      const provider = lastAssistant.providerID ?? "unknown"
+      const lastProcessedCount = manager.getProcessedMessageCount(sessionID)
+      if (assistantMessages.length <= lastProcessedCount) return
 
-      manager.recordMessage(sessionID, agent, model, provider, {
-        input: lastAssistant.tokens?.input,
-        output: lastAssistant.tokens?.output,
-        reasoning: lastAssistant.tokens?.reasoning,
-        cache: {
-          read: lastAssistant.tokens?.cache?.read,
-          write: lastAssistant.tokens?.cache?.write,
-        },
-      })
+      const newMessages = assistantMessages.slice(lastProcessedCount)
+      manager.setProcessedMessageCount(sessionID, assistantMessages.length)
+
+      const agent = getSessionAgent(sessionID) ?? "unknown"
+
+      for (const msg of newMessages) {
+        const model = msg.model ?? "unknown"
+        const provider = msg.providerID ?? "unknown"
+
+        manager.recordMessage(sessionID, agent, model, provider, {
+          input: msg.tokens?.input,
+          output: msg.tokens?.output,
+          reasoning: msg.tokens?.reasoning,
+          cache: {
+            read: msg.tokens?.cache?.read,
+            write: msg.tokens?.cache?.write,
+          },
+        })
+      }
     } catch {
-      // Graceful degradation - do not disrupt message handling
+      // Graceful degradation
     }
   }
 
@@ -89,6 +124,58 @@ export function createTokenAnalyticsHook(
 
     try {
       manager.recordToolCall(sessionID, agent)
+    } catch {
+      // Graceful degradation
+    }
+  }
+
+  const compactingHandler = async ({ sessionID }: { sessionID: string }) => {
+    try {
+      const report = manager.getReport(sessionID)
+      if (!report || report.totalTokens === 0) return
+
+      const summary = generateCompactionTokenSummary(report)
+      await injectNotification(ctx, sessionID, summary)
+    } catch {
+      // Graceful degradation
+    }
+  }
+
+  const idleHandler = async (sessionID: string) => {
+    try {
+      if (subagentSessions.has(sessionID)) return
+
+      const mainSessionID = getMainSessionID()
+      if (mainSessionID && sessionID !== mainSessionID) return
+
+      const activityUsage = manager.getActivityUsage(sessionID)
+      const activityTotal = activityUsage.input + activityUsage.output + activityUsage.reasoning
+      if (activityTotal === 0) return
+
+      const activityCost = manager.getActivityCost(sessionID)
+      const accumulatedReport = manager.getReport(sessionID)
+      if (!accumulatedReport) return
+
+      const summary = generateIdleTokenSummary(activityUsage, activityCost, accumulatedReport)
+      await injectNotification(ctx, sessionID, summary)
+
+      manager.markReported(sessionID)
+    } catch {
+      // Graceful degradation
+    }
+  }
+
+  const sessionEndHandler = async (sessionID: string) => {
+    try {
+      const report = manager.getReport(sessionID)
+      if (!report || report.totalTokens === 0) return
+
+      const mainSessionID = getMainSessionID()
+      if (!mainSessionID || mainSessionID === sessionID) return
+
+      const parentSessionID = manager.getParentSessionID(sessionID) ?? mainSessionID
+      const summary = generateCompactTokenSummary(report)
+      await injectNotification(ctx, parentSessionID, summary)
     } catch {
       // Graceful degradation
     }
@@ -112,9 +199,17 @@ export function createTokenAnalyticsHook(
       }
     }
 
+    if (event.type === "session.idle") {
+      const sessionID = props?.sessionID as string | undefined
+      if (sessionID) {
+        await idleHandler(sessionID)
+      }
+    }
+
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined
       if (sessionInfo?.id) {
+        await sessionEndHandler(sessionInfo.id)
         manager.clear(sessionInfo.id)
       }
     }
@@ -123,6 +218,7 @@ export function createTokenAnalyticsHook(
   return {
     "message.updated": messageUpdatedHandler,
     "tool.execute.after": toolExecuteAfter,
+    "experimental.session.compacting": compactingHandler,
     event: eventHandler,
   }
 }

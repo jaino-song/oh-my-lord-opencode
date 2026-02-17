@@ -756,6 +756,7 @@ export const JOSHUA_PERMISSION = {
 export const joshuaAgent: AgentConfig = {
   name: "Joshua (Test Runner)",
   description: "Universal test runner for Jest and Playwright. Auto-detects framework, runs tests, parses results, and provides actionable feedback.",
+  // GLM 4.7 by Z.AI (zai-coding-plan provider)
   model: "zai-coding-plan/glm-4.7",
   prompt: JOSHUA_SYSTEM_PROMPT,
   permission: JOSHUA_PERMISSION,

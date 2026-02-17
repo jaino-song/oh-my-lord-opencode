@@ -30,13 +30,25 @@ planner-paul (auto-continues through all phases):
            → Non-trivial detected → AUTO-CONTINUE
   Phase 1: Research (parallel explore/librarian)
   Phase 2: Creates plan in .paul/plans/auth.md
+           - For frontend/UI scope, plan includes:
+             1) Blueprint (file tree + file contracts)
+             2) UI Planning Contract (layout/responsive/animation/skeleton/data-component)
+             3) Required Skills field on frontend tasks
   Phase 3: Review chain (ALL MANDATORY):
            1. Elijah deep review - security/perf/arch (loop until PASS)
-           2. Ezra deep review (loop until PASS)
-           3. Solomon creates test specs
+           2. Ezra deep review (loop until PASS; includes frontend-plan compliance checks for UI scope)
+           3. Solomon creates test specs (`delegate_task output_format="full"`)
+              - If spec file is missing, retry once with fallback: Solomon returns complete markdown via `signal_done` and planner persists it
            4. Thomas TDD review (loop until approved)
+           (Planner subagent delegations use `delegate_task output_format="full"` to avoid truncation of structured outputs/specs)
   Phase 4: Sets up EXEC:: todos
-           → "Plan ready. Switch to @Paul to execute." → STOPS
+           - EXEC task metadata includes Agent/Skills/Contracts/Files/TODO-IDs
+           - `execute_phase` injects referenced contract blocks into delegated prompts
+           - Contract parsing prefers machine-readable `contracts-v1` JSON block, with markdown fallback
+           - Preflight blocks phase execution on malformed/missing metadata or unknown contract refs
+           - File-scope and contract acceptance checks are enforced per task
+           - If TODO anchor IDs remain in listed files, task is reported as failed
+            → "Plan ready. Switch to @Paul to execute." → STOPS
 
 User: @Paul
 
@@ -47,7 +59,13 @@ Paul:
      - Joshua runs tests (RED - fail expected)
      - Paul-Junior/frontend implements
      - Joshua runs tests (GREEN - pass)
-  3. Reports completion
+  3. Final verification for implementation plans:
+     - Elijah runs `--verify-plan` against active plan
+     - If verdict is `CONCERNS_REMAIN`, execution continues until resolved
+  4. Completion gate:
+     - Final todo completion is blocked unless recent Elijah verification approval exists for implementation plans
+     - Docs/config-only plans skip Elijah gate
+  5. Reports completion
 ```
 
 **Duration**: Minutes to hours depending on complexity

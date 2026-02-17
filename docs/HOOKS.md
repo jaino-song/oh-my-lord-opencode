@@ -83,6 +83,7 @@ This is the set exported by `src/hooks/index.ts`.
 - Cannot write implementation code (write/edit) before test file exists
 - Cannot mark todo as completed without running test verification
 - Cannot skip test execution after implementation
+- Cannot mark final todo completion for code-implementation plans without recent Elijah `--verify-plan` approval
 
 **Phases Tracked**:
 - `NONE`: No work started
@@ -94,6 +95,7 @@ This is the set exported by `src/hooks/index.ts`.
 - Auto-clears dirty files when delegating to test agents (Joshua, Peter, John)
 - Detects test files by extension (`.test.ts`, `.spec.ts`, `__tests__/`)
 - Supports TypeScript, JavaScript, Python
+- Conditional Elijah gate: applies only when active plan contains implementation file scope; skipped for docs/config-only plans
 
 ---
 
@@ -137,6 +139,7 @@ This is the set exported by `src/hooks/index.ts`.
 
 **Exemptions**:
 - When delegating to Paul/worker-paul for execution (don't inject read-only warning)
+- `delegate_task` prompt passthrough: planner hook does not append read-only consult warnings to delegated subagent prompts
 - Draft plan writes (no todo gate)
 
 ---

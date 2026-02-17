@@ -52,7 +52,7 @@ type AgentCost = "FREE" | "CHEAP" | "EXPENSIVE"
 
 | Cost | When to Use | Model Examples |
 |------|-------------|----------------|
-| `FREE` | High-volume, background tasks | opencode/grok-code, opencode/glm-4.7-free |
+| `FREE` | High-volume, background tasks | opencode/grok-code, zai-coding-plan/glm-4.7 |
 | `CHEAP` | Standard operations | anthropic/claude-sonnet-4-5 |
 | `EXPENSIVE` | Complex reasoning, critical decisions | anthropic/claude-opus-4-5, openai/gpt-5.2 |
 
@@ -299,7 +299,7 @@ const restrictions = createAgentToolRestrictions([
 
 | Category | Recommended Model | Reasoning |
 |----------|-------------------|-----------|
-| Exploration | `opencode/grok-code` or `opencode/glm-4.7-free` | Fast, cheap, high volume |
+| Exploration | `opencode/grok-code` or `zai-coding-plan/glm-4.7` | Fast, cheap, high volume |
 | Specialist | `google/gemini-3-pro-preview` or `anthropic/claude-sonnet-4-5` | Good balance |
 | Advisor | `anthropic/claude-sonnet-4-5` | Strong reasoning, moderate cost |
 | Orchestrator | `anthropic/claude-opus-4-5` | Maximum reasoning capability |

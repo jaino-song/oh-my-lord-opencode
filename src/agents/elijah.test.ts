@@ -334,6 +334,13 @@ describe("ELIJAH_SYSTEM_PROMPT --verify-plan mode", () => {
     // #then - Unresolved Concerns section exists
     expect(ELIJAH_SYSTEM_PROMPT).toMatch(/Unresolved Concerns/)
   })
+
+  test("should define maintenance-only skip rule for verify-plan", () => {
+    // #given - the Elijah prompt
+    // #when - checking for docs/config-only skip guidance
+    // #then - skip rule is explicitly documented
+    expect(ELIJAH_SYSTEM_PROMPT).toMatch(/Verification not needed for maintenance-only plan/)
+  })
 })
 
 describe("createElijahAgent factory function", () => {

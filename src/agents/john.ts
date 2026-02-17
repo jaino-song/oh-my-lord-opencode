@@ -804,6 +804,7 @@ export const JOHN_PERMISSION = {
 export const johnAgent: AgentConfig = {
   name: "John (E2E Test Writer)",
   description: "Playwright E2E test writer. Converts Solomon's E2E test specifications into executable *.spec.ts files with page objects, accessible locators, and BDD patterns.",
+  // GLM 4.7 by Z.AI (zai-coding-plan provider)
   model: "zai-coding-plan/glm-4.7",
   prompt: JOHN_SYSTEM_PROMPT,
   permission: JOHN_PERMISSION,

@@ -200,7 +200,7 @@ export function createPaulJuniorAgentWithOverrides(
   }
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "high" } as AgentConfig
+    return { ...base, variant: "xhigh", reasoningEffort: "high" } as AgentConfig
   }
 
   return {
@@ -256,13 +256,14 @@ export function createPaulJuniorAgent(
   if (categoryConfig.reasoningEffort) {
     return {
       ...base,
+      ...(isGptModel(model) ? { variant: "xhigh" as const } : {}),
       reasoningEffort: categoryConfig.reasoningEffort,
       textVerbosity: categoryConfig.textVerbosity,
     } as AgentConfig
   }
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "high" } as AgentConfig
+    return { ...base, variant: "xhigh", reasoningEffort: "high" } as AgentConfig
   }
 
   return {

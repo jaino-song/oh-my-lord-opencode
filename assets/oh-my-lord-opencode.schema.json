@@ -2567,6 +2567,20 @@
           "type": "boolean"
         }
       }
+    },
+    "execute_phase": {
+      "type": "object",
+      "properties": {
+        "frontend_conformance_mode": {
+          "default": "normal",
+          "type": "string",
+          "enum": [
+            "strict",
+            "normal",
+            "off"
+          ]
+        }
+      }
     }
   }
 }

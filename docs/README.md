@@ -11,6 +11,7 @@ Reference:
 - `docs/AGENTS.md`
 - `docs/HOOKS.md`
 - `docs/TOOLS.md`
+- `docs/CONTRACTS_V1.md`
 - `docs/FEATURES.md`
 - `docs/MCP.md`
 - `docs/CONFIGURATION.md`

@@ -69,3 +69,25 @@ export function hasRecentApproval(root: string, approverPattern: string, duratio
       (approverLower.includes(patternLower) || patternLower.includes(approverLower))
   })
 }
+
+export function getLatestApprovalTimestamp(
+  root: string,
+  approverPattern: string,
+  status: "approved" | "rejected" = "approved"
+): number | null {
+  const state = loadApprovalState(root)
+  const patternLower = approverPattern.toLowerCase()
+
+  let latest: number | null = null
+  for (const approval of state.approvals) {
+    const approverLower = approval.approver.toLowerCase()
+    const matchesApprover = approverLower.includes(patternLower) || patternLower.includes(approverLower)
+    if (!matchesApprover) continue
+    if (approval.status !== status) continue
+    if (latest === null || approval.timestamp > latest) {
+      latest = approval.timestamp
+    }
+  }
+
+  return latest
+}

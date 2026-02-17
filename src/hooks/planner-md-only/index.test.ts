@@ -204,7 +204,7 @@ describe("planner-md-only", () => {
       ).resolves.toBeUndefined()
     })
 
-    test("should inject read-only warning when Prometheus calls delegate_task", async () => {
+    test("should not inject read-only warning when Prometheus calls delegate_task", async () => {
       // #given
       const hook = createPlannerMdOnlyHook(createMockPluginInput())
       const input = {
@@ -220,11 +220,11 @@ describe("planner-md-only", () => {
       await hook["tool.execute.before"](input, output)
 
       // #then
-      expect(output.args.prompt).toContain(SYSTEM_DIRECTIVE_PREFIX)
-      expect(output.args.prompt).toContain("DO NOT modify any files")
+      expect(output.args.prompt).toBe("Analyze this codebase")
+      expect(output.args.prompt).not.toContain(SYSTEM_DIRECTIVE_PREFIX)
     })
 
-    test("should not block Prometheus delegations (authorization handled by hierarchy-enforcer)", async () => {
+    test("should allow Prometheus delegate_task prompts with execution subagent_type", async () => {
       // #given
       const hook = createPlannerMdOnlyHook(createMockPluginInput())
       const input = {
@@ -239,12 +239,8 @@ describe("planner-md-only", () => {
         },
       }
 
-      // #when
+      // #when / #then
       return expect(hook["tool.execute.before"](input, output)).resolves.toBeUndefined()
-
-      // #then
-      expect(output.args.prompt).toContain(SYSTEM_DIRECTIVE_PREFIX)
-      expect(output.args.prompt).toContain("DO NOT modify any files")
     })
 
     test("should inject read-only warning when Prometheus calls task", async () => {

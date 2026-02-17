@@ -12,11 +12,14 @@ import { getTaskToastManager } from "../../features/task-toast-manager"
 
 import { getsessiontokenusage } from "../../features/task-toast-manager/token-utils"
 import { subagentSessions, getSessionAgent } from "../../features/claude-code-session-state"
-import { log, getAgentToolRestrictions, hasValidOutputFromMessages } from "../../shared"
+import { log, getAgentToolRestrictions } from "../../shared"
 import { truncateToTokenLimit } from "../../shared/dynamic-truncator"
 import { getParentAgentName } from "../../features/agent-context"
 import { AGENT_FALLBACK_MODELS, MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS } from "../../config/fallback-models"
-import { SIGNAL_DONE_TOOL_NAME } from "../signal-done"
+import {
+  type PollSessionResult,
+  pollSessionReliability,
+} from "../shared/delegation-reliability"
 
 type OpencodeClient = PluginInput["client"]
 
@@ -137,81 +140,15 @@ function summarizeSkillContent(content: string): string {
   return content
 }
 
-interface MessagePart {
-  type?: string
-  name?: string
-  tool?: string
-  text?: string
-  input?: { result?: string }
-  state?: { input?: { result?: string } }
-}
+export type DelegatePollClassification = "success" | "retryable_failure" | "terminal_failure" | "cancelled"
 
-interface SessionMessage {
-  info?: { role?: string }
-  parts?: MessagePart[]
-}
-
-function findSignalDoneResult(messages: SessionMessage[]): string | null {
-  for (const msg of messages) {
-    if (msg.info?.role !== "assistant") continue
-    for (const part of msg.parts ?? []) {
-      const isToolPart = part.type === "tool_use" || part.type === "tool"
-      const isSignalDone = part.name === SIGNAL_DONE_TOOL_NAME || part.tool === SIGNAL_DONE_TOOL_NAME
-      if (isToolPart && isSignalDone) {
-        const result = part.input?.result ?? part.state?.input?.result
-        if (typeof result === "string") {
-          return result
-        }
-      }
-    }
+export function classifyPollResultForDelegateTask(status: PollSessionResult["status"]): DelegatePollClassification {
+  if (status === "signal_done") return "success"
+  if (status === "aborted") return "cancelled"
+  if (status === "checkpoint_idle" || status === "no_progress_timeout" || status === "max_wait") {
+    return "retryable_failure"
   }
-  return null
-}
-
-interface ErrorLoopResult {
-  detected: boolean
-  reason?: string
-  recentOutputs?: string[]
-}
-
-function detectErrorLoop(messages: SessionMessage[]): ErrorLoopResult {
-  const recentTexts: string[] = []
-  
-  const recentMsgs = messages.slice(-10)
-  for (const msg of recentMsgs) {
-    if (msg.info?.role !== "assistant") continue
-    for (const part of msg.parts ?? []) {
-      if (part.type === "text" && part.text) {
-        recentTexts.push(part.text.trim().slice(0, 200))
-      }
-    }
-  }
-  
-  if (recentTexts.length < 3) {
-    return { detected: false }
-  }
-  
-  const lastThree = recentTexts.slice(-3)
-  const allSame = lastThree.every(t => t === lastThree[0])
-  if (allSame && lastThree[0].length > 10) {
-    return {
-      detected: true,
-      reason: "Same output repeated 3+ times",
-      recentOutputs: lastThree,
-    }
-  }
-  
-  const errorPatterns = /\b(error|failed|cannot|unable|exception|refused|denied|invalid|unauthorized)\b/i
-  const errorCount = recentTexts.filter(t => errorPatterns.test(t)).length
-  if (errorCount >= 3 && errorCount === recentTexts.length) {
-    return {
-      detected: true,
-      reason: "All recent outputs contain error messages",
-      recentOutputs: recentTexts.slice(-3),
-    }
-  }
-  
-  return { detected: false }
+  return "terminal_failure"
 }
 
 type ToolContextWithMetadata = {
@@ -411,27 +348,22 @@ Use \`background_output\` with task_id="${task.id}" to check progress.`
           return `❌ Failed to send resume prompt: ${errorMessage}\n\nSession ID: ${args.resume}`
         }
 
-        const POLL_INTERVAL_MS = 500
-        const pollStart = Date.now()
-        let lastMsgCount = 0
+        const resumePollResult = await pollSessionReliability({
+          client,
+          sessionID: args.resume,
+          abort: ctx.abort,
+          maxPollTimeMs: 120000,
+        })
 
-        while (Date.now() - pollStart < 120000) {
-          await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS))
-
-          const messagesCheck = await client.session.messages({ path: { id: args.resume } })
-          const msgs = ((messagesCheck as { data?: unknown }).data ?? messagesCheck) as Array<SessionMessage>
-          const currentMsgCount = msgs.length
-
-          const signalDoneResult = findSignalDoneResult(msgs)
-          if (signalDoneResult !== null) {
-            log("[delegate_task:resume] signal_done detected", { sessionID: args.resume })
-            subagentSessions.delete(args.resume)
-            if (toastManager) toastManager.removeTask(taskId)
-            const duration = formatDuration(startTime)
-            const tokens = await getsessiontokenusage(client as any, args.resume)
-            const total = tokens ? tokens.input + tokens.output : 0
-            const tokenline = tokens ? `TOKENS: ${tokens.input} in / ${tokens.output} out / ${total} total` : ""
-            return `⚡ RESUME → ${args.resume}
+        if (resumePollResult.status === "signal_done" && resumePollResult.signalDoneResult) {
+          log("[delegate_task:resume] signal_done detected", { sessionID: args.resume })
+          subagentSessions.delete(args.resume)
+          if (toastManager) toastManager.removeTask(taskId)
+          const duration = formatDuration(startTime)
+          const tokens = await getsessiontokenusage(client as any, args.resume)
+          const total = tokens ? tokens.input + tokens.output : 0
+          const tokenline = tokens ? `TOKENS: ${tokens.input} in / ${tokens.output} out / ${total} total` : ""
+          return `⚡ RESUME → ${args.resume}
 TASK: ${args.prompt.slice(0, 100)}...
 ${tokenline}
 DURATION: ${duration}
@@ -441,10 +373,7 @@ SESSION ID: ${args.resume}
 
 ---
 
-${formatOutputByPreference(signalDoneResult, outputFormat)}`
-          }
-
-          lastMsgCount = currentMsgCount
+${formatOutputByPreference(resumePollResult.signalDoneResult, outputFormat)}`
         }
 
         const messagesResult = await client.session.messages({
@@ -655,7 +584,6 @@ task launched in background. use \`background_output\` with task_id="${task.id}"
         let lastError: unknown = null
 
 const POLL_INTERVAL_MS = 500
-const MAX_POLL_TIME_MS = 20 * 60 * 1000
 const WORKING_NO_PROGRESS_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes - allows for extended model thinking/reasoning
 const CHECKPOINT_TIME_MS = 5 * 60 * 1000
 const ERROR_LOOP_CHECK_INTERVAL_MS = 2 * 60 * 1000
@@ -687,90 +615,42 @@ const ERROR_LOOP_CHECK_INTERVAL_MS = 2 * 60 * 1000
               promptError = error instanceof Error ? error : new Error(String(error))
             })
 
-            const pollStart = Date.now()
-            let lastMsgCount = 0
-            let pollCount = 0
-            let lastMsgChangeTime = Date.now()
-            let checkpointChecked = false
             let needsRetry = false
-            let lastErrorLoopCheck = 0
 
             log("[delegate_task] Starting poll loop", { sessionID, agentToUse })
+            const pollResult = await pollSessionReliability({
+              client,
+              sessionID,
+              abort: ctx.abort,
+              pollIntervalMs: POLL_INTERVAL_MS,
+              noProgressTimeoutMs: WORKING_NO_PROGRESS_TIMEOUT_MS,
+              checkpointTimeMs: CHECKPOINT_TIME_MS,
+              errorLoopCheckIntervalMs: ERROR_LOOP_CHECK_INTERVAL_MS,
+            })
 
-            // eslint-disable-next-line no-constant-condition
-            while (true) {
-              if (ctx.abort?.aborted) {
-                log("[delegate_task] Aborted by user - checking for signal_done first", { sessionID })
-                try {
-                  const messagesOnAbort = await client.session.messages({ path: { id: sessionID } })
-                  const msgsOnAbort = ((messagesOnAbort as { data?: unknown }).data ?? messagesOnAbort) as Array<SessionMessage>
-                  const signalDoneOnAbort = findSignalDoneResult(msgsOnAbort)
-                  if (signalDoneOnAbort !== null) {
-                    log("[delegate_task] signal_done found on abort - returning result", { sessionID })
-                    subagentSessions.delete(sessionID)
-                    if (toastManager && taskId) toastManager.removeTask(taskId)
-                    return `⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(agentToUse)}
-TASK: ${args.description}
-✅ TASK (session_id="${sessionID}") COMPLETE (signal_done, recovered on abort)
+            if (promptError) {
+              throw promptError
+            }
 
-SESSION ID: ${sessionID}
+            const pollClassification = classifyPollResultForDelegateTask(pollResult.status)
 
----
-
-${formatOutputByPreference(signalDoneOnAbort, outputFormat)}`
-                  }
-                } catch (err) {
-                  log("[delegate_task] Failed to check signal_done on abort", { sessionID, error: String(err) })
-                }
-                if (toastManager && taskId) toastManager.removeTask(taskId)
-                return `Task aborted.\n\nSession ID: ${sessionID}`
-              }
-
-              if (promptError) {
-                throw promptError
-              }
-
-              await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS))
-              pollCount++
-
-              const statusResult = await client.session.status()
-              const allStatuses = (statusResult.data ?? {}) as Record<string, { type: string }>
-              const sessionStatus = allStatuses[sessionID]
-
-              if (pollCount % 10 === 0) {
-                log("[delegate_task] Poll status", {
-                  sessionID,
-                  pollCount,
-                  elapsed: Math.floor((Date.now() - pollStart) / 1000) + "s",
-                  sessionStatus: sessionStatus?.type ?? "not_in_status",
-                  lastMsgCount,
+            if (pollClassification === "success" && pollResult.signalDoneResult) {
+              subagentSessions.delete(sessionID)
+              const duration = formatDuration(startTime)
+              const tokens = await getsessiontokenusage(client as any, sessionID)
+              const total = tokens ? tokens.input + tokens.output : 0
+              const tokenline = tokens ? `TOKENS: ${tokens.input} in / ${tokens.output} out / ${total} total` : ""
+              if (toastManager && taskId) {
+                toastManager.showCompletionToast({
+                  id: taskId,
+                  description: args.description,
+                  agent: agentToUse,
+                  duration,
+                  tokens: tokens ?? undefined,
+                  result: pollResult.signalDoneResult.slice(0, 200),
                 })
               }
-
-              const messagesCheck = await client.session.messages({ path: { id: sessionID } })
-              const msgs = ((messagesCheck as { data?: unknown }).data ?? messagesCheck) as Array<SessionMessage>
-              const currentMsgCount = msgs.length
-              const assistantMsgs = msgs.filter((m) => m.info?.role === "assistant")
-
-              const signalDoneResult = findSignalDoneResult(msgs)
-              if (signalDoneResult !== null) {
-                log("[delegate_task] signal_done detected", { sessionID, pollCount })
-                subagentSessions.delete(sessionID)
-                const duration = formatDuration(startTime)
-                const tokens = await getsessiontokenusage(client as any, sessionID)
-                const total = tokens ? tokens.input + tokens.output : 0
-                const tokenline = tokens ? `TOKENS: ${tokens.input} in / ${tokens.output} out / ${total} total` : ""
-                if (toastManager && taskId) {
-                  toastManager.showCompletionToast({
-                    id: taskId,
-                    description: args.description,
-                    agent: agentToUse,
-                    duration,
-                    tokens: tokens ?? undefined,
-                    result: signalDoneResult.slice(0, 200),
-                  })
-                }
-                return `⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(agentToUse)}
+              return `⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(agentToUse)}
 TASK: ${args.description}
 ${tokenline}
 DURATION: ${duration}
@@ -780,68 +660,26 @@ SESSION ID: ${sessionID}
 
 ---
 
-${formatOutputByPreference(signalDoneResult, outputFormat)}`
-              }
+${formatOutputByPreference(pollResult.signalDoneResult, outputFormat)}`
+            }
 
-              // debug: log message state every 10 polls
-              if (pollCount % 10 === 0) {
-                log("[delegate_task] message check", { 
-                  sessionID, 
-                  totalMsgs: currentMsgCount, 
-                  assistantMsgs: assistantMsgs.length,
-                  status: sessionStatus?.type ?? "unknown",
-                  msgRoles: msgs.map((m: any) => m.info?.role).filter(Boolean)
-                })
-              }
+            if (pollClassification === "cancelled") {
+              if (toastManager && taskId) toastManager.removeTask(taskId)
+              return `Task aborted.\n\nSession ID: ${sessionID}`
+            }
 
-              // validate output using pure function (no extra api call)
-              const hasValidOutput = hasValidOutputFromMessages(msgs as any)
-
-              // No-progress timeout: catches rate limiting regardless of session status
-              if (currentMsgCount !== lastMsgCount) {
-                lastMsgChangeTime = Date.now()
-              } else {
-                const timeSinceLastProgress = Date.now() - lastMsgChangeTime
-                if (!hasValidOutput && timeSinceLastProgress >= WORKING_NO_PROGRESS_TIMEOUT_MS) {
-                  log("[delegate_task] No progress timeout", { 
-                    sessionID, timeSinceLastProgress, currentMsgCount, status: sessionStatus?.type ?? "undefined", hasValidOutput 
-                  })
-                  throw new Error(`No progress for 10min and no valid output - possible rate limiting or API stall`)
-                }
-              }
-
-              // 5-minute checkpoint: if session idle without signal_done, mark for retry
-              // (signal_done is already checked every poll at line 703, so no need to check again)
-              const elapsed = Date.now() - pollStart
-              if (!checkpointChecked && elapsed >= CHECKPOINT_TIME_MS) {
-                checkpointChecked = true
-                log("[delegate_task] 5-minute checkpoint reached", { sessionID, status: sessionStatus?.type })
-                
-                if (sessionStatus?.type === "idle" || !sessionStatus) {
-                  log("[delegate_task] Session idle at checkpoint without signal_done - marking for retry", { sessionID })
-                  needsRetry = true
-                  break
-                }
-                log("[delegate_task] Session still busy at checkpoint - continuing", { sessionID, status: sessionStatus?.type })
-              }
-              
-              // Error loop detection: check if busy session is stuck in error loop
-              if (sessionStatus?.type !== "idle" && elapsed - lastErrorLoopCheck >= ERROR_LOOP_CHECK_INTERVAL_MS) {
-                lastErrorLoopCheck = elapsed
-                const errorLoop = detectErrorLoop(msgs)
-                if (errorLoop.detected) {
-                  log("[delegate_task] Error loop detected", { sessionID, reason: errorLoop.reason })
-                  if (toastManager && taskId) toastManager.removeTask(taskId)
-                  subagentSessions.delete(sessionID)
-                  const recentOutput = errorLoop.recentOutputs?.join("\n---\n") ?? "(no output)"
-                  return `⚠️ ERROR LOOP DETECTED
+            if (pollResult.status === "error_loop") {
+              if (toastManager && taskId) toastManager.removeTask(taskId)
+              subagentSessions.delete(sessionID)
+              const recentOutput = pollResult.errorLoop?.recentOutputs?.join("\n---\n") ?? "(no output)"
+              return `⚠️ ERROR LOOP DETECTED
 
 ⚡ ${capitalizeAgent(parentAgentName)} → ${capitalizeAgent(agentToUse)}
 TASK: ${args.description}
 
 ❌ Subagent appears stuck in an error loop.
 
-**Reason**: ${errorLoop.reason}
+**Reason**: ${pollResult.errorLoop?.reason ?? "Unknown"}
 **Session ID**: ${sessionID}
 
 **Recent outputs**:
@@ -855,18 +693,15 @@ ${recentOutput}
 3. Review the error and fix the underlying issue
 
 This task requires manual intervention.`
-                }
-              }
-              
-              lastMsgCount = currentMsgCount
             }
 
-            // MAX_POLL_TIME_MS disabled: other timeout mechanisms (no-progress, checkpoint, error loop)
-            // cover all failure modes. Hard ceiling was killing legitimate long-running agents.
-            // if (Date.now() - pollStart >= MAX_POLL_TIME_MS) {
-            //   log("[delegate_task] Poll timeout reached", { sessionID, pollCount, lastMsgCount })
-            //   needsRetry = true
-            // }
+            if (pollResult.status === "no_progress_timeout") {
+              throw new Error("No progress for 10min and no valid output - possible rate limiting or API stall")
+            }
+
+            if (pollClassification === "retryable_failure") {
+              needsRetry = true
+            }
 
             if (needsRetry && attempt < MAX_RETRY_ATTEMPTS) {
               log("[delegate_task] Retrying delegation after checkpoint failure", { sessionID, attempt })
@@ -1031,4 +866,3 @@ ${formattedOutput}`
     },
   })
 }
-

@@ -3,6 +3,8 @@ import { createEmptyTokenUsage, addTokenUsage, calculateCost, MODEL_PRICING } fr
 
 export class TokenAnalyticsManager {
   private sessions: Map<string, SessionTokenAnalytics> = new Map()
+  private lastReportedUsage: Map<string, TokenUsage> = new Map()
+  private processedMessageCounts: Map<string, number> = new Map()
 
   startSession(sessionID: string, parentSessionID?: string, agent?: string, model?: string): void {
     if (this.sessions.has(sessionID)) return
@@ -35,8 +37,12 @@ export class TokenAnalyticsManager {
     provider: string,
     tokens: { input?: number; output?: number; reasoning?: number; cache?: { read?: number; write?: number } }
   ): void {
-    const session = this.sessions.get(sessionID)
-    if (!session) return
+    let session = this.sessions.get(sessionID)
+    if (!session) {
+      // Auto-create session if not yet tracked (session.created event may have been missed)
+      this.startSession(sessionID, undefined, agent, model)
+      session = this.sessions.get(sessionID)!
+    }
 
     const usage: TokenUsage = {
       input: tokens.input || 0,
@@ -70,13 +76,26 @@ export class TokenAnalyticsManager {
   }
 
   recordToolCall(sessionID: string, agent: string): void {
-    const session = this.sessions.get(sessionID)
-    if (!session) return
-
-    const record = session.agents.get(agent)
-    if (record) {
-      record.toolCalls++
+    let session = this.sessions.get(sessionID)
+    if (!session) {
+      this.startSession(sessionID, undefined, agent)
+      session = this.sessions.get(sessionID)!
     }
+
+    let record = session.agents.get(agent)
+    if (!record) {
+      record = {
+        agent,
+        model: "unknown",
+        provider: "unknown",
+        usage: createEmptyTokenUsage(),
+        messageCount: 0,
+        toolCalls: 0,
+        startTime: Date.now(),
+      }
+      session.agents.set(agent, record)
+    }
+    record.toolCalls++
   }
 
   endSession(sessionID: string): void {
@@ -168,8 +187,50 @@ export class TokenAnalyticsManager {
     return nodes
   }
 
+  getProcessedMessageCount(sessionID: string): number {
+    return this.processedMessageCounts.get(sessionID) ?? 0
+  }
+
+  setProcessedMessageCount(sessionID: string, count: number): void {
+    this.processedMessageCounts.set(sessionID, count)
+  }
+
+  getActivityUsage(sessionID: string): TokenUsage {
+    const session = this.sessions.get(sessionID)
+    if (!session) return createEmptyTokenUsage()
+    const lastReported = this.lastReportedUsage.get(sessionID) ?? createEmptyTokenUsage()
+    return {
+      input: session.totalUsage.input - lastReported.input,
+      output: session.totalUsage.output - lastReported.output,
+      reasoning: session.totalUsage.reasoning - lastReported.reasoning,
+      cacheRead: session.totalUsage.cacheRead - lastReported.cacheRead,
+      cacheWrite: session.totalUsage.cacheWrite - lastReported.cacheWrite,
+    }
+  }
+
+  getActivityCost(sessionID: string): number {
+    const activityUsage = this.getActivityUsage(sessionID)
+    const session = this.sessions.get(sessionID)
+    if (!session) return 0
+    const firstAgent = session.agents.values().next().value
+    const model = firstAgent?.model ?? "unknown"
+    return calculateCost(activityUsage, model)
+  }
+
+  markReported(sessionID: string): void {
+    const session = this.sessions.get(sessionID)
+    if (!session) return
+    this.lastReportedUsage.set(sessionID, { ...session.totalUsage })
+  }
+
+  getParentSessionID(sessionID: string): string | undefined {
+    return this.sessions.get(sessionID)?.parentSessionID
+  }
+
   clear(sessionID: string): void {
     this.sessions.delete(sessionID)
+    this.lastReportedUsage.delete(sessionID)
+    this.processedMessageCounts.delete(sessionID)
     
     for (const [id, session] of this.sessions.entries()) {
       if (session.parentSessionID === sessionID) {

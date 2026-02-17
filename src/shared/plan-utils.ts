@@ -1,5 +1,8 @@
-import { existsSync, readdirSync, statSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
+
+const IMPLEMENTATION_FILE_EXTENSION_REGEX = /\.(tsx|ts|jsx|js|py|go|rs|java|cpp|cs|kt|swift|php|rb|c)\b/i
+const IMPLEMENTATION_FILE_REF_REGEX = /([A-Za-z0-9_./-]+\.(?:tsx|ts|jsx|js|py|go|rs|java|cpp|cs|kt|swift|php|rb|c))/gi
 
 /**
  * Active Plan Mechanism
@@ -80,4 +83,79 @@ export function getActivePlanName(workspaceRoot: string): string | null {
   // Extract filename from full path
   const parts = activePlan.split(/[/\\]/)
   return parts[parts.length - 1]
+}
+
+/**
+ * Determine whether a plan content includes implementation-code scope.
+ *
+ * Used for conditional verification gates (for example Elijah --verify-plan).
+ */
+export function isImplementationPlanContent(planContent: string): boolean {
+  return IMPLEMENTATION_FILE_EXTENSION_REGEX.test(planContent)
+}
+
+export function extractImplementationFileRefsFromPlanContent(planContent: string): string[] {
+  const refs = new Set<string>()
+  for (const match of planContent.matchAll(IMPLEMENTATION_FILE_REF_REGEX)) {
+    const raw = (match[1] ?? "").trim()
+    if (!raw) continue
+    const cleaned = raw.replace(/^[`'"(]+|[`'"),.:;]+$/g, "")
+    if (!cleaned) continue
+    refs.add(cleaned)
+  }
+  return Array.from(refs)
+}
+
+export function getLatestImplementationFileMtimeFromPlan(workspaceRoot: string): number | null {
+  const activePlanPath = getActivePlan(workspaceRoot)
+  if (!activePlanPath || !existsSync(activePlanPath)) {
+    return null
+  }
+
+  let content = ""
+  try {
+    content = readFileSync(activePlanPath, "utf8")
+  } catch {
+    return null
+  }
+
+  const refs = extractImplementationFileRefsFromPlanContent(content)
+  if (refs.length === 0) {
+    return null
+  }
+
+  let latest: number | null = null
+  for (const ref of refs) {
+    const absolute = join(workspaceRoot, ref)
+    if (!existsSync(absolute)) continue
+    try {
+      const mtime = statSync(absolute).mtimeMs
+      if (latest === null || mtime > latest) {
+        latest = mtime
+      }
+    } catch {
+      // ignore unreadable file entries
+    }
+  }
+
+  return latest
+}
+
+/**
+ * Determine whether the active plan requires implementation verification.
+ *
+ * Returns false when no active plan exists or the plan cannot be read.
+ */
+export function isActivePlanImplementation(workspaceRoot: string): boolean {
+  const activePlanPath = getActivePlan(workspaceRoot)
+  if (!activePlanPath || !existsSync(activePlanPath)) {
+    return false
+  }
+
+  try {
+    const content = readFileSync(activePlanPath, "utf8")
+    return isImplementationPlanContent(content)
+  } catch {
+    return false
+  }
 }

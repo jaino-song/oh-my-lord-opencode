@@ -1,5 +1,14 @@
 import { describe, test, expect } from "bun:test"
-import { inferAgentFromTodoContent } from "./tools"
+import {
+  inferAgentFromTodoContent,
+  extractRequiredSkillsFromTodoContent,
+  extractContractRefsFromTodoContent,
+  extractFileRefsFromTodoContent,
+  extractTodoAnchorIdsFromTodoContent,
+  parseMachineReadableContractSpec,
+  parseMachineReadableContractSpecWithValidation,
+  parsePlanContractBlocks,
+} from "./tools"
 import type { ExecutePhaseArgs } from "./types"
 
 describe("execute-phase skills parameter", () => {
@@ -123,5 +132,214 @@ describe("execute-phase agent inference", () => {
 
     // #then
     expect(agent).toBe("Paul-Junior")
+  })
+})
+
+describe("execute-phase task skill parsing", () => {
+  test("should parse explicit Skills metadata", () => {
+    // #given
+    const todoContent = "EXEC:: [P1.1] Build hero section (Agent: frontend-ui-ux-engineer) (Skills: frontend-design, ui-ux-pro-max)"
+
+    // #when
+    const skills = extractRequiredSkillsFromTodoContent(todoContent)
+
+    // #then
+    expect(skills).toEqual(["frontend-design", "ui-ux-pro-max"])
+  })
+
+  test("should parse Required Skills metadata alias", () => {
+    // #given
+    const todoContent = "EXEC:: [P2.1] Improve performance (Agent: frontend-ui-ux-engineer) (Required Skills: vercel-react-best-practices)"
+
+    // #when
+    const skills = extractRequiredSkillsFromTodoContent(todoContent)
+
+    // #then
+    expect(skills).toEqual(["vercel-react-best-practices"])
+  })
+
+  test("should parse explicit none skills", () => {
+    // #given
+    const todoContent = "EXEC:: [P3.1] Run full test suite (Agent: Joshua) (Skills: none)"
+
+    // #when
+    const skills = extractRequiredSkillsFromTodoContent(todoContent)
+
+    // #then
+    expect(skills).toEqual([])
+  })
+
+  test("should return undefined when no skills metadata exists", () => {
+    // #given
+    const todoContent = "EXEC:: [P4.1] Implement API endpoint (Agent: Paul-Junior)"
+
+    // #when
+    const skills = extractRequiredSkillsFromTodoContent(todoContent)
+
+    // #then
+    expect(skills).toBeUndefined()
+  })
+})
+
+describe("execute-phase task contract metadata parsing", () => {
+  test("should parse contract refs", () => {
+    // #given
+    const todoContent = "EXEC:: [P1.1] Build hero section (Agent: frontend-ui-ux-engineer) (Contracts: FC-HERO, FC-CARD)"
+
+    // #when
+    const contracts = extractContractRefsFromTodoContent(todoContent)
+
+    // #then
+    expect(contracts).toEqual(["FC-HERO", "FC-CARD"])
+  })
+
+  test("should parse file refs", () => {
+    // #given
+    const todoContent = "EXEC:: [P1.2] Implement login form (Files: src/app/login/page.tsx, src/components/login-form.tsx)"
+
+    // #when
+    const files = extractFileRefsFromTodoContent(todoContent)
+
+    // #then
+    expect(files).toEqual(["src/app/login/page.tsx", "src/components/login-form.tsx"])
+  })
+
+  test("should parse TODO anchor IDs", () => {
+    // #given
+    const todoContent = "EXEC:: [P1.3] Resolve deferred behavior (TODO-IDs: TD-LOGIN-001, TD-LOGIN-002)"
+
+    // #when
+    const todoIds = extractTodoAnchorIdsFromTodoContent(todoContent)
+
+    // #then
+    expect(todoIds).toEqual(["TD-LOGIN-001", "TD-LOGIN-002"])
+  })
+
+  test("should normalize none values for metadata", () => {
+    // #given
+    const todoContent = "EXEC:: [P3.1] Run checks (Contracts: none) (Files: none) (TODO-IDs: none)"
+
+    // #when
+    const contracts = extractContractRefsFromTodoContent(todoContent)
+    const files = extractFileRefsFromTodoContent(todoContent)
+    const todoIds = extractTodoAnchorIdsFromTodoContent(todoContent)
+
+    // #then
+    expect(contracts).toEqual([])
+    expect(files).toEqual([])
+    expect(todoIds).toEqual([])
+  })
+})
+
+describe("execute-phase plan file contract parsing", () => {
+  test("should parse file contracts by heading id", () => {
+    // #given
+    const planContent = `# Example Plan
+
+## Blueprint
+
+### File Contracts
+
+#### FC-LOGIN-FORM
+**File**: \`src/components/login-form.tsx\`
+1. Render inputs
+
+#### FC-AUTH-SERVICE
+**File**: \`src/services/auth.ts\`
+1. Implement login call
+
+### UI Planning Contract
+- Keep spacing consistent`
+
+    // #when
+    const contracts = parsePlanContractBlocks(planContent)
+
+    // #then
+    expect(contracts.size).toBe(2)
+    expect(contracts.get("FC-LOGIN-FORM")).toContain("login-form.tsx")
+    expect(contracts.get("FC-AUTH-SERVICE")).toContain("auth.ts")
+  })
+
+  test("should parse machine-readable contracts-v1 block", () => {
+    // #given
+    const planContent = `# Plan
+
+## Blueprint
+
+### File Contracts
+
+
+\`\`\`json
+{
+  "schemaVersion": "contracts-v1",
+  "contracts": [
+    {
+      "id": "FC-LOGIN-FORM",
+      "files": ["src/components/login-form.tsx"],
+      "todoIds": ["TD-LOGIN-001"],
+      "acceptance": {
+        "requiredFilesExist": ["src/components/login-form.tsx"],
+        "frontendConformance": true
+      }
+    }
+  ]
+}
+\`\`\`
+`
+
+    // #when
+    const spec = parseMachineReadableContractSpec(planContent)
+
+    // #then
+    expect(spec?.schemaVersion).toBe("contracts-v1")
+    expect(spec?.contracts).toHaveLength(1)
+    expect(spec?.contracts[0].id).toBe("FC-LOGIN-FORM")
+    expect(spec?.contracts[0].acceptance?.frontendConformance).toBe(true)
+  })
+
+  test("should ignore non-schema json blocks", () => {
+    // #given
+    const planContent = `# Plan
+\`\`\`json
+{ "foo": "bar" }
+\`\`\`
+`
+
+    // #when
+    const spec = parseMachineReadableContractSpec(planContent)
+
+    // #then
+    expect(spec).toBeUndefined()
+  })
+
+  test("should return field-level schema errors for malformed contracts-v1 block", () => {
+    // #given
+    const planContent = `# Plan
+\`\`\`json
+{
+  "schemaVersion": "contracts-v1",
+  "contracts": [
+    {
+      "id": "",
+      "files": ["src/app/page.tsx"],
+      "acceptance": {
+        "requiredPatterns": [
+          { "file": "", "regex": "(" }
+        ]
+      }
+    }
+  ]
+}
+\`\`\`
+`
+
+    // #when
+    const parsed = parseMachineReadableContractSpecWithValidation(planContent)
+
+    // #then
+    expect(parsed.spec).toBeUndefined()
+    expect(parsed.candidateFound).toBe(true)
+    expect(parsed.errors.length).toBeGreaterThan(0)
+    expect(parsed.errors.some((e) => e.includes("contracts.0.id"))).toBe(true)
   })
 })

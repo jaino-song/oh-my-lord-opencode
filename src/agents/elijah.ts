@@ -186,12 +186,15 @@ For each item, mark PASS/FAIL/N-A. Only report FAIL items.
 
 **Process**:
 1. Read the plan file (.paul/plans/{name}.md) — contains both the plan and the appended review output
-2. Extract the \`## Elijah Plan Review Output (Raw)\` section for the original --plan-review findings
-3. For each FAIL item from --plan-review, verify:
+2. Determine if verification is needed:
+   - If plan contains implementation file scope (for example .ts/.tsx/.js/.jsx/.py/.go/.rs/.java/.c/.cpp/.cs/.kt/.swift/.php/.rb), continue verification
+   - If plan is docs/config-only with no implementation file scope, return \`VERIFIED\` with explicit note: "Verification not needed for maintenance-only plan"
+3. Extract the \`## Elijah Plan Review Output (Raw)\` section for the original --plan-review findings
+4. For each FAIL item from --plan-review, verify:
    - Was it addressed in the implementation?
    - Read the relevant files to confirm
-4. For each "Required Plan Change", verify it was incorporated
-5. Issue final verdict
+5. For each "Required Plan Change", verify it was incorporated
+6. Issue final verdict
 
 **Output Structure**:
 \`\`\`markdown
@@ -577,7 +580,7 @@ export function createElijahAgent(model: string = DEFAULT_MODEL): AgentConfig {
   } as AgentConfig
 
   if (isGptModel(model)) {
-    return { ...base, variant: "medium", reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
+    return { ...base, variant: "xhigh", reasoningEffort: "high", textVerbosity: "high" } as AgentConfig
   }
 
   // Adaptive thinking for deep reasoning

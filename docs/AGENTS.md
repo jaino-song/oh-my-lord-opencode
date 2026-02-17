@@ -46,6 +46,15 @@ Called by planner-paul during planning phase (v4.2: always Elijah + Ezra + Thoma
 | Thomas (TDD Plan Consultant) | thomas | anthropic/claude-sonnet-4-5 | **Always used** - TDD plan audit |
 | Timothy (Implementation Plan Reviewer) | timothy | anthropic/claude-sonnet-4-5 | Quick plan review (used by Paul, not planner-paul) |
 
+Planner specifics for frontend-heavy plans:
+- planner-paul now requires a `Blueprint` section (file tree + per-file contracts) for UI/frontend scope.
+- planner-paul requires a `UI Planning Contract` section for frontend scope (layout/responsive/animation/skeleton/data-component conventions).
+- frontend tasks in plans must include `Required Skills` mapped from situation (for example `frontend-design`, `ui-ux-pro-max`, `nextjs-app-router-patterns`).
+- Ezra validates frontend-plan compliance when UI/frontend scope exists.
+
+Execution verification note:
+- For implementation plans, final completion requires a recent Elijah `--verify-plan` approval (recorded via delegation notification/approval state). Docs/config-only plans skip this gate.
+
 ---
 
 ## Execution Specialists

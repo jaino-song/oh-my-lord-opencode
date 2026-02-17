@@ -89,14 +89,10 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
       const toolName = input.tool
 
       if (TASK_TOOLS.includes(toolName)) {
-        // planner-paul no longer delegates to Paul/worker-paul (user switches manually).
-        // This check remains for backward compatibility if delegation is re-enabled.
+        // Keep delegate_task prompts untouched.
+        // planner-paul delegations often require write-capable subagents (e.g. Solomon writing test specs).
         if (toolName.toLowerCase() === "delegate_task") {
-          const targetAgent = (output.args.agent || output.args.subagent_type || output.args.name) as string | undefined
-          const normalizedTarget = targetAgent?.trim().toLowerCase()
-          if (normalizedTarget === "paul" || normalizedTarget === "worker-paul") {
-            return
-          }
+          return
         }
 
         const prompt = output.args.prompt as string | undefined
@@ -228,5 +224,4 @@ export function createPlannerMdOnlyHook(ctx: PluginInput) {
     },
   }
 }
-
 

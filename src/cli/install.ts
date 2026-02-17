@@ -52,7 +52,7 @@ function formatConfigSummary(config: InstallConfig): string {
 
   const paulModel = config.hasClaude ? "claude-opus-4-5" : (config.hasCopilot ? "github-copilot/claude-opus-4.5" : "big-pickle")
   const elijahModel = config.hasChatGPT ? "gpt-5.2" : (config.hasCopilot ? "github-copilot/gpt-5.2" : (config.hasClaude ? "claude-opus-4-6" : "big-pickle"))
-  const librarianModel = "zai-coding-plan/glm-4.7"
+const librarianModel = "zai-coding-plan/glm-4.7"
   const frontendModel = config.hasGemini ? "antigravity-gemini-3-pro-high" : (config.hasClaude ? "claude-opus-4-5" : "big-pickle")
 
   lines.push(`  ${SYMBOLS.bullet} Paul          ${SYMBOLS.arrow} ${color.cyan(paulModel)}`)

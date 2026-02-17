@@ -442,3 +442,54 @@ describe("Paul-Junior agent override", () => {
     }
   })
 })
+
+describe("execute_phase config schema", () => {
+  test("accepts valid frontend conformance modes", () => {
+    // #given
+    const config = {
+      execute_phase: {
+        frontend_conformance_mode: "strict",
+      },
+    }
+
+    // #when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // #then
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.execute_phase?.frontend_conformance_mode).toBe("strict")
+    }
+  })
+
+  test("defaults execute_phase frontend conformance mode to normal", () => {
+    // #given
+    const config = {
+      execute_phase: {},
+    }
+
+    // #when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // #then
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.execute_phase?.frontend_conformance_mode).toBe("normal")
+    }
+  })
+
+  test("rejects invalid execute_phase frontend conformance mode", () => {
+    // #given
+    const config = {
+      execute_phase: {
+        frontend_conformance_mode: "aggressive",
+      },
+    }
+
+    // #when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // #then
+    expect(result.success).toBe(false)
+  })
+})

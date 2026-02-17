@@ -3,7 +3,8 @@ import { basename } from "node:path"
 import { log } from "../../shared/logger"
 import { markFileDirty, clearDirtyFiles, hasDirtyFiles, getDirtyFiles } from "./dirty-file-tracker"
 import { requiresTDD, getTDDRequirementReason } from "./constants"
-import { hasRecentApproval } from "../hierarchy-enforcer/approval-state"
+import { getLatestApprovalTimestamp, hasRecentApproval } from "../hierarchy-enforcer/approval-state"
+import { getActivePlanName, getLatestImplementationFileMtimeFromPlan, isActivePlanImplementation } from "../../shared/plan-utils"
 
 const HOOK_NAME = "tdd-enforcement"
 const WRITE_EDIT_TOOLS = ["mcp_write", "mcp_edit"]
@@ -69,6 +70,21 @@ function isCompletingTodo(args: Record<string, unknown>): boolean {
   return false
 }
 
+function isFinalTodoCompletion(args: Record<string, unknown>): boolean {
+  const todos = (args.todos as Array<{ status?: string }>) ?? []
+  if (!Array.isArray(todos) || todos.length === 0) return false
+  return todos.every((t) => {
+    const status = (t.status ?? "").toLowerCase()
+    return status === "completed" || status === "done" || status === "cancelled"
+  })
+}
+
+function getElijahVerificationGuidance(workspaceRoot: string): string {
+  const activePlanName = getActivePlanName(workspaceRoot)
+  const planPathHint = activePlanName ? `.paul/plans/${activePlanName}` : ".paul/plans/{name}.md"
+  return `delegate_task(subagent_type="elijah", prompt="--verify-plan ${planPathHint}\\n\\nRead the 'Elijah Plan Review Output (Raw)' section at the bottom of the plan file for the original planning-phase review.", run_in_background=false, output_format="full")`
+}
+
 const callToFilePathMap = new Map<string, string>()
 
 export function createTddEnforcementHook(ctx: PluginInput) {
@@ -93,7 +109,38 @@ ${dirtyFiles.map(f => `- ${f}`).join("\n")}
 **Requirement**: You MUST run Joshua (Test Runner) to verify changes before completing the todo.
 Use: \`delegate_task(subagent_type="Joshua (Test Runner)", prompt="Run tests")\`
 `
-             throw new Error(errorMsg)
+              throw new Error(errorMsg)
+          }
+
+          if (isFinalTodoCompletion(output.args) && isActivePlanImplementation(ctx.directory)) {
+            const hasRecentElijahVerification = hasRecentApproval(ctx.directory, "elijah", 1200000)
+            if (!hasRecentElijahVerification) {
+              const verifyCommand = getElijahVerificationGuidance(ctx.directory)
+              const errorMsg = `
+⛔ **PLAN VERIFICATION BLOCK**
+
+You are finishing all todos for an implementation plan without a recent Elijah verification.
+
+**Requirement**: Run Elijah --verify-plan and resolve CONCERNS_REMAIN before final completion.
+Use: \`${verifyCommand}\`
+`
+              throw new Error(errorMsg)
+            }
+
+            const latestElijahApproval = getLatestApprovalTimestamp(ctx.directory, "elijah", "approved")
+            const latestImplementationChange = getLatestImplementationFileMtimeFromPlan(ctx.directory)
+            if (latestElijahApproval !== null && latestImplementationChange !== null && latestElijahApproval <= latestImplementationChange) {
+              const verifyCommand = getElijahVerificationGuidance(ctx.directory)
+              const errorMsg = `
+⛔ **PLAN VERIFICATION STALE**
+
+Your latest Elijah verification is older than implementation file changes in the active plan scope.
+
+**Requirement**: Re-run Elijah --verify-plan after code changes and resolve CONCERNS_REMAIN.
+Use: \`${verifyCommand}\`
+`
+              throw new Error(errorMsg)
+            }
           }
         }
         return

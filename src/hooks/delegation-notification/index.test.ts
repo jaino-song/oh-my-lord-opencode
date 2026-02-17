@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, spyOn, mock } from "bun:test"
+import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test"
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
@@ -471,6 +471,46 @@ describe("delegation-notification", () => {
       const state = loadApprovalState(tempDir)
       expect(state.approvals.some(a => a.approver === "Thomas")).toBe(true)
     })
+
+    test("should record Elijah approval on verify-plan VERIFIED verdict", async () => {
+      // #given
+      const { createDelegationNotificationHook } = await import("./index")
+      const { loadApprovalState } = await import("../hierarchy-enforcer/approval-state")
+      const hook = createDelegationNotificationHook(mockCtx as any)
+
+      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "call-21b" }
+      const output = {
+        args: { subagent_type: "elijah" },
+        output: "--verify-plan .paul/plans/feature.md\n\n## Elijah Post-Implementation Verification\n\n### Verdict: VERIFIED"
+      }
+
+      // #when
+      await hook["tool.execute.after"](input, output)
+
+      // #then
+      const state = loadApprovalState(tempDir)
+      expect(state.approvals.some(a => a.approver === "Elijah" && a.status === "approved")).toBe(true)
+    })
+
+    test("should record Elijah rejection on verify-plan CONCERNS_REMAIN verdict", async () => {
+      // #given
+      const { createDelegationNotificationHook } = await import("./index")
+      const { loadApprovalState } = await import("../hierarchy-enforcer/approval-state")
+      const hook = createDelegationNotificationHook(mockCtx as any)
+
+      const input = { tool: "delegate_task", sessionID: TEST_SESSION_ID, callID: "call-21c" }
+      const output = {
+        args: { subagent_type: "Elijah (Deep Reasoning Advisor)" },
+        output: "## Elijah Post-Implementation Verification\n\n### Verdict: CONCERNS_REMAIN"
+      }
+
+      // #when
+      await hook["tool.execute.after"](input, output)
+
+      // #then
+      const state = loadApprovalState(tempDir)
+      expect(state.approvals.some(a => a.approver === "Elijah" && a.status === "rejected")).toBe(true)
+    })
   })
 
   describe("edge cases", () => {
@@ -483,7 +523,7 @@ describe("delegation-notification", () => {
       const output = { args: {}, output: "file contents" }
 
       // #when / #then
-      await expect(hook["tool.execute.after"](input, output)).resolves.toBeUndefined()
+      await hook["tool.execute.after"](input, output)
       expect(mockCtx.client.tui.showToast).not.toHaveBeenCalled()
     })
 
@@ -515,7 +555,7 @@ describe("delegation-notification", () => {
       const output = { args: { subagent_type: "explore" }, output: "" }
 
       // #when / #then
-      await expect(hook["tool.execute.after"](input, output)).resolves.toBeUndefined()
+      await hook["tool.execute.after"](input, output)
     })
   })
 })

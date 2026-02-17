@@ -1,5 +1,5 @@
 export * from "./types"
 export { TokenAnalyticsManager } from "./manager"
 export { createTokenAnalyticsHook } from "./hook"
-export { generateTokenReport } from "./reporter"
+export { generateTokenReport, generateCompactTokenSummary, generateIdleTokenSummary, generateCompactionTokenSummary } from "./reporter"
 export { createTokenReportTool } from "./tool"

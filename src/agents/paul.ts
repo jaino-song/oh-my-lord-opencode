@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AvailableAgent, AvailableSkill } from "./paul-prompt-builder"
 import type { CategoryConfig } from "../config/schema"
-import { createAgentToolRestrictions, type PermissionValue } from "../shared/permission-compat"
+import { createAgentToolRestrictions } from "../shared/permission-compat"
 
 export interface OrchestratorContext {
   model?: string
@@ -127,7 +127,7 @@ PHASE EXECUTION (PRIMARY METHOD)
 
 EXEC:: todos format:
 - Phase marker: \`EXEC:: [P1] === PHASE 1: {Title} (Parallel) ===\`
-- Task: \`EXEC:: [P1.1] {Task} (Agent: {hint})\`
+- Task: \`EXEC:: [P1.1] {Task} (Agent: {hint}) (Skills: {skill-a, skill-b | none}) (Contracts: {contract-a, contract-b | none}) (Files: {file-a, file-b | none}) (TODO-IDs: {todo-id-a, todo-id-b | none})\`
 
 **Workflow:**
 1. \`execute_phase({ phase: 1 })\` → System runs all P1.x tasks

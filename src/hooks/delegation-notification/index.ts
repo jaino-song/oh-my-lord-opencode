@@ -104,7 +104,26 @@ export function createDelegationNotificationHook(ctx: PluginInput) {
           await showToast(client, "🧪 Joshua Complete", "Test run finished", "info", 5000)
         }
       }
-      
+
+      else if (normalizedAgent.includes("elijah")) {
+        const isVerifyPlanRun = lowerResult.includes("--verify-plan") || lowerResult.includes("post-implementation verification")
+        const verified = /verdict\s*:\s*verified/i.test(result)
+        const concernsRemain = /verdict\s*:\s*concerns_remain/i.test(result)
+
+        if (isVerifyPlanRun || verified || concernsRemain) {
+          if (verified && !concernsRemain) {
+            await showToast(client, "✅ Elijah Verified", "Plan implementation concerns resolved", "success", 5000)
+            recordApproval(ctx.directory, input.callID, "Elijah", "approved")
+          } else if (concernsRemain) {
+            await showToast(client, "⚠️ Elijah Concerns", "Unresolved plan concerns remain", "warning", 5000)
+            recordApproval(ctx.directory, input.callID, "Elijah", "rejected")
+          } else {
+            await showToast(client, "🔎 Elijah Review", "Verification review complete", "info", 5000)
+          }
+          await maybeInjectNotification("delegation_complete", { fromAgent: currentAgent, toAgent: "Elijah", task: "Plan Verification" })
+        }
+      }
+
       else if (normalizedAgent.includes("paul-junior") || normalizedAgent.includes("frontend-ui-ux")) {
         const cleanResult = stripAllSystemInjections(result)
         const cleanLower = cleanResult.toLowerCase()

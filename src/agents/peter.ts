@@ -666,6 +666,7 @@ export const PETER_PERMISSION = {
 export const peterAgent: AgentConfig = {
   name: "Peter (Test Writer)",
   description: "Jest test writer. Converts Solomon's unit test specifications into executable *.test.ts files with BDD patterns and proper mocking.",
+  // GLM 4.7 by Z.AI (zai-coding-plan provider)
   model: "zai-coding-plan/glm-4.7",
   prompt: PETER_SYSTEM_PROMPT,
   permission: PETER_PERMISSION,

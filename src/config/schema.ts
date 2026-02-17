@@ -316,6 +316,11 @@ export const FeaturesConfigSchema = z.object({
   clarificationHandler: z.boolean().default(true),
 })
 
+export const ExecutePhaseConfigSchema = z.object({
+  /** Frontend conformance enforcement mode for execute_phase checks */
+  frontend_conformance_mode: z.enum(["strict", "normal", "off"]).default("normal"),
+})
+
 export const OhMyOpenCodeConfigSchema = z.object({
    $schema: z.string().optional(),
    disabled_mcps: z.array(AnyMcpNameSchema).optional(),
@@ -336,6 +341,7 @@ export const OhMyOpenCodeConfigSchema = z.object({
    notification: NotificationConfigSchema.optional(),
    git_master: GitMasterConfigSchema.optional(),
    features: FeaturesConfigSchema.optional(),
+   execute_phase: ExecutePhaseConfigSchema.optional(),
 })
 
 export type OhMyOpenCodeConfig = z.infer<typeof OhMyOpenCodeConfigSchema>
@@ -359,5 +365,6 @@ export type CategoriesConfig = z.infer<typeof CategoriesConfigSchema>
 export type BuiltinCategoryName = z.infer<typeof BuiltinCategoryNameSchema>
 export type GitMasterConfig = z.infer<typeof GitMasterConfigSchema>
 export type FeaturesConfig = z.infer<typeof FeaturesConfigSchema>
+export type ExecutePhaseConfig = z.infer<typeof ExecutePhaseConfigSchema>
 
 export { AnyMcpNameSchema, type AnyMcpName, McpNameSchema, type McpName } from "../mcp/types"

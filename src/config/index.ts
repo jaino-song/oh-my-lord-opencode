@@ -9,6 +9,7 @@ export {
    PaulAgentConfigSchema,
    ExperimentalConfigSchema,
    RalphLoopConfigSchema,
+   ExecutePhaseConfigSchema,
 } from "./schema"
 
 export type {
@@ -23,4 +24,5 @@ export type {
    ExperimentalConfig,
    DynamicContextPruningConfig,
    RalphLoopConfig,
+   ExecutePhaseConfig,
 } from "./schema"

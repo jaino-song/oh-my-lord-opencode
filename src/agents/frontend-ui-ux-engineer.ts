@@ -174,7 +174,7 @@ This signals completion to the orchestrator. Do NOT output anything after callin
   }
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "high" } as AgentConfig
+    return { ...base, variant: "xhigh", reasoningEffort: "high" } as AgentConfig
   }
 
   return base

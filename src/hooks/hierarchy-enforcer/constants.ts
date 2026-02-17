@@ -21,10 +21,15 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
   // "Timothy (Implementation Plan Reviewer)": [],
 
   "Solomon (TDD Planner)": ["explore", "librarian"],
+  "solomon": ["explore", "librarian"],
   "Thomas (TDD Plan Consultant)": ["explore", "librarian"],
+  "thomas": ["explore", "librarian"],
   "Nathan (Request Analyst)": ["explore", "librarian"],
+  "nathan": ["explore", "librarian"],
   "Ezra (Plan Reviewer)": ["explore", "librarian"],
+  "ezra": ["explore", "librarian"],
   "Elijah (Deep Reasoning Advisor)": ["explore", "librarian"],
+  "elijah": ["explore", "librarian"],
 
   "Paul": [
     "Joshua (Test Runner)",
@@ -42,7 +47,9 @@ export const AGENT_RELATIONSHIPS: Record<string, string[]> = {
   ],
 
   "Joshua (Test Runner)": ["explore", "librarian"],
+  "joshua": ["explore", "librarian"],
   "Paul-Junior": ["explore", "librarian"],
+  "paul-junior": ["explore", "librarian"],
   "frontend-ui-ux-engineer": ["explore", "librarian"],
   "git-master": ["explore", "librarian"],
   "document-writer": ["explore", "librarian"],

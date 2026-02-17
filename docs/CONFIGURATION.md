@@ -415,6 +415,25 @@ Configure Paul agent behavior.
 
 ---
 
+## Execute Phase Config
+
+Controls frontend conformance strictness during `execute_phase` enforcement.
+
+```jsonc
+{
+  "execute_phase": {
+    "frontend_conformance_mode": "normal" // "strict" | "normal" | "off"
+  }
+}
+```
+
+Mode behavior:
+- `strict`: run automatic frontend checks and fail frontend-tagged tasks that do not provide frontend file scope
+- `normal`: run automatic frontend checks for frontend-scoped tasks
+- `off`: disable frontend conformance checks (automatic and contract acceptance frontendConformance)
+
+---
+
 ## Skills Config
 
 Advanced skill configuration.

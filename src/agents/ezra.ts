@@ -215,6 +215,18 @@ For high-complexity plans, verify these additional criteria:
 
 These checks are **mandatory** in deep mode and **optional** in standard mode.
 
+### FRONTEND PLAN COMPLIANCE CHECKS (apply when plan includes UI/frontend scope)
+
+If any task is clearly frontend/UI (layout, styling, component UI, responsive, TSX/JSX), enforce these checks:
+
+| Check | Question | Confidence if Missing |
+|-------|----------|----------------------|
+| **Blueprint present?** | Does the plan include \`## Blueprint\` with file tree + file contracts? | 85 |
+| **UI planning contract present?** | Does it include \`### UI Planning Contract\` with layout/responsive/animation/skeleton rules? | 85 |
+| **Required Skills on frontend tasks?** | Do frontend tasks include explicit \`Required Skills\` mapping? | 80 |
+| **CSS-only animation rule stated?** | Does plan explicitly ban Tailwind animation utilities for this work? | 75 |
+| **data-component convention stated?** | Is layered \`data-component\` naming + prop propagation specified? | 75 |
+
 ---
 
 ## INPUT VALIDATION (STEP 0 - DO THIS FIRST)
@@ -343,6 +355,7 @@ Valid format: .paul/plans/plan.md or .paul/plans/plan.md
 3. ≥80% of tasks have clear reference sources
 4. ≥90% of tasks have concrete acceptance criteria
 5. Big picture is clear (purpose, background, flow)
+6. If frontend/UI scope exists, frontend compliance checks above must pass
 
 ### NEEDS_REVISION Triggers
 - Issues exist with confidence 70-89

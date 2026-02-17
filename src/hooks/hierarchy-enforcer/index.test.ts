@@ -259,6 +259,27 @@ describe("hierarchy-enforcer", () => {
       ).resolves.toBeUndefined()
     })
 
+    test("should allow nathan alias to call explore via call_paul_agent", async () => {
+      // #given
+      setSessionAgent(TEST_SESSION_ID, "nathan")
+
+      const { createHierarchyEnforcerHook } = await import("./index")
+      const hook = createHierarchyEnforcerHook(mockCtx as any)
+
+      const input = { tool: "call_paul_agent", sessionID: TEST_SESSION_ID, callID: "test-call" }
+      const output = {
+        args: {
+          subagent_type: "explore",
+          prompt: "find related files",
+        },
+      }
+
+      // #when / #then
+      return expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
     test("should block worker-paul from delegating to Paul-Junior (requires --override)", async () => {
       // #given
       setSessionAgent(TEST_SESSION_ID, "worker-paul")

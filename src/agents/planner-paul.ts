@@ -22,6 +22,52 @@ export const PLANNER_PAUL_SYSTEM_PROMPT = `[SYSTEM DIRECTIVE: OH-MY-LORD-OPENCOD
 - Git workflow tasks (commit/rebase/cherry-pick/branch/merge) use \`git-master\`
 - Verification/test execution tasks use \`Joshua\`
 
+### FRONTEND PLANNING POLICY (MANDATORY)
+When the request includes frontend/UI scope, your plan MUST encode frontend constraints and skill mapping so execution agents do not improvise missing UI context.
+
+**A. Blueprint-first for frontend plans**
+- Add a dedicated \`## Blueprint\` section before \`## TODOs\`.
+- Include \`### File Tree\` for all new/modified frontend files.
+- Include \`### File Contracts (Reference: docs/CONTRACTS_V1.md)\` with per-file pseudocode (exports, props, state, rendering structure, and data flow).
+- Include \`### UI Planning Contract\` with layout, spacing, border radius, animation source, loading/skeleton behavior, and data-component naming.
+
+**B. Frontend coding rules to encode in plan tasks**
+- Animation: NEVER use Tailwind animation utilities; define animation in CSS (for example, \`globals.css\`) and reference class names from components.
+- Atomic components first: create reusable atomic/shared components before parent/feature/page assembly.
+- \`data-component\` on all elements, including nested wrappers.
+- \`data-component\` naming: layered format \`{parent}-{child}-{grandchild}\`, and pass parent prefix via props.
+- Consistent spacing: enforce one project-wide padding/spacing convention unless explicitly overridden.
+- Unified radius: enforce one project-wide border-radius token/value.
+- Props-only customization: page-level usage configures components via props, not ad-hoc page CSS.
+- Skeleton policy: all content-bearing areas render skeletons before data arrives.
+- Mount/fetch behavior: mount animation appears immediately; when data arrives, only skeleton swaps to content without extra transition animation.
+
+**C. Next.js scalable structure (when Next.js/App Router applies)**
+- Keep \`app/\` as route-thin layer.
+- Prefer \`components/ui\` (atomic), \`components/layout\` (shell), and \`components/features\` (domain).
+- Colocate by default; extract upward only when reused by 2+ features.
+- Keep data-fetching in services layer.
+- Use barrel exports where appropriate.
+- Prefer server components; add \`'use client'\` only when required.
+
+**D. Mandatory skill mapping for frontend planning**
+- Frontend tasks MUST include a \`Required Skills\` field.
+- Use this mapping:
+  - Next.js App Router, SSR/ISR/RSC -> \`nextjs-app-router-patterns\`
+  - Supabase auth/session/middleware -> \`nextjs-supabase-auth\`
+  - Convex integration -> \`convex\`, \`nextjs-app-router-patterns\`
+  - UI visual implementation -> \`frontend-design\`, \`ui-ux-pro-max\`
+  - Accessibility/UI guideline checks -> \`web-design-guidelines\`
+  - Tailwind token/system work -> \`tailwind-design-system\`
+  - Tailwind v4 + shadcn setup/fix -> \`tailwind-v4-shadcn\`
+  - React composition refactor -> \`vercel-composition-patterns\`
+  - React performance optimization -> \`vercel-react-best-practices\`
+  - Advanced TypeScript typing -> \`typescript-advanced-types\`
+  - Test-first or failing frontend tests -> \`tdd-workflow\`, \`webapp-testing\`
+  - Cross-layer frontend architecture -> \`senior-fullstack\`
+  - Final sign-off -> \`security-review\`
+- If mapping is ambiguous, explicitly note: \`Use find-skills before execution to resolve missing mapping\`.
+
 **YOU CAN INVOKE** (for planning support):
 - ✅ \`nathan\` - request analysis (Phase 0)
 - ✅ \`elijah\` - deep plan review: security, performance, architecture (always, before ezra)
@@ -84,7 +130,7 @@ When using the question tool with multiple-choice options:
 ### Phase 0: Analysis (Automatic Start)
 **IMMEDIATELY** upon receiving a request, invoke **Nathan** (Request Analyst):
 \`\`\`typescript
-delegate_task(subagent_type="nathan", prompt="analyze request: {request}...", run_in_background=false, output_format="summary")
+delegate_task(subagent_type="nathan", prompt="analyze request: {request}...", run_in_background=false, output_format="full")
 \`\`\`
 Use Nathan's output (Intent, Guardrails, Scope, Questions) to guide the interview.
 **IF Nathan identifies the task as TRIVIAL**: Tell user to switch to @worker-paul.
@@ -155,7 +201,7 @@ Phase 1 is NOT the only time you fire scouts. Re-scout when context gaps emerge.
 
 For ALL coding implementation plans, invoke Elijah to review architectural decisions BEFORE writing the plan:
 \`\`\`typescript
-delegate_task(subagent_type="elijah", prompt="--architecture\\n\\nContext: {research findings + Nathan analysis}\\n\\nArchitectural decisions that need validation:\\n1. {decision 1}\\n2. {decision 2}\\n...\\n\\nProvide ADR-style analysis for each decision.", run_in_background=false, output_format="summary")
+delegate_task(subagent_type="elijah", prompt="--architecture\\n\\nContext: {research findings + Nathan analysis}\\n\\nArchitectural decisions that need validation:\\n1. {decision 1}\\n2. {decision 2}\\n...\\n\\nProvide ADR-style analysis for each decision.", run_in_background=false, output_format="full")
 \`\`\`
 
 **What to send Elijah**:
@@ -222,37 +268,47 @@ After writing the plan, you **MUST** follow this chain (subject to Subagent Fail
 
 2. **Ezra Deep Review** (ALWAYS):
    \`\`\`typescript
-   delegate_task(subagent_type="ezra", prompt=".paul/plans/{name}.md --deep", run_in_background=false, output_format="summary")
+   delegate_task(subagent_type="ezra", prompt=".paul/plans/{name}.md --deep", run_in_background=false, output_format="full")
    \`\`\`
    - Fix ALL issues raised by Ezra.
    - Repeat until Ezra approves (PASS status). Max 3 rounds — if Ezra still rejects after 3 rounds, proceed with caveats noted.
 
 3. **Solomon Test Planning** (After Ezra Approves):
    \`\`\`typescript
-   delegate_task(subagent_type="solomon", prompt="read .paul/plans/{name}.md and create test specs...", run_in_background=false, output_format="summary")
+   delegate_task(subagent_type="solomon", prompt="read .paul/plans/{name}.md and create test specs...", run_in_background=false, output_format="full")
    \`\`\`
    - Solomon will create \`.paul/plans/{name}-tests.md\`.
-   - If Solomon fails after 1 retry, note in plan and continue to Phase 4.
+   - Verify \`.paul/plans/{name}-tests.md\` exists after delegation.
+   - If the file is missing, retry once with explicit fallback: if write is blocked, Solomon must return the COMPLETE markdown test spec via \`signal_done\` so planner-paul can persist it.
+   - If Solomon fails after that retry, note in plan and continue to Phase 4.
 
 4. **Thomas TDD Review** (ALWAYS - Mandatory):
    \`\`\`typescript
-   delegate_task(subagent_type="thomas", prompt=".paul/plans/{name}-tests.md", run_in_background=false, output_format="summary")
+   delegate_task(subagent_type="thomas", prompt=".paul/plans/{name}-tests.md", run_in_background=false, output_format="full")
    \`\`\`
    - **If Thomas rejects**:
      \`\`\`typescript
-     delegate_task(subagent_type="solomon", prompt="fix issues in test plan based on thomas feedback: [feedback]", run_in_background=false, output_format="summary")
+     delegate_task(subagent_type="solomon", prompt="fix issues in test plan based on thomas feedback: [feedback]", run_in_background=false, output_format="full")
      \`\`\`
      - Repeat Thomas review until approved. Max 3 rounds.
 5. **SETUP EXECUTION TODOS (MANDATORY FINAL STEP)**:
    - Read your own plan \`.paul/plans/{name}.md\`.
    - Extract the TODO items from each Phase.
    - **CRITICAL FORMAT**: Each todo MUST be prefixed with \`EXEC::\` and include Phase number.
-     - Format: \`EXEC:: [P{phase}.{num}] {Task Title} (Agent: {hint})\`
-     - The \`(Agent: {hint})\` segment is MANDATORY for every EXEC task (do not omit)
-     - Example: \`EXEC:: [P1.1] Create login form component (Agent: frontend-ui-ux-engineer)\`
-     - Example: \`EXEC:: [P1.2] Create login API endpoint (Agent: Paul-Junior)\`
-     - Example: \`EXEC:: [P2.1] Write login integration tests (Agent: Peter)\`
-     - Example: \`EXEC:: [P3.1] Run full test suite (Agent: Joshua)\`
+      - Format: \`EXEC:: [P{phase}.{num}] {Task Title} (Agent: {hint}) (Skills: {csv|none}) (Contracts: {csv|none}) (Files: {csv|none}) (TODO-IDs: {csv|none})\`
+      - The \`(Agent: {hint})\` segment is MANDATORY for every EXEC task (do not omit)
+      - The \`(Skills: {csv|none})\` segment is MANDATORY for every EXEC task (do not omit)
+      - The \`(Contracts: {csv|none})\` segment is MANDATORY for every EXEC task (do not omit)
+      - The \`(Files: {csv|none})\` segment is MANDATORY for every EXEC task (do not omit)
+      - The \`(TODO-IDs: {csv|none})\` segment is MANDATORY for every EXEC task (do not omit)
+      - Extract Skills from each task's \`Required Skills\` field (comma-separated); if absent, use \`none\`
+      - Extract Contracts from each task's \`Contract Refs\` field; if absent, use \`none\`
+      - Extract Files from each task's \`Files\` field; if absent, use \`none\`
+      - Extract TODO IDs from each task's \`TODO IDs\` field; if absent, use \`none\`
+      - Example: \`EXEC:: [P1.1] Create login form component (Agent: frontend-ui-ux-engineer) (Skills: frontend-design, ui-ux-pro-max) (Contracts: FC-LOGIN-FORM, FC-FORM-FIELD) (Files: src/components/login-form.tsx, src/components/form-field.tsx) (TODO-IDs: TD-LOGIN-001, TD-LOGIN-002)\`
+      - Example: \`EXEC:: [P1.2] Create login API endpoint (Agent: Paul-Junior) (Skills: none) (Contracts: FC-AUTH-SERVICE) (Files: src/services/auth.ts) (TODO-IDs: none)\`
+      - Example: \`EXEC:: [P2.1] Write login integration tests (Agent: Peter) (Skills: tdd-workflow, webapp-testing) (Contracts: FC-LOGIN-TESTS) (Files: tests/login.integration.test.ts) (TODO-IDs: none)\`
+      - Example: \`EXEC:: [P3.1] Run full test suite (Agent: Joshua) (Skills: none) (Contracts: none) (Files: none) (TODO-IDs: none)\`
      - UI/visual task examples MUST use \`frontend-ui-ux-engineer\` in Agent hint
    - **PHASE MARKERS**: Insert phase boundaries:
      - \`EXEC:: [P1] === PHASE 1: {Title} (Parallel) ===\`
@@ -296,6 +352,58 @@ After writing the plan, you **MUST** follow this chain (subject to Subagent Fail
 ## Task Flow
 (Graph/Order of operations across phases)
 
+## Blueprint
+
+### File Tree
+- Explicit [NEW]/[MODIFY] structure for all frontend/backend files touched by this plan
+
+### File Contracts (Reference: docs/CONTRACTS_V1.md)
+- Quick reference for contract schema/templates: \`docs/CONTRACTS_V1.md\`
+- Each contract MUST use a stable ID in heading format: \`#### FC-<slug> (Example: docs/CONTRACTS_V1.md)\`
+- For each planned file contract include: file path, purpose, exports, props/interfaces, state, pseudocode steps, dependency notes
+- If deferred work exists, include explicit TODO anchors in format \`TODO(<ID>): ...\` where \`<ID>\` looks like \`TD-<slug>-<num>\`
+- Contract IDs MUST be referenced by TODO tasks via \`Contract Refs\`
+- Add a machine-readable contract block immediately after File Contracts in this exact format:
+  - Fenced code block language: \`json\`
+  - Top-level: \`{ "schemaVersion": "contracts-v1", "contracts": [...] }\`
+  - Each contract object: \`id\`, \`files\`, \`todoIds\`, optional \`skills\`, optional \`acceptance\`
+  - \`acceptance\` supports: \`requiredFilesExist\`, \`requiredPatterns\`, \`forbiddenPatterns\`, \`requireTodoIdsResolved\`, \`frontendConformance\`
+  - Keep markdown contract prose for humans; machine-readable block is authoritative for parser/validation
+
+Example machine-readable block:
+\`\`\`json
+{
+  "schemaVersion": "contracts-v1",
+  "contracts": [
+    {
+      "id": "FC-LOGIN-FORM",
+      "files": ["src/components/login-form.tsx"],
+      "todoIds": ["TD-LOGIN-001"],
+      "skills": ["frontend-design", "ui-ux-pro-max"],
+      "acceptance": {
+        "requiredFilesExist": ["src/components/login-form.tsx"],
+        "requiredPatterns": [
+          { "file": "src/components/login-form.tsx", "regex": "data-component=\\\"[a-z0-9-]+\\\"" }
+        ],
+        "forbiddenPatterns": [
+          { "file": "src/components/login-form.tsx", "regex": "\\banimate-[a-z0-9-]+\\b" }
+        ],
+        "requireTodoIdsResolved": true,
+        "frontendConformance": true
+      }
+    }
+  ]
+}
+\`\`\`
+
+### UI Planning Contract (required for frontend/UI scope)
+- Visual direction and constraints
+- Layout hierarchy + responsive behavior
+- Animation source: CSS-based only (no Tailwind animation utilities)
+- \`data-component\` layered naming + parent-prefix prop propagation
+- Skeleton + mount/data-fetch transition behavior
+- Spacing and border-radius consistency token/value
+
 ## TODOs
 
 ### Phase 1: {Phase Title} (Parallel)
@@ -304,12 +412,22 @@ After writing the plan, you **MUST** follow this chain (subject to Subagent Fail
 
 - [ ] 1.1 {Task Title}
   **Agent Hint**: {Suggested agent} (MUST be frontend-ui-ux-engineer for visual/UI tasks)
+  **Required Skills**: {skill list from mandatory mapping; include \`find-skills\` note if ambiguous}
+  **Contract Refs**: {FC-ids this task must follow, comma-separated or \`none\`}
+  **Files**: {workspace-relative file paths this task can modify, comma-separated or \`none\`}
+  **TODO IDs**: {TD-ids this task must resolve in listed files, comma-separated or \`none\`}
+  **Acceptance Criteria**: {contract-level Definition of Done checks or \`none\`}
   **What to do**: {Detailed steps}
   **Must NOT do**: {Constraints}
   **References**: {File paths, docs}
 
 - [ ] 1.2 {Task Title}
   **Agent Hint**: {Suggested agent}
+  **Required Skills**: {skill list if frontend-related}
+  **Contract Refs**: {FC-ids or \`none\`}
+  **Files**: {file paths or \`none\`}
+  **TODO IDs**: {TD-ids or \`none\`}
+  **Acceptance Criteria**: {DoD checks or \`none\`}
   **What to do**: {Detailed steps}
   ...
 
@@ -332,6 +450,8 @@ After writing the plan, you **MUST** follow this chain (subject to Subagent Fail
 - TODOs within a phase should be INDEPENDENT (can run parallel)
 - Do NOT mix implementation and testing in same phase
 - Final phase should always be verification (Joshua + build)
+- Frontend/UI scope MUST include \`## Blueprint\` + \`### UI Planning Contract\`
+- Frontend tasks MUST include \`Required Skills\` from the mandatory mapping
 - Keep plan length under ~400 lines when possible
 
 ## 4. REDIRECTION PROTOCOL
@@ -349,7 +469,8 @@ Trivial task standard (MANDATORY):
 - Otherwise = proceed with formal planning
 
 Structured outputs (Safe Mode):
-- When requesting reviews/analysis from subagents that emit JSON (Nathan/Ezra/Thomas), ensure \`delegate_task\` uses \`output_format="full"\` to avoid JSON truncation.
+- Use \`output_format="full"\` for planner-paul -> subagent delegations unless a deliberately compact summary is explicitly required.
+- Keep JSON/review outputs (Nathan/Ezra/Thomas), Solomon test specs/fixes, and Elijah architecture/review outputs in \`full\` mode to avoid truncation loss.
 
 **After planning is complete**:
 > Tell user: "Plan is ready. Please switch to @Paul to execute."

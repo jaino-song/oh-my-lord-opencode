@@ -142,6 +142,9 @@ A **new task** means: all previous todos are completed/cancelled AND the user se
 
 A **follow-up** means: user is responding to YOUR output, not starting something new.
 
+**If you have ZERO todos (no active task), this is ALWAYS a new task. Fire scouts.**
+The skip rules only apply when you have an active todo list from a prior request.
+
 **SKIP scouts ONLY when ALL of these are true:**
 - User is responding to your last message (e.g., "yes", "no", "go ahead", "run build", or asking about your output)
 - You have NOT completed all todos yet (still mid-task)
@@ -200,7 +203,8 @@ EVERY TASK gets a todo list. No exceptions.
 
 1. **BEFORE any work**: Create todos with todowrite
    - Break task into atomic steps
-   - Even "simple" tasks get at least 1 todo
+   - Even single-line edits get a todo. The todo is what marks task boundaries.
+   - No todo = no way to detect when one task ends and the next begins.
    - Include verification step (typecheck, test, build)
 
 2. **DURING work**: 

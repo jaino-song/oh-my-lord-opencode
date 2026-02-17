@@ -1,6 +1,5 @@
 import type { Plugin } from "@opencode-ai/plugin";
 import {
-  createTodoContinuationEnforcer,
   type TodoContinuationEnforcer,
   createContextWindowMonitorHook,
   createSessionRecoveryHook,
@@ -62,7 +61,6 @@ import { getSystemMcpServerNames } from "./features/claude-code-mcp-loader";
 import {
   setMainSession,
   getMainSessionID,
-  setSessionAgent,
   updateSessionAgent,
   clearSessionAgent,
 } from "./features/claude-code-session-state";
@@ -77,6 +75,7 @@ import {
   discoverCommandsSync,
   sessionExists,
   createDelegateTask,
+  createExecutePhase,
   interactive_bash,
   startTmuxCheck,
   lspManager,
@@ -87,7 +86,7 @@ import { initTaskToastManager } from "./features/task-toast-manager";
 import { type HookName } from "./config";
 import { log, detectExternalNotificationPlugin, getNotificationConflictWarning, resetMessageCursor } from "./shared";
 import { loadPluginConfig } from "./plugin-config";
-import { createModelCacheState, getModelLimit } from "./plugin-state";
+import { createModelCacheState } from "./plugin-state";
 import { createConfigHandler } from "./plugin-handlers";
 
 const OhMyOpenCodePlugin: Plugin = async (ctx) => {
@@ -292,6 +291,12 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     directory: ctx.directory,
     gitMasterConfig: pluginConfig.git_master,
   });
+  const executePhase = createExecutePhase({
+    manager: backgroundManager,
+    client: ctx.client,
+    directory: ctx.directory,
+    frontendConformanceMode: pluginConfig.execute_phase?.frontend_conformance_mode,
+  });
   const disabledSkills = new Set(pluginConfig.disabled_skills ?? []);
   const systemMcpNames = getSystemMcpServerNames();
   const builtinSkills = createBuiltinSkills().filter((skill) => {
@@ -355,6 +360,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
        call_paul_agent: callPaulAgent,
       look_at: lookAt,
       delegate_task: delegateTask,
+      execute_phase: executePhase,
       skill: skillTool,
       skill_mcp: skillMcpTool,
       slashcommand: slashcommandTool,
@@ -461,6 +467,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
       input: { sessionID: string },
       output: { context: string[]; prompt?: string }
     ) => {
+      await tokenAnalyticsHook["experimental.session.compacting"]?.(input);
       await compactionContextInjector?.["experimental.session.compacting"]?.(input, output);
       await claudeCodeHooks["experimental.session.compacting"]?.(input, output);
     },
@@ -468,7 +475,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     config: configHandler,
 
     event: async (input) => {
-      await autoUpdateChecker?.event(input);
+      autoUpdateChecker?.event(input);
       await claudeCodeHooks.event(input);
       await backgroundNotificationHook?.event(input);
       await sessionNotification?.(input);

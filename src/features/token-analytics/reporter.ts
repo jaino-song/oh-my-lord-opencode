@@ -219,3 +219,73 @@ export function generateTokenReport(report: TokenReport): string {
 
   return lines.join("\n")
 }
+
+function aggregateUsage(breakdown: AgentReportEntry[]): TokenUsage {
+  return breakdown.reduce(
+    (acc, entry) => ({
+      input: acc.input + entry.usage.input,
+      output: acc.output + entry.usage.output,
+      reasoning: acc.reasoning + entry.usage.reasoning,
+      cacheRead: acc.cacheRead + entry.usage.cacheRead,
+      cacheWrite: acc.cacheWrite + entry.usage.cacheWrite,
+    }),
+    { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0 }
+  )
+}
+
+function formatUsageLine(usage: TokenUsage): string {
+  const total = usage.input + usage.output + usage.reasoning
+  return `Total: ${formatNumber(total)} | In: ${formatNumber(usage.input)} | Out: ${formatNumber(usage.output)} | Cache R: ${formatNumber(usage.cacheRead)} | Cache W: ${formatNumber(usage.cacheWrite)}`
+}
+
+export function generateCompactTokenSummary(report: TokenReport): string {
+  const lines: string[] = []
+
+  lines.push(`[TOKEN USAGE REPORT]`)
+  lines.push(`Tokens: ${formatNumber(report.totalTokens)} | Cost: ${formatCost(report.estimatedCost)} | Duration: ${formatDuration(report.duration)}`)
+
+  if (report.agentBreakdown.length > 0) {
+    const agentSummaries = report.agentBreakdown
+      .filter((e) => getTotalTokens(e.usage) > 0)
+      .map((e) => `${e.agent}(${formatNumber(getTotalTokens(e.usage))})`)
+    if (agentSummaries.length > 0) {
+      lines.push(`Agents: ${agentSummaries.join(", ")}`)
+    }
+  }
+
+  const totalUsage = aggregateUsage(report.agentBreakdown)
+  lines.push(formatUsageLine(totalUsage))
+
+  return lines.join("\n")
+}
+
+export function generateIdleTokenSummary(
+  activityUsage: TokenUsage,
+  activityCost: number,
+  accumulatedReport: TokenReport
+): string {
+  const lines: string[] = []
+  const activityTotal = activityUsage.input + activityUsage.output + activityUsage.reasoning
+
+  lines.push(`[SESSION IDLE - TOKEN USAGE]`)
+
+  lines.push(`Activity: ${formatNumber(activityTotal)} tokens (${formatCost(activityCost)})`)
+  lines.push(`  ${formatUsageLine(activityUsage)}`)
+
+  lines.push(`Accumulated: ${formatNumber(accumulatedReport.totalTokens)} tokens (${formatCost(accumulatedReport.estimatedCost)})`)
+  const accUsage = aggregateUsage(accumulatedReport.agentBreakdown)
+  lines.push(`  ${formatUsageLine(accUsage)}`)
+
+  return lines.join("\n")
+}
+
+export function generateCompactionTokenSummary(accumulatedReport: TokenReport): string {
+  const lines: string[] = []
+
+  lines.push(`[COMPACTION - TOKEN USAGE]`)
+  lines.push(`Accumulated before compaction: ${formatNumber(accumulatedReport.totalTokens)} tokens (${formatCost(accumulatedReport.estimatedCost)})`)
+  const accUsage = aggregateUsage(accumulatedReport.agentBreakdown)
+  lines.push(`  ${formatUsageLine(accUsage)}`)
+
+  return lines.join("\n")
+}

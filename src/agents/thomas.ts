@@ -293,6 +293,7 @@ const thomasRestrictions = createAgentToolRestrictions([
   "delegate_task",
 ])
 
+// GLM 4.7 by Z.AI (zai-coding-plan provider)
 const DEFAULT_MODEL = "zai-coding-plan/glm-4.7"
 
 export function createThomasAgent(model: string = DEFAULT_MODEL): AgentConfig {

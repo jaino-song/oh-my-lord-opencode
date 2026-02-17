@@ -8,6 +8,10 @@ export interface PhaseTodo {
   content: string
   taskNumber: string
   agentHint?: string
+  requiredSkills?: string[]
+  contractRefs?: string[]
+  fileRefs?: string[]
+  todoAnchorIds?: string[]
   status: string
 }
 
@@ -26,4 +30,32 @@ export interface PhaseResult {
   status: "success" | "failed"
   result: string
   sessionId?: string
+  skillsUsed?: string[]
+}
+
+export interface ContractPatternCheck {
+  file: string
+  regex: string
+  description?: string
+}
+
+export interface ContractAcceptanceSpec {
+  requiredFilesExist?: string[]
+  requiredPatterns?: ContractPatternCheck[]
+  forbiddenPatterns?: ContractPatternCheck[]
+  requireTodoIdsResolved?: boolean
+  frontendConformance?: boolean
+}
+
+export interface MachineReadableContract {
+  id: string
+  files?: string[]
+  todoIds?: string[]
+  skills?: string[]
+  acceptance?: ContractAcceptanceSpec
+}
+
+export interface MachineReadableContractSpec {
+  schemaVersion: "contracts-v1"
+  contracts: MachineReadableContract[]
 }

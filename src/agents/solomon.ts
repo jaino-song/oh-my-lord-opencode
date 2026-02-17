@@ -917,7 +917,7 @@ export const solomonAgent: AgentConfig = {
   name: "Solomon (TDD Planner)",
   description: "TDD-focused planner. Plans tests FIRST (Jest + Playwright), then implementation. Interview mode, Red-Green-Refactor methodology.",
   model: "openai/gpt-5.3-codex",
-  variant: "medium",
+  variant: "xhigh",
   reasoningEffort: "medium",
   prompt: SOLOMON_SYSTEM_PROMPT,
   permission: SOLOMON_PERMISSION,
