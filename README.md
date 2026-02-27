@@ -7,7 +7,7 @@
 
 ## What is Oh My Lord OpenCode?
 
-Oh My Lord OpenCode transforms [OpenCode](https://github.com/opencode-ai/opencode) into a strict, multi-model AI project manager. It orchestrates 20+ specialized agents across Claude, GPT-5.2, Gemini 3, and GLM-4.7 — enforcing TDD workflows, delegation hierarchies, and code quality at the hook level.
+Oh My Lord OpenCode transforms [OpenCode](https://github.com/opencode-ai/opencode) into a strict, multi-model AI project manager. It orchestrates 20+ specialized agents across Claude, GPT-5.3-codex, Gemini 3 Flash, and GLM-4.7 — enforcing TDD workflows, delegation hierarchies, and code quality at the hook level.
 
 ### Core Philosophy: Zero-Trust Orchestration
 
@@ -15,7 +15,7 @@ LLMs cut corners. Rather than relying on prompt instructions alone, oh-my-lord-o
 
 ## Key Features
 
-- **Multi-Model Orchestration** — Seamlessly switch between Claude (Opus/Sonnet/Haiku), GPT-5.2, Gemini 3 Pro, and GLM-4.7 within a single workflow
+- **Multi-Model Orchestration** — Seamlessly switch between Claude (Opus/Sonnet/Haiku), GPT-5.3-codex, Gemini 3 Flash, and GLM-4.7 within a single workflow
 - **Strict TDD Enforcement** — HARD BLOCKS for code-before-tests violations with mandatory RED-GREEN-REFACTOR cycle
 - **30+ Lifecycle Hooks** — Code-level enforcement for hierarchy, TDD, workflow, context injection, recovery, and more
 - **Three-Domain Architecture** — Strict separation between Planning, Execution, and Trivial task domains
@@ -33,9 +33,9 @@ LLMs cut corners. Rather than relying on prompt instructions alone, oh-my-lord-o
 
 | Agent | Use Case | Model |
 |-------|----------|-------|
-| `@planner-paul` | Complex features, new architecture, multi-file changes | Claude Opus 4 |
-| `@Paul` | Execute formal plans from `.paul/plans/` | Claude Opus 4 |
-| `@worker-paul` | Small standalone tasks, quick fixes | Claude Opus 4 |
+| `@planner-paul` | Complex features, new architecture, multi-file changes | Claude Opus 4.6 |
+| `@Paul` | Execute formal plans from `.paul/plans/` | Claude Opus 4.6 |
+| `@worker-paul` | Small standalone tasks, quick fixes | Claude Opus 4.6 |
 
 ### Workflow (v4.2 — Auto-Continue)
 
@@ -101,29 +101,28 @@ User → @Paul
 
 | Agent | Model | Role |
 |-------|-------|------|
-| **planner-paul** | Claude Opus 4 | Creates formal implementation plans with mandatory review chain |
-| **Paul** | Claude Opus 4 | Executes plans — delegates to specialists, never implements directly |
-| **worker-paul** | Claude Opus 4 | Autonomous executor for standalone tasks (scales with complexity) |
+| **planner-paul** | Claude Opus 4.6 | Creates formal implementation plans with mandatory review chain |
+| **Paul** | Claude Opus 4.6 | Executes plans — delegates to specialists, never implements directly |
+| **worker-paul** | Claude Opus 4.6 | Autonomous executor for standalone tasks (scales with complexity) |
 | **Saul** | Claude Sonnet 4.5 | Bare model — minimal prompt, no framework overhead |
 
 ### Planning Assistants
 
 | Agent | Model | Role |
 |-------|-------|------|
-| **Nathan** | Claude Opus 4 | Request analyst — impact-based triviality detection |
-| **Elijah** | Claude Opus 4 | Deep reasoning advisor — security/perf/arch reviews (35-item checklist) |
-| **Ezra** | Claude Opus 4 | Plan reviewer — confidence scoring and quality feedback |
-| **Solomon** | Claude Opus 4 | TDD planner — comprehensive test strategy design |
-| **Thomas** | Claude Sonnet 4.5 | TDD reviewer — audits test specifications |
+| **Nathan** | GPT-5.3-codex | Request analyst — impact-based triviality detection |
+| **Elijah** | GPT-5.3-codex | Deep reasoning advisor — security/perf/arch reviews (35-item checklist) |
+| **Ezra** | GPT-5.3-codex | Plan reviewer — confidence scoring and quality feedback |
+| **Solomon** | GPT-5.3-codex | TDD planner — comprehensive test strategy design |
+| **Thomas** | GLM-4.7 | TDD reviewer — audits test specifications |
 | **Timothy** | Claude Sonnet 4.5 | Quick plan reviewer (used by Paul mid-execution) |
 
 ### Implementation Specialists
 
 | Agent | Model | Role |
 |-------|-------|------|
-| **Paul-Junior** | Claude Opus 4 | Backend/logic implementation (no delegation allowed) |
-| **frontend-ui-ux-engineer** | Gemini 3 Pro | UI/UX implementation — CSS, React, visual interfaces |
-| **ultrabrain** | OpenAI o1 | Hard logic — algorithms, security-critical, architecture |
+| **Paul-Junior** | GPT-5.3-codex | Backend/logic implementation (no delegation allowed) |
+| **frontend-ui-ux-engineer** | GPT-5.3-codex | UI/UX implementation — CSS, React, visual interfaces |
 
 ### Testing Agents
 
@@ -138,12 +137,12 @@ User → @Paul
 | Agent | Model | Role |
 |-------|-------|------|
 | **explore** | Claude Haiku 4.5 | Fast codebase navigation and search |
-| **librarian** | GLM-4.7 | Multi-repo analysis and documentation lookup |
+| **librarian** | Gemini 3 Flash | Multi-repo analysis and documentation lookup |
 | **git-master** | GLM-4.7 | Git operations — atomic commits, workflows |
 | **document-writer** | Gemini 3 Flash | Technical documentation generation |
 | **multimodal-looker** | Gemini 3 Flash | Image/PDF/diagram analysis |
 
-## Tools (25+)
+## Tools (28+)
 
 | Category | Tools | Description |
 |----------|-------|-------------|
@@ -227,13 +226,12 @@ Also supports:
 
 ### Installation
 
-```bash
-# Install from GitHub release
-# Add to your OpenCode configuration:
-# ~/.config/opencode/config.json
+```json
+// Load local build output in OpenCode
+// ~/.config/opencode/opencode.json
 {
   "plugin": [
-    "oh-my-lord-opencode"
+    "file:///absolute/path/to/oh-my-lord-opencode/dist/index.js"
   ]
 }
 ```
@@ -284,11 +282,16 @@ oh-my-lord-opencode/
 | [v0.21.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.21.0) | 2026-02-11 | **Latest** — worker-paul v3.5 autonomous executor, `--override` enforcement, scaled investigation |
 | [v0.20.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.20.0) | 2026-02-07 | Mandatory Elijah review in planning chain, `--plan-review` and `--verify-plan` modes |
 | [v0.19.2](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.19.2) | 2026-02-06 | Model upgrades (GPT-5.3-codex), universal explore/librarian access |
+| [v0.19.1](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.19.1) | 2026-02-06 | Patch release |
 | [v0.19.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.19.0) | 2026-02-06 | Direct bash execution for Paul agents, deprecated agent cleanup |
+| [v0.18.1](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.18.1) | 2026-02-06 | Patch release |
 | [v0.18.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.18.0) | 2026-02-05 | Removed truncation bottlenecks, concurrency 3→10, mandatory scout policy |
+| [v0.17.2](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.17.2) | 2026-02-05 | Patch release |
+| [v0.17.1](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.17.1) | 2026-02-04 | Patch release |
 | [v0.17.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.17.0) | 2026-02-03 | Boulder continuation, 7-section compaction summaries, deprecated agent removal |
 | [v0.16.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.16.0) | 2026-02-02 | planner-paul v4.2 auto-continue workflow, manual agent switching |
 | [v0.15.2](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.15.2) | 2026-02-01 | Canonicalized docs, clarification handler, category presets |
+| [v0.15.1](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.15.1) | 2026-02-01 | Patch release |
 | [v0.15.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.15.0) | 2026-02-01 | Agent model updates (GLM-4.7, Sonnet 4.5), reasoning effort config |
 | [v0.14.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.14.0) | 2026-01-30 | `/hit-it` command, mandatory todos, rate-limit detection |
 | [v0.13.0](https://github.com/jaino-song/oh-my-lord-opencode/releases/tag/v0.13.0) | 2026-01-29 | Automatic retry with fallback models |
