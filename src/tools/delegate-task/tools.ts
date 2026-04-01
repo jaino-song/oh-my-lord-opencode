@@ -24,6 +24,8 @@ import {
 type OpencodeClient = PluginInput["client"]
 
 const ORCHESTRATOR_AGENTS = ["Paul", "planner-paul"]
+const EXEC_PHASE_MARKER_REGEX = /^\[P(\d+)\]\s*===\s*PHASE\s+\d+:\s*(.+?)\s*\((Parallel|Sequential)\)\s*===$/i
+const EXEC_TASK_REGEX = /^\[P(\d+)\.(\d+)\]/i
 
 const DEFAULT_OUTPUT_SUMMARY_TOKENS = 800
 
@@ -151,6 +153,92 @@ export function classifyPollResultForDelegateTask(status: PollSessionResult["sta
   return "terminal_failure"
 }
 
+interface Todo {
+  content: string
+  status: string
+}
+
+interface PendingExecPhase {
+  phase: number
+  mode: "parallel" | "sequential"
+}
+
+function stripExecPrefix(content: string): string {
+  return content.replace(/^EXEC::\s*/i, "").trim()
+}
+
+function parseExecPhaseMarker(content: string): PendingExecPhase | null {
+  const cleaned = stripExecPrefix(content)
+  const match = cleaned.match(EXEC_PHASE_MARKER_REGEX)
+  if (!match) return null
+
+  return {
+    phase: parseInt(match[1], 10),
+    mode: match[3].toLowerCase() as "parallel" | "sequential",
+  }
+}
+
+function parseExecTaskPhase(content: string): number | null {
+  const cleaned = stripExecPrefix(content)
+  const match = cleaned.match(EXEC_TASK_REGEX)
+  if (!match) return null
+  return parseInt(match[1], 10)
+}
+
+async function getPendingExecPhaseForSession(client: OpencodeClient, sessionID: string): Promise<PendingExecPhase | null> {
+  const todoMethod = (client.session as { todo?: (input: { path: { id: string } }) => Promise<unknown> }).todo
+  if (typeof todoMethod !== "function") {
+    return null
+  }
+
+  let todosResponse: unknown = null
+  try {
+    todosResponse = await todoMethod.call(client.session, { path: { id: sessionID } })
+  } catch {
+    return null
+  }
+
+  const todos = ((todosResponse as { data?: unknown } | null)?.data ?? []) as Todo[]
+  if (!Array.isArray(todos) || todos.length === 0) {
+    return null
+  }
+
+  const pendingExecTodos = todos.filter((todo) => {
+    if (!todo || typeof todo.content !== "string") return false
+    if (!todo.content.toLowerCase().startsWith("exec::")) return false
+    return todo.status !== "completed" && todo.status !== "cancelled"
+  })
+
+  if (pendingExecTodos.length === 0) {
+    return null
+  }
+
+  let activePhase: number | null = null
+  for (const todo of pendingExecTodos) {
+    const phase = parseExecTaskPhase(todo.content)
+    if (phase !== null) {
+      activePhase = phase
+      break
+    }
+  }
+
+  if (activePhase === null) {
+    return null
+  }
+
+  let mode: "parallel" | "sequential" = "sequential"
+  for (const todo of todos) {
+    if (!todo || typeof todo.content !== "string") continue
+    const marker = parseExecPhaseMarker(todo.content)
+    if (marker && marker.phase === activePhase) {
+      mode = marker.mode
+      break
+    }
+  }
+
+  return { phase: activePhase, mode }
+}
+
 type ToolContextWithMetadata = {
   sessionID: string
   messageID: string
@@ -226,6 +314,23 @@ If you believe no skills are needed, you MUST explicitly explain why to the user
       const firstMessageAgent = messageDir ? findFirstMessageWithAgent(messageDir) : null
       const sessionAgent = getSessionAgent(ctx.sessionID)
       const parentAgent = ctx.agent ?? sessionAgent ?? firstMessageAgent ?? prevMessage?.agent
+
+      const callerName = (parentAgent ?? "").trim().toLowerCase()
+      if (!args.resume && callerName === "paul") {
+        const pendingExecPhase = await getPendingExecPhaseForSession(client, ctx.sessionID)
+        if (pendingExecPhase) {
+          const prompt = args.prompt ?? ""
+          const targetsPhaseTask = /\[P\d+\.\d+\]/i.test(prompt) || /\bexecute\s+task\b/i.test(prompt)
+          if (targetsPhaseTask) {
+            return `❌ Plan-phase task delegation blocked for Paul. Use execute_phase({ phase: ${pendingExecPhase.phase} }) for planner-generated EXEC:: tasks. delegate_task is only allowed for retries with resume or non-phase one-off work.`
+          }
+
+          const looksLikeRetry = /\bfix:|\bretry\b/i.test(prompt)
+          if (pendingExecPhase.mode === "sequential" && args.run_in_background === true && !looksLikeRetry) {
+            return `❌ Sequential phase P${pendingExecPhase.phase} is active. Background delegate_task calls are blocked for Paul. Use execute_phase({ phase: ${pendingExecPhase.phase} }) to preserve sequential execution order.`
+          }
+        }
+      }
       
       log("[delegate_task] parentAgent resolution", {
         sessionID: ctx.sessionID,

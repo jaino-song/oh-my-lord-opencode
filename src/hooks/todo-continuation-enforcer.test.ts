@@ -171,10 +171,128 @@ describe("todo-continuation-enforcer", () => {
       event: { type: "session.idle", properties: { sessionID: bgTaskSession } },
     })
 
-    // #then - continuation injected for background task session
-    await new Promise(r => setTimeout(r, 2500))
+    // #then - one-time advisory injected for background task session
+    await new Promise(r => setTimeout(r, 150))
     expect(promptCalls.length).toBe(1)
     expect(promptCalls[0].sessionID).toBe(bgTaskSession)
+    expect(promptCalls[0].text).toContain("one-time reminder")
+  })
+
+  test("should send subagent advisory only once for unchanged todos", async () => {
+    // #given - subagent session with stable pending todos
+    setMainSession("main-session")
+    const bgTaskSession = "bg-task-once"
+    subagentSessions.add(bgTaskSession)
+
+    const hook = createTodoContinuationEnforcer(createMockPluginInput(), {})
+
+    // #when - idle fires multiple times with same todo signature
+    await hook.handler({
+      event: { type: "session.idle", properties: { sessionID: bgTaskSession } },
+    })
+    await new Promise(r => setTimeout(r, 150))
+
+    await hook.handler({
+      event: { type: "session.idle", properties: { sessionID: bgTaskSession } },
+    })
+    await new Promise(r => setTimeout(r, 150))
+
+    // #then - reminder sent once (advisory, non-spam)
+    expect(promptCalls.length).toBe(1)
+  })
+
+  test("should re-send subagent advisory when remaining todo signature changes", async () => {
+    // #given - subagent session where pending todo content changes
+    setMainSession("main-session")
+    const bgTaskSession = "bg-task-changed"
+    subagentSessions.add(bgTaskSession)
+
+    let todoCallCount = 0
+    const mockInput = createMockPluginInput()
+    mockInput.client.session.todo = async () => {
+      todoCallCount++
+      if (todoCallCount === 1) {
+        return {
+          data: [
+            { id: "1", content: "Task A", status: "pending", priority: "high" },
+            { id: "2", content: "Task B", status: "completed", priority: "medium" },
+          ],
+        }
+      }
+      return {
+        data: [
+          { id: "9", content: "Task C", status: "pending", priority: "high" },
+        ],
+      }
+    }
+
+    const hook = createTodoContinuationEnforcer(mockInput, {})
+
+    // #when
+    await hook.handler({ event: { type: "session.idle", properties: { sessionID: bgTaskSession } } })
+    await new Promise(r => setTimeout(r, 150))
+    await hook.handler({ event: { type: "session.idle", properties: { sessionID: bgTaskSession } } })
+    await new Promise(r => setTimeout(r, 150))
+
+    // #then - advisory sent again for new todo signature
+    expect(promptCalls.length).toBe(2)
+  })
+
+  test("should not send subagent advisory when session was interrupted by user abort", async () => {
+    // #given - background subagent session interrupted by abort
+    setMainSession("main-session")
+    const bgTaskSession = "bg-task-interrupted"
+    subagentSessions.add(bgTaskSession)
+
+    const hook = createTodoContinuationEnforcer(createMockPluginInput(), {})
+
+    // #when - abort error is reported, then session goes idle multiple times
+    await hook.handler({
+      event: {
+        type: "session.error",
+        properties: { sessionID: bgTaskSession, error: { name: "MessageAbortedError" } },
+      },
+    })
+
+    await hook.handler({ event: { type: "session.idle", properties: { sessionID: bgTaskSession } } })
+    await new Promise(r => setTimeout(r, 150))
+    await hook.handler({ event: { type: "session.idle", properties: { sessionID: bgTaskSession } } })
+    await new Promise(r => setTimeout(r, 150))
+
+    // #then - advisory remains suppressed
+    expect(promptCalls).toHaveLength(0)
+  })
+
+  test("should allow subagent advisory after assistant activity clears interruption suppression", async () => {
+    // #given - interrupted subagent session
+    setMainSession("main-session")
+    const bgTaskSession = "bg-task-resume-after-abort"
+    subagentSessions.add(bgTaskSession)
+
+    const hook = createTodoContinuationEnforcer(createMockPluginInput(), {})
+
+    // #when - abort then first idle (suppressed)
+    await hook.handler({
+      event: {
+        type: "session.error",
+        properties: { sessionID: bgTaskSession, error: { name: "MessageAbortedError" } },
+      },
+    })
+    await hook.handler({ event: { type: "session.idle", properties: { sessionID: bgTaskSession } } })
+
+    // #when - assistant activity resumes, then idle again
+    await hook.handler({
+      event: {
+        type: "message.updated",
+        properties: { info: { sessionID: bgTaskSession, role: "assistant" } },
+      },
+    })
+    await hook.handler({ event: { type: "session.idle", properties: { sessionID: bgTaskSession } } })
+    await new Promise(r => setTimeout(r, 150))
+
+    // #then - advisory is allowed again
+    expect(promptCalls).toHaveLength(1)
+    expect(promptCalls[0].text).toContain("one-time reminder")
   })
 
 

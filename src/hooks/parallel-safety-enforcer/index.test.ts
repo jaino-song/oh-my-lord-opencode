@@ -4,6 +4,7 @@ import {
   checkFileConflicts,
   registerPendingFiles,
   clearPendingFiles,
+  pruneStalePendingFiles,
   _resetState,
 } from "./file-tracker"
 
@@ -94,6 +95,19 @@ describe("parallel-safety-enforcer", () => {
       const result = checkFileConflicts("session-1", ["src/test.ts"])
       
       // #then
+      expect(result.hasConflict).toBe(false)
+    })
+
+    test("should prune stale file locks", () => {
+      // #given
+      registerPendingFiles("session-1", "task-1", ["src/test.ts"])
+
+      // #when
+      const removed = pruneStalePendingFiles("session-1", 0)
+      const result = checkFileConflicts("session-1", ["src/test.ts"])
+
+      // #then
+      expect(removed).toContain("task-1")
       expect(result.hasConflict).toBe(false)
     })
   })

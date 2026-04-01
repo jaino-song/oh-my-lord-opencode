@@ -960,6 +960,76 @@ describe("BackgroundManager.tryCompleteTask", () => {
   })
 })
 
+describe("BackgroundManager.handleEvent session.deleted retention", () => {
+  let manager: BackgroundManager
+
+  beforeEach(() => {
+    // #given
+    manager = createBackgroundManager()
+    stubNotifyParentSession(manager)
+  })
+
+  afterEach(() => {
+    manager.shutdown()
+  })
+
+  test("should retain completed task after session.deleted for output retrieval", () => {
+    // #given
+    const task: BackgroundTask = {
+      id: "task-completed",
+      sessionID: "session-completed",
+      parentSessionID: "session-parent",
+      parentMessageID: "msg-1",
+      description: "completed task",
+      prompt: "test",
+      agent: "explore",
+      status: "completed",
+      startedAt: new Date(),
+      completedAt: new Date(),
+    }
+    getTaskMap(manager).set(task.id, task)
+
+    // #when
+    manager.handleEvent({
+      type: "session.deleted",
+      properties: { info: { id: task.sessionID } },
+    })
+
+    // #then
+    const retained = manager.getTask(task.id)
+    expect(retained).toBeDefined()
+    expect(retained?.status).toBe("completed")
+  })
+
+  test("should mark running task as cancelled and retain it after session.deleted", () => {
+    // #given
+    const task: BackgroundTask = {
+      id: "task-running",
+      sessionID: "session-running",
+      parentSessionID: "session-parent",
+      parentMessageID: "msg-1",
+      description: "running task",
+      prompt: "test",
+      agent: "explore",
+      status: "running",
+      startedAt: new Date(),
+    }
+    getTaskMap(manager).set(task.id, task)
+
+    // #when
+    manager.handleEvent({
+      type: "session.deleted",
+      properties: { info: { id: task.sessionID } },
+    })
+
+    // #then
+    const retained = manager.getTask(task.id)
+    expect(retained).toBeDefined()
+    expect(retained?.status).toBe("cancelled")
+    expect(retained?.error).toBe("Session deleted")
+  })
+})
+
 describe("BackgroundManager.trackTask", () => {
   let manager: BackgroundManager
 
@@ -1059,4 +1129,3 @@ describe("BackgroundManager process cleanup", () => {
     }
   })
 })
-

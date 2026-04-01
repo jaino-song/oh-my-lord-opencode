@@ -1,4 +1,4 @@
-import { FILE_PATH_PATTERNS } from "./constants"
+import { FILE_PATH_PATTERNS, STALE_PENDING_TASK_MS } from "./constants"
 
 interface PendingTask {
   taskId: string
@@ -7,6 +7,29 @@ interface PendingTask {
 }
 
 const pendingBySession = new Map<string, Map<string, PendingTask>>()
+
+export function pruneStalePendingFiles(parentSessionID: string, staleMs: number = STALE_PENDING_TASK_MS): string[] {
+  const sessionTasks = pendingBySession.get(parentSessionID)
+  if (!sessionTasks) {
+    return []
+  }
+
+  const now = Date.now()
+  const removedTaskIds: string[] = []
+
+  for (const [taskId, task] of sessionTasks.entries()) {
+    if (now - task.startTime >= staleMs) {
+      sessionTasks.delete(taskId)
+      removedTaskIds.push(taskId)
+    }
+  }
+
+  if (sessionTasks.size === 0) {
+    pendingBySession.delete(parentSessionID)
+  }
+
+  return removedTaskIds
+}
 
 export function extractFilesFromPrompt(prompt: string): string[] {
   const files = new Set<string>()
@@ -31,6 +54,8 @@ export function checkFileConflicts(
   parentSessionID: string,
   files: string[]
 ): { hasConflict: boolean; conflictingFile?: string; conflictingTaskId?: string } {
+  pruneStalePendingFiles(parentSessionID)
+
   const sessionTasks = pendingBySession.get(parentSessionID)
   if (!sessionTasks) {
     return { hasConflict: false }
@@ -81,6 +106,7 @@ export function clearPendingFiles(
 }
 
 export function getPendingTaskCount(parentSessionID: string): number {
+  pruneStalePendingFiles(parentSessionID)
   return pendingBySession.get(parentSessionID)?.size ?? 0
 }
 

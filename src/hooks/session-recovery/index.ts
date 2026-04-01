@@ -123,18 +123,22 @@ function extractMessageIndex(error: unknown): number | null {
   return match ? parseInt(match[1], 10) : null
 }
 
+function isToolResultMissingErrorMessage(message: string): boolean {
+  if (!message) return false
+
+  return (
+    message.includes("tool_use block requires corresponding tool_result") ||
+    message.includes("without `tool_result` blocks immediately after") ||
+    message.includes("without tool_result blocks immediately after") ||
+    message.includes("each `tool_use` block must have a corresponding `tool_result` block") ||
+    message.includes("tool_use without corresponding tool_result")
+  )
+}
+
 export function detectErrorType(error: unknown): RecoveryErrorType {
   const message = getErrorMessage(error)
 
-  if (message.includes("tool_use") && message.includes("tool_result")) {
-    return "tool_result_missing"
-  }
-
-  if (message.includes("tool_use") && message.includes("without") && message.includes("tool_result")) {
-    return "tool_result_missing"
-  }
-
-  if (message.includes("each `tool_use` block must have a corresponding `tool_result` block")) {
+  if (isToolResultMissingErrorMessage(message)) {
     return "tool_result_missing"
   }
 
@@ -157,27 +161,81 @@ export function detectErrorType(error: unknown): RecoveryErrorType {
   return null
 }
 
-function extractOrphanedCallId(error: unknown): string | null {
+function extractOrphanedCallIds(error: unknown): string[] {
   const message = getErrorMessage(error)
-  const match = message.match(/tool_use.*?ids.*?without.*?tool_result.*?:\s*(\S+)/)
-  return match ? match[1].replace(/[.,]$/, "") : null
+
+  const ids = new Set<string>()
+
+  for (const match of message.matchAll(/toolu_[a-z0-9]+/g)) {
+    const id = match[0]?.trim()
+    if (id) ids.add(id)
+  }
+
+  const segmentMatch = message.match(/tool_result.*?:\s*([^.\n]+)/)
+  if (segmentMatch?.[1]) {
+    const tokens = segmentMatch[1]
+      .split(",")
+      .map((token) => token.trim().replace(/[`"'.]/g, ""))
+      .filter(Boolean)
+
+    for (const token of tokens) {
+      if (token.includes(" ")) continue
+      ids.add(token)
+    }
+  }
+
+  return Array.from(ids)
 }
 
 function hasToolParts(parts: MessagePart[]): boolean {
   return parts.some((p) => p.type === "tool_use" || p.type === "tool")
 }
 
+function hasToolPartsInMessage(msg: MessageData): boolean {
+  return (msg.parts ?? []).some((p) => p.type === "tool_use" || p.type === "tool")
+}
+
+function messageContainsOrphanedCallId(msg: MessageData, orphanedCallIds: string[]): boolean {
+  if (orphanedCallIds.length === 0) return false
+
+  for (const part of msg.parts ?? []) {
+    const candidateId = (part.callID ?? part.id ?? "").trim()
+    if (!candidateId) continue
+    if (orphanedCallIds.includes(candidateId)) {
+      return true
+    }
+  }
+
+  return false
+}
+
 async function recoverToolResultMissing(
   _client: Client,
-  sessionID: string,
+  _sessionID: string,
   _failedAssistantMsg: MessageData,
   allMessages?: MessageData[],
   error?: unknown
 ): Promise<boolean> {
-  const orphanedCallId = error ? extractOrphanedCallId(error) : null
+  const orphanedCallIds = error ? extractOrphanedCallIds(error) : []
+  const targetIndex = error ? extractMessageIndex(error) : null
   const messages = allMessages ?? []
 
   let anyRecovered = false
+
+  if (targetIndex !== null) {
+    const indicesToTry = [targetIndex, targetIndex - 1, targetIndex + 1]
+    for (const idx of indicesToTry) {
+      if (idx < 0 || idx >= messages.length) continue
+      const msg = messages[idx]
+      if (msg.info?.role !== "assistant") continue
+      const messageID = msg.info?.id
+      if (!messageID) continue
+      if (removeToolUseParts(messageID)) {
+        anyRecovered = true
+        break
+      }
+    }
+  }
 
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
@@ -187,22 +245,25 @@ async function recoverToolResultMissing(
     if (!messageID) continue
 
     const storedParts = readParts(messageID)
-    if (storedParts.length === 0) continue
-    if (!hasToolParts(storedParts)) continue
+    const hasStoredToolParts = storedParts.length > 0 && hasToolParts(storedParts)
+    const hasMessageToolParts = hasToolPartsInMessage(msg)
+    if (!hasStoredToolParts && !hasMessageToolParts) continue
 
-    if (orphanedCallId) {
+    if (orphanedCallIds.length > 0) {
       const hasOrphan = storedParts.some((p) => {
         const raw = p as Record<string, unknown>
-        return raw.callID === orphanedCallId || raw.id === orphanedCallId
-      })
-      if (hasOrphan) {
-        if (removeToolUseParts(messageID)) anyRecovered = true
-        break
+        const callID = typeof raw.callID === "string" ? raw.callID : ""
+        const id = typeof raw.id === "string" ? raw.id : ""
+        return orphanedCallIds.includes(callID) || orphanedCallIds.includes(id)
+      }) || messageContainsOrphanedCallId(msg, orphanedCallIds)
+
+      if (!hasOrphan) {
+        continue
       }
-    } else {
-      if (removeToolUseParts(messageID)) anyRecovered = true
-      break
     }
+
+    if (removeToolUseParts(messageID)) anyRecovered = true
+    break
   }
 
   return anyRecovered

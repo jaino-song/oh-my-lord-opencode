@@ -3,6 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, utimesSync, writeFileSync } from "node:
 import { join } from "node:path"
 import { tmpdir } from "node:os"
 import { createTddEnforcementHook } from "./index"
+import { clearSessionAgent, setSessionAgent, subagentSessions } from "../../features/claude-code-session-state"
 
 describe("tdd-enforcement Elijah verify-plan gate", () => {
   let tempDir: string
@@ -13,13 +14,18 @@ describe("tdd-enforcement Elijah verify-plan gate", () => {
     mkdirSync(join(tempDir, ".paul", "plans"), { recursive: true })
     mkdirSync(join(tempDir, ".paul"), { recursive: true })
     writeFileSync(join(tempDir, ".paul", "approval_state.json"), JSON.stringify({ approvals: [] }, null, 2))
+    subagentSessions.clear()
   })
 
   afterEach(() => {
+    clearSessionAgent("s1")
+    clearSessionAgent("subagent-1")
+    clearSessionAgent("subagent-2")
+    subagentSessions.clear()
     rmSync(tempDir, { recursive: true, force: true })
   })
 
-  test("blocks final todo completion for implementation plans without recent Elijah verification", async () => {
+  test("blocks final todo completion for implementation plans without recent Elijah verification", () => {
     // #given
     writeFileSync(
       join(tempDir, ".paul", "plans", "impl-plan.md"),
@@ -40,10 +46,10 @@ describe("tdd-enforcement Elijah verify-plan gate", () => {
       }
     ) as Promise<void>
 
-    await expect(run).rejects.toThrow("PLAN VERIFICATION BLOCK")
+    return expect(run).rejects.toThrow("PLAN VERIFICATION BLOCK")
   })
 
-  test("allows final todo completion when recent Elijah approval exists", async () => {
+  test("allows final todo completion when recent Elijah approval exists", () => {
     // #given
     writeFileSync(
       join(tempDir, ".paul", "plans", "impl-plan.md"),
@@ -81,10 +87,10 @@ describe("tdd-enforcement Elijah verify-plan gate", () => {
       }
     ) as Promise<void>
 
-    await expect(run).resolves.toBeUndefined()
+    return expect(run).resolves.toBeUndefined()
   })
 
-  test("skips Elijah requirement for maintenance-only plans", async () => {
+  test("skips Elijah requirement for maintenance-only plans", () => {
     // #given
     writeFileSync(
       join(tempDir, ".paul", "plans", "docs-plan.md"),
@@ -105,10 +111,10 @@ describe("tdd-enforcement Elijah verify-plan gate", () => {
       }
     ) as Promise<void>
 
-    await expect(run).resolves.toBeUndefined()
+    return expect(run).resolves.toBeUndefined()
   })
 
-  test("does not require Elijah for non-final todo updates", async () => {
+  test("does not require Elijah for non-final todo updates", () => {
     // #given
     writeFileSync(
       join(tempDir, ".paul", "plans", "impl-plan.md"),
@@ -129,10 +135,60 @@ describe("tdd-enforcement Elijah verify-plan gate", () => {
       }
     ) as Promise<void>
 
-    await expect(run).resolves.toBeUndefined()
+    return expect(run).resolves.toBeUndefined()
   })
 
-  test("blocks final completion when Elijah approval is older than implementation file changes", async () => {
+  test("skips Elijah gate for Paul-Junior final todo completion", () => {
+    // #given
+    setSessionAgent("subagent-1", "Paul-Junior")
+    writeFileSync(
+      join(tempDir, ".paul", "plans", "impl-plan.md"),
+      "# Plan\n\n## File Tree\n- src/features/auth/service.ts\n"
+    )
+    const hook = createTddEnforcementHook({ directory: tempDir } as any)
+
+    // #when / #then
+    const run = hook["tool.execute.before"](
+      { tool: "todowrite", sessionID: "subagent-1", callID: "c-sub-1" },
+      {
+        args: {
+          todos: [
+            { status: "completed" },
+            { status: "completed" },
+          ],
+        },
+      }
+    ) as Promise<void>
+
+    return expect(run).resolves.toBeUndefined()
+  })
+
+  test("skips Elijah gate for tracked subagent sessions without explicit agent context", () => {
+    // #given
+    subagentSessions.add("subagent-2")
+    writeFileSync(
+      join(tempDir, ".paul", "plans", "impl-plan.md"),
+      "# Plan\n\n## File Tree\n- src/features/auth/service.ts\n"
+    )
+    const hook = createTddEnforcementHook({ directory: tempDir } as any)
+
+    // #when / #then
+    const run = hook["tool.execute.before"](
+      { tool: "todowrite", sessionID: "subagent-2", callID: "c-sub-2" },
+      {
+        args: {
+          todos: [
+            { status: "completed" },
+            { status: "completed" },
+          ],
+        },
+      }
+    ) as Promise<void>
+
+    return expect(run).resolves.toBeUndefined()
+  })
+
+  test("blocks final completion when Elijah approval is older than implementation file changes", () => {
     // #given
     writeFileSync(
       join(tempDir, ".paul", "plans", "impl-plan.md"),
@@ -178,6 +234,6 @@ describe("tdd-enforcement Elijah verify-plan gate", () => {
       }
     ) as Promise<void>
 
-    await expect(run).rejects.toThrow("PLAN VERIFICATION STALE")
+    return expect(run).rejects.toThrow("PLAN VERIFICATION STALE")
   })
 })

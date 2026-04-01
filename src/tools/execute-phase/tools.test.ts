@@ -297,6 +297,35 @@ describe("execute-phase plan file contract parsing", () => {
     expect(spec?.contracts[0].acceptance?.frontendConformance).toBe(true)
   })
 
+  test("should accept skills:null in machine-readable contracts-v1 block", () => {
+    // #given
+    const planContent = `# Plan
+
+### File Contracts
+
+\`\`\`json
+{
+  "schemaVersion": "contracts-v1",
+  "contracts": [
+    {
+      "id": "FC-LOGIN-FORM",
+      "files": ["src/components/login-form.tsx"],
+      "skills": null
+    }
+  ]
+}
+\`\`\`
+`
+
+    // #when
+    const spec = parseMachineReadableContractSpec(planContent)
+
+    // #then
+    expect(spec?.schemaVersion).toBe("contracts-v1")
+    expect(spec?.contracts).toHaveLength(1)
+    expect(spec?.contracts[0].skills).toBeUndefined()
+  })
+
   test("should ignore non-schema json blocks", () => {
     // #given
     const planContent = `# Plan

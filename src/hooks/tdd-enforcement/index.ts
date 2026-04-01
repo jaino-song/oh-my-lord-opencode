@@ -5,6 +5,8 @@ import { markFileDirty, clearDirtyFiles, hasDirtyFiles, getDirtyFiles } from "./
 import { requiresTDD, getTDDRequirementReason } from "./constants"
 import { getLatestApprovalTimestamp, hasRecentApproval } from "../hierarchy-enforcer/approval-state"
 import { getActivePlanName, getLatestImplementationFileMtimeFromPlan, isActivePlanImplementation } from "../../shared/plan-utils"
+import { getParentAgentName } from "../../features/agent-context"
+import { subagentSessions } from "../../features/claude-code-session-state"
 
 const HOOK_NAME = "tdd-enforcement"
 const WRITE_EDIT_TOOLS = ["mcp_write", "mcp_edit"]
@@ -85,6 +87,12 @@ function getElijahVerificationGuidance(workspaceRoot: string): string {
   return `delegate_task(subagent_type="elijah", prompt="--verify-plan ${planPathHint}\\n\\nRead the 'Elijah Plan Review Output (Raw)' section at the bottom of the plan file for the original planning-phase review.", run_in_background=false, output_format="full")`
 }
 
+function shouldEnforcePlanVerification(sessionID: string): boolean {
+  if (subagentSessions.has(sessionID)) return false
+  const currentAgent = getParentAgentName(sessionID, "Paul").toLowerCase()
+  return currentAgent === "paul"
+}
+
 const callToFilePathMap = new Map<string, string>()
 
 export function createTddEnforcementHook(ctx: PluginInput) {
@@ -112,7 +120,7 @@ Use: \`delegate_task(subagent_type="Joshua (Test Runner)", prompt="Run tests")\`
               throw new Error(errorMsg)
           }
 
-          if (isFinalTodoCompletion(output.args) && isActivePlanImplementation(ctx.directory)) {
+          if (isFinalTodoCompletion(output.args) && shouldEnforcePlanVerification(input.sessionID) && isActivePlanImplementation(ctx.directory)) {
             const hasRecentElijahVerification = hasRecentApproval(ctx.directory, "elijah", 1200000)
             if (!hasRecentElijahVerification) {
               const verifyCommand = getElijahVerificationGuidance(ctx.directory)

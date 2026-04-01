@@ -17,6 +17,7 @@ import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
 const TASK_TTL_MS = 30 * 60 * 1000
+const COMPLETED_TASK_RETENTION_MS = 30 * 60 * 1000
 const MIN_STABILITY_TIME_MS = 10 * 1000
 const PROGRESS_TOAST_INTERVAL_MS = 10000
 const WORKING_TOAST_INTERVAL_MS = 15 * 1000
@@ -545,6 +546,11 @@ export class BackgroundManager {
         task.status = "cancelled"
         task.completedAt = new Date()
         task.error = "Session deleted"
+
+        this.markForNotification(task)
+        this.notifyParentSession(task).catch(err => {
+          log("[background-agent] Failed to notify on session.deleted:", err)
+        })
       }
 
        if (task.concurrencyKey) {
@@ -553,9 +559,12 @@ export class BackgroundManager {
        }
       // Clean up pendingByParent to prevent stale entries
       this.cleanupPendingByParent(task)
-      this.tasks.delete(task.id)
-      this.clearNotificationsForTask(task.id)
       subagentSessions.delete(sessionID)
+
+      log("[background-agent] Preserving task after session.deleted for output retrieval", {
+        taskId: task.id,
+        status: task.status,
+      })
     }
   }
 
@@ -848,7 +857,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve result.`
         this.tasks.delete(taskId)
         log("[background-agent] Removed completed task from memory:", taskId)
       }
-    }, 5 * 60 * 1000)
+    }, COMPLETED_TASK_RETENTION_MS)
   }
 
   private formatDuration(start: Date, end?: Date): string {

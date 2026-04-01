@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+import { homedir } from "node:os"
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type {
   BuiltinAgentName,
@@ -31,6 +34,27 @@ import type { AvailableAgent } from "./paul-prompt-builder"
 import { deepMerge } from "../shared"
 
 import { resolveMultipleSkills } from "../features/opencode-skill-loader/skill-content"
+
+/**
+ * Reads the global AI playbook from ~/.agents/playbook/AGENTS.md.
+ * This file contains standard instructions that apply to ALL agents.
+ * Returns empty string if the file doesn't exist (graceful degradation).
+ */
+let _cachedPlaybook: string | null = null
+
+export function readGlobalPlaybook(): string {
+  if (_cachedPlaybook !== null) return _cachedPlaybook
+
+  try {
+    const playbookPath = join(homedir(), ".agents", "playbook", "AGENTS.md")
+    _cachedPlaybook = readFileSync(playbookPath, "utf-8").trim()
+  } catch {
+    // File doesn't exist or isn't readable — skip silently
+    _cachedPlaybook = ""
+  }
+
+  return _cachedPlaybook
+}
 
 type AgentSource = AgentFactory | AgentConfig
 
@@ -97,7 +121,8 @@ export function buildAgent(
   source: AgentSource,
   model?: string,
   gitMasterConfig?: GitMasterConfig,
-  override?: AgentOverrideConfig
+  override?: AgentOverrideConfig,
+  globalPlaybook?: string
 ): AgentConfig {
   let base = isFactory(source) ? source(model) : source
 
@@ -112,6 +137,10 @@ export function buildAgent(
       const skillContent = Array.from(resolved.values()).join("\n\n")
       base.prompt = skillContent + (base.prompt ? "\n\n" + base.prompt : "")
     }
+  }
+
+  if (globalPlaybook && base.prompt) {
+    base.prompt = globalPlaybook + "\n\n" + base.prompt
   }
 
   return base
@@ -166,6 +195,7 @@ export function createBuiltinAgents(
 ): Record<string, AgentConfig> {
   const result: Record<string, AgentConfig> = {}
   const availableAgents: AvailableAgent[] = []
+  const playbook = readGlobalPlaybook()
 
     for (const [name, source] of Object.entries(agentSources)) {
       const agentName = name as BuiltinAgentName
@@ -175,7 +205,7 @@ export function createBuiltinAgents(
     const override = agentOverrides[agentName]
     const model = override?.model
 
-    let config = buildAgent(source, model, gitMasterConfig, override)
+    let config = buildAgent(source, model, gitMasterConfig, override, playbook)
 
     if (agentName === "librarian" && directory && config.prompt) {
       const envContext = createEnvContext()
@@ -212,7 +242,7 @@ export function createBuiltinAgents(
       paulConfig = mergeAgentConfig(paulConfig, paulOverride)
      }
 
-      paulConfig = buildAgent(paulConfig, undefined, gitMasterConfig)
+      paulConfig = buildAgent(paulConfig, undefined, gitMasterConfig, undefined, playbook)
 
     result["Paul"] = paulConfig
   }
@@ -227,7 +257,7 @@ export function createBuiltinAgents(
            plannerConfig = mergeAgentConfig(plannerConfig, plannerOverride)
        }
 
-        plannerConfig = buildAgent(plannerConfig, undefined, gitMasterConfig)
+        plannerConfig = buildAgent(plannerConfig, undefined, gitMasterConfig, undefined, playbook)
 
       result["planner-paul"] = plannerConfig
   }
@@ -241,7 +271,7 @@ export function createBuiltinAgents(
            workerConfig = mergeAgentConfig(workerConfig, workerOverride)
        }
 
-        workerConfig = buildAgent(workerConfig, undefined, gitMasterConfig)
+        workerConfig = buildAgent(workerConfig, undefined, gitMasterConfig, undefined, playbook)
 
       result["worker-paul"] = workerConfig
   }
@@ -255,7 +285,7 @@ export function createBuiltinAgents(
            juniorConfig = mergeAgentConfig(juniorConfig, juniorOverride)
        }
 
-        juniorConfig = buildAgent(juniorConfig, undefined, gitMasterConfig)
+        juniorConfig = buildAgent(juniorConfig, undefined, gitMasterConfig, undefined, playbook)
 
        result["Paul-Junior"] = juniorConfig
    }
@@ -269,7 +299,7 @@ export function createBuiltinAgents(
            saulConfig = mergeAgentConfig(saulConfig, saulOverride)
        }
 
-        saulConfig = buildAgent(saulConfig, undefined, gitMasterConfig)
+        saulConfig = buildAgent(saulConfig, undefined, gitMasterConfig, undefined, playbook)
 
     result["Saul"] = saulConfig
   }

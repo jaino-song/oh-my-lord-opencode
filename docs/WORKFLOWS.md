@@ -41,14 +41,16 @@ planner-paul (auto-continues through all phases):
               - If spec file is missing, retry once with fallback: Solomon returns complete markdown via `signal_done` and planner persists it
            4. Thomas TDD review (loop until approved)
            (Planner subagent delegations use `delegate_task output_format="full"` to avoid truncation of structured outputs/specs)
-  Phase 4: Sets up EXEC:: todos
-           - EXEC task metadata includes Agent/Skills/Contracts/Files/TODO-IDs
-           - `execute_phase` injects referenced contract blocks into delegated prompts
-           - Contract parsing prefers machine-readable `contracts-v1` JSON block, with markdown fallback
-           - Preflight blocks phase execution on malformed/missing metadata or unknown contract refs
-           - File-scope and contract acceptance checks are enforced per task
-           - If TODO anchor IDs remain in listed files, task is reported as failed
-            → "Plan ready. Switch to @Paul to execute." → STOPS
+   Phase 4: Sets up EXEC:: todos
+            - EXEC task metadata includes Agent/Skills/Contracts/Files/TODO-IDs
+            - `execute_phase` injects referenced contract blocks into delegated prompts
+            - Contract parsing prefers machine-readable `contracts-v1` JSON block, with markdown fallback
+            - `contracts-v1` accepts `"skills": null` and normalizes to empty/undefined skills
+            - Preflight blocks phase execution on malformed/missing metadata or unknown contract refs
+            - File-scope and contract acceptance checks are enforced per task
+            - If TODO anchor IDs remain in listed files, task is reported as failed
+            - During plan execution, Paul must run phase work through `execute_phase`; direct `delegate_task` for phase tasks is blocked
+             → "Plan ready. Switch to @Paul to execute." → STOPS
 
 User: @Paul
 
@@ -63,8 +65,9 @@ Paul:
      - Elijah runs `--verify-plan` against active plan
      - If verdict is `CONCERNS_REMAIN`, execution continues until resolved
   4. Completion gate:
-     - Final todo completion is blocked unless recent Elijah verification approval exists for implementation plans
-     - Docs/config-only plans skip Elijah gate
+      - Final todo completion is blocked unless recent Elijah verification approval exists for implementation plans
+      - Gate is evaluated at orchestrator scope (Paul); subagent sessions are not required to call Elijah directly
+      - Docs/config-only plans skip Elijah gate
   5. Reports completion
 ```
 

@@ -39,8 +39,10 @@ interface SessionState {
   isRecovering?: boolean
   countdownStartedAt?: number
   abortDetectedAt?: number
+  suppressSubagentReminderAfterAbort?: boolean
   lastActionableTodoSignature?: string
   loopAttemptCount?: number
+  lastSubagentReminderSignature?: string
 }
 
 const CONTINUATION_PROMPT = `${createSystemDirective(SystemDirectiveTypes.TODO_CONTINUATION)}
@@ -52,6 +54,15 @@ ADVISORY: Consider continuing with the next pending task if appropriate.
 - If a task is blocked or requires user input, you may skip it
 - Mark tasks complete when finished
 - If all remaining tasks are blocked, you may stop and report status`
+
+const SUBAGENT_REMINDER_PROMPT = `${createSystemDirective(SystemDirectiveTypes.TODO_CONTINUATION)}
+
+Subagent advisory: this is a one-time reminder, not an enforcement block.
+
+You still have incomplete todos in this subagent session.
+- If work is done, mark remaining todos as completed/cancelled.
+- If blocked by an error/bug/permission issue, keep the todo pending/cancelled and report the blocker briefly.
+- If you intentionally defer, you may ignore this reminder and continue.`
 
 const COUNTDOWN_SECONDS = 2
 const TOAST_DURATION_MS = 900
@@ -179,8 +190,6 @@ export function createTodoContinuationEnforcer(
 
   async function injectContinuation(
     sessionID: string,
-    incompleteCount: number,
-    total: number,
     resolvedInfo?: ResolvedMessageInfo
   ): Promise<void> {
     const state = sessions.get(sessionID)
@@ -313,10 +322,47 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
     }
   }
 
-  function startCountdown(
+  async function injectSubagentReminder(
     sessionID: string,
     incompleteCount: number,
     total: number,
+    resolvedInfo?: ResolvedMessageInfo
+  ): Promise<void> {
+    const prompt = `${SUBAGENT_REMINDER_PROMPT}\n\n[Status: ${total - incompleteCount}/${total} completed, ${incompleteCount} remaining]`
+
+    await ctx.client.tui.showToast({
+      body: {
+        title: "Subagent Todo Reminder",
+        message: `${incompleteCount} task(s) still open`,
+        variant: "warning" as const,
+        duration: 1800,
+      },
+    }).catch(() => {})
+
+    try {
+      await ctx.client.session.prompt({
+        path: { id: sessionID },
+        body: {
+          agent: resolvedInfo?.agent,
+          ...(resolvedInfo?.model !== undefined ? { model: resolvedInfo.model } : {}),
+          parts: [{ type: "text", text: prompt }],
+        },
+        query: { directory: ctx.directory },
+      })
+
+      log(`[${HOOK_NAME}] Subagent reminder injected`, {
+        sessionID,
+        agent: resolvedInfo?.agent,
+        incompleteCount,
+      })
+    } catch (err) {
+      log(`[${HOOK_NAME}] Failed to inject subagent reminder`, { sessionID, error: String(err) })
+    }
+  }
+
+  function startCountdown(
+    sessionID: string,
+    incompleteCount: number,
     resolvedInfo?: ResolvedMessageInfo
   ): void {
     const state = getState(sessionID)
@@ -335,7 +381,7 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
 
     state.countdownTimer = setTimeout(() => {
       cancelCountdown(sessionID)
-      injectContinuation(sessionID, incompleteCount, total, resolvedInfo)
+      injectContinuation(sessionID, resolvedInfo)
     }, COUNTDOWN_SECONDS * 1000)
 
     log(`[${HOOK_NAME}] Countdown started`, { sessionID, seconds: COUNTDOWN_SECONDS, incompleteCount })
@@ -352,6 +398,9 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
       if (error?.name === "MessageAbortedError" || error?.name === "AbortError") {
         const state = getState(sessionID)
         state.abortDetectedAt = Date.now()
+        if (subagentSessions.has(sessionID)) {
+          state.suppressSubagentReminderAfterAbort = true
+        }
         log(`[${HOOK_NAME}] Abort detected via session.error`, { sessionID, errorName: error.name })
       }
 
@@ -376,6 +425,11 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
       }
 
       const state = getState(sessionID)
+
+      if (isBackgroundTaskSession && state.suppressSubagentReminderAfterAbort) {
+        log(`[${HOOK_NAME}] Skipped subagent reminder: session interrupted by user`, { sessionID })
+        return
+      }
 
       if (state.isRecovering) {
         log(`[${HOOK_NAME}] Skipped: in recovery`, { sessionID })
@@ -466,6 +520,8 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
       const actionableCount = actionableTodos.length
       
       if (actionableCount === 0) {
+        state.suppressSubagentReminderAfterAbort = undefined
+        state.lastSubagentReminderSignature = undefined
         if (resolvedInfo?.agent && skipAgents.includes(resolvedInfo.agent)) {
           log(`[${HOOK_NAME}] Skipped: agent in skipAgents list and no actionable todos`, { sessionID, agent: resolvedInfo.agent })
         } else {
@@ -474,7 +530,22 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
         return
       }
 
-      startCountdown(sessionID, actionableCount, todos.length, resolvedInfo)
+      if (isBackgroundTaskSession) {
+        const todoSignature = getTodoSignature(actionableTodos)
+        if (state.lastSubagentReminderSignature === todoSignature) {
+          log(`[${HOOK_NAME}] Skipped subagent reminder: already sent for current todos`, {
+            sessionID,
+            agent: resolvedInfo?.agent,
+          })
+          return
+        }
+
+        state.lastSubagentReminderSignature = todoSignature
+        await injectSubagentReminder(sessionID, actionableCount, todos.length, resolvedInfo)
+        return
+      }
+
+      startCountdown(sessionID, actionableCount, resolvedInfo)
       return
     }
 
@@ -500,7 +571,10 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
 
       if (role === "assistant") {
         const state = sessions.get(sessionID)
-        if (state) state.abortDetectedAt = undefined
+        if (state) {
+          state.abortDetectedAt = undefined
+          state.suppressSubagentReminderAfterAbort = undefined
+        }
         cancelCountdown(sessionID)
       }
       return
@@ -513,7 +587,10 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
 
       if (sessionID && role === "assistant") {
         const state = sessions.get(sessionID)
-        if (state) state.abortDetectedAt = undefined
+        if (state) {
+          state.abortDetectedAt = undefined
+          state.suppressSubagentReminderAfterAbort = undefined
+        }
         cancelCountdown(sessionID)
       }
       return
@@ -523,7 +600,10 @@ ${actionableTodos.map(t => `- [${t.status}] ${t.content} (ID: ${t.id})`).join("\
       const sessionID = props?.sessionID as string | undefined
       if (sessionID) {
         const state = sessions.get(sessionID)
-        if (state) state.abortDetectedAt = undefined
+        if (state) {
+          state.abortDetectedAt = undefined
+          state.suppressSubagentReminderAfterAbort = undefined
+        }
         cancelCountdown(sessionID)
       }
       return

@@ -10,3 +10,7 @@ export const FILE_PATH_PATTERNS = [
 export const BACKGROUND_CAPABLE_TOOLS = ["delegate_task", "task"]
 
 export const MAX_PARALLEL_TASKS = 10
+
+// Locks are expected to be short-lived (tool call scope).
+// If post-hook cleanup is skipped, auto-prune stale entries.
+export const STALE_PENDING_TASK_MS = 5 * 60 * 1000

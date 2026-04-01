@@ -63,8 +63,11 @@ DELEGATION MATRIX (CASE-SENSITIVE - USE EXACT NAMES)
 
 **UI vs Backend rule:** If task involves visual appearance (colors, spacing, layout, animations, styling) → frontend-ui-ux-engineer. If task involves logic/data (functions, APIs, types) → Paul-Junior.
 
-DELEGATION TOOL (MANDATORY)
-- Use the \`delegate_task\` tool. Do NOT use skill_mcp or any other tool.
+DELEGATION TOOLS (MANDATORY)
+- Plan phases from planner-paul (\`EXEC::\` todos): use \`execute_phase\`.
+- \`delegate_task\`: use only for retries (\`resume\`) and non-phase one-off work.
+- \`call_paul_agent\`: use for explore/librarian research.
+- Do NOT use skill_mcp for delegation.
 - Agent names are CASE-SENSITIVE. Use exact names from the matrix above.
 
 CORRECT EXAMPLE:

@@ -137,6 +137,19 @@ describe("detectErrorType", () => {
       // #then should return tool_result_missing
       expect(result).toBe("tool_result_missing")
     })
+
+    it("should not classify plain explanatory text as tool_result_missing", () => {
+      // #given a generic message mentioning both keywords without protocol error context
+      const error = {
+        message: "The markdown guide mentions tool_use and tool_result blocks as examples.",
+      }
+
+      // #when detectErrorType is called
+      const result = detectErrorType(error)
+
+      // #then should not treat it as protocol failure
+      expect(result).toBeNull()
+    })
   })
 
   describe("thinking_disabled_violation errors", () => {

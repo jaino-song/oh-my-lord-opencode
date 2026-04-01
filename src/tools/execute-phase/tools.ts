@@ -88,7 +88,7 @@ const MachineReadableContractSchema = z.object({
   id: z.string().min(1),
   files: z.array(z.string().min(1)).optional(),
   todoIds: z.array(z.string().min(1)).optional(),
-  skills: z.array(z.string().min(1)).optional(),
+  skills: z.array(z.string().min(1)).nullable().optional().transform((value) => value ?? undefined),
   acceptance: ContractAcceptanceSchema.optional(),
 }).strict()
 

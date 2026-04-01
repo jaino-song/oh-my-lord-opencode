@@ -83,7 +83,7 @@ This is the set exported by `src/hooks/index.ts`.
 - Cannot write implementation code (write/edit) before test file exists
 - Cannot mark todo as completed without running test verification
 - Cannot skip test execution after implementation
-- Cannot mark final todo completion for code-implementation plans without recent Elijah `--verify-plan` approval
+- Cannot mark final todo completion for code-implementation plans without recent Elijah `--verify-plan` approval (orchestrator-owned gate; subagent sessions are exempt)
 
 **Phases Tracked**:
 - `NONE`: No work started
@@ -411,6 +411,8 @@ Note: The call has already completed - you are NOT waiting for a response. Proce
 - Monitors todo list for incomplete items
 - Detects "abort" signals (stopping mid-task)
 - Injects advisory continuation prompt before agent stops
+- For background subagent sessions, injects a one-time advisory reminder when session goes idle with incomplete todos (non-blocking, overrideable)
+- If a subagent session was interrupted by abort/user-stop, reminder injection stays suppressed until assistant/tool activity resumes in that session
 
 **Advisory**:
 ```

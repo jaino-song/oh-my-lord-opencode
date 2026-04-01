@@ -50,12 +50,15 @@ From `src/tools/delegate-task`, `src/tools/background-task`, and `src/tools/sign
 Notes:
 - `delegate_task` args are defined in `src/tools/delegate-task/types.ts`.
 - `delegate_task` supports `output_format: "summary" | "full"` (default: `summary`). `summary` truncates long outputs; use `full` for long plan/spec outputs.
+- When caller is `Paul` and planner-generated `EXEC::` todos are active, `delegate_task` blocks direct phase-task execution and directs callers to `execute_phase`.
 - `signal_done` is called by subagents to explicitly signal completion to the orchestrator.
 - `execute_phase` reads `EXEC::` todos and executes one phase at a time; task-level `(Skills: ...)` metadata overrides phase-level `skills` argument.
 - `execute_phase` also supports `(Contracts: ...)`, `(Files: ...)`, and `(TODO-IDs: ...)` metadata: contract refs are injected into delegated prompts, and tasks fail if listed TODO/FIXME anchors remain in listed files.
 - `execute_phase` now validates machine-readable contract blocks (`schemaVersion: "contracts-v1"`) first, then falls back to markdown contract parsing; includes preflight validation, file-scope enforcement, contract acceptance checks, and automatic frontend conformance checks.
+- Machine-readable `contracts-v1` accepts `"skills": null` and normalizes it to no skills.
 - File-scope enforcement uses delegated tool traces first and then applies a git-diff snapshot fallback to catch newly introduced file edits per task.
 - Frontend conformance enforcement mode is configurable via `execute_phase.frontend_conformance_mode` (`strict` | `normal` | `off`).
+- `background_output` returns stable, repeatable completed output (not cursor-consumed), caches completed output text, and keeps completed tasks retrievable for longer retention windows.
 - Contract schema reference and templates: `docs/CONTRACTS_V1.md`.
 
 ### Explore/Librarian Spawner

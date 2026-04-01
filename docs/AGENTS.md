@@ -54,6 +54,7 @@ Planner specifics for frontend-heavy plans:
 
 Execution verification note:
 - For implementation plans, final completion requires a recent Elijah `--verify-plan` approval (recorded via delegation notification/approval state). Docs/config-only plans skip this gate.
+- Elijah `--verify-plan` is orchestrator-owned (Paul). Subagents should finish their scoped todos and report blockers; they do not directly run Elijah verification.
 
 ---
 
